@@ -1,7 +1,7 @@
 import "@/styles/globals.css";
 import { trpc } from "@/utils/trpc";
 import { ThemeProvider } from '@mui/material/styles';
-import theme from './theme';
+import theme from '../materials/theme';
 import type { AppProps } from "next/app";
 import Layout from "./Layout";
 

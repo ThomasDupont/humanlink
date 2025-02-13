@@ -2,7 +2,7 @@ import { Box, Button, Container, Grid2 as Grid, IconButton, InputAdornment, Text
 import { FormEvent, useState } from "react";
 import { Search } from "@mui/icons-material";
 import { getHook } from "../hooks/hook.factory";
-import ServiceCard from "./components/ServiceCard";
+import ServiceCard from "../components/ServiceCard";
 
 const RESULT_NUMBER = 3
 const useMatcherHook = getHook('elastic')
