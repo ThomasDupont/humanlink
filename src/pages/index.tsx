@@ -1,5 +1,5 @@
 import { Box, Button, Container, Grid2 as Grid, IconButton, InputAdornment, TextField, Typography } from "@mui/material"
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, KeyboardEvent } from "react";
 import { Search } from "@mui/icons-material";
 import { getHook } from "../hooks/hook.factory";
 import ServiceCard from "../components/ServiceCard";
@@ -20,7 +20,7 @@ export default function Home() {
 
   const showMore = (resultToShow?.length ?? 0) < (result?.length ?? 0)
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement> | KeyboardEvent<HTMLDivElement>) => {
     event.preventDefault()
 
     if (message) query(message)
@@ -62,6 +62,7 @@ export default function Home() {
                 fullWidth
                 multiline
                 minRows={1}
+                onKeyDown={e => e.key === 'Enter' && handleSubmit(e)}
                 slotProps={{
                   input: {
                     endAdornment:
