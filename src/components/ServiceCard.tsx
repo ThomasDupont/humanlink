@@ -28,7 +28,7 @@ export default function ServiceCard({ service }: { service: Service }) {
         randomProfiles.then(r => setProfiles(r.data.results))
     }, [])
 
-    const profile: any = profiles[parseInt(service.id, 10)]
+    const profile: any = profiles[parseInt(service.id, 10) - 1]
 
   return profile && (
     <Card sx={{ width: 345, minHeight: 402 }}>
