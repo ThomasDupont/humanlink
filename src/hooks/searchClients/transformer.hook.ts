@@ -1,10 +1,10 @@
 "use client"
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Service } from "../types/Services.type";
+import { Service } from "../../types/Services.type";
 import { HookInterface } from "./hook.interface";
 
 export const useTransformer: HookInterface = () => {
-    const worker = useRef<Worker>(null);
+    const worker = useRef<Worker | null>(null);
 
     const [result, setResult] = useState<Service[]>();
     const [ready, setReady] = useState<boolean>(false);
