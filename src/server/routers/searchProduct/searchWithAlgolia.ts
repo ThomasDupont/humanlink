@@ -26,14 +26,11 @@ export const performSearchWithAlgolia: SearchProvider = async ({ query }) => {
             const service: Service = {
                 id: hit._id.toString(),
                 title: hit.title,
-                
             }
 
             return service
         })
     ).flat()
-
-    console.log(hits)
 
     return hits
 }

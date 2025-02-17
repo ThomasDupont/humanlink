@@ -1,11 +1,11 @@
 import { Box, Button, Container, Grid2 as Grid, IconButton, InputAdornment, TextField, Typography } from "@mui/material"
 import { FormEvent, useState, KeyboardEvent } from "react";
 import { Search } from "@mui/icons-material";
-import { getHook } from "../hooks/hook.factory";
+import { getSearchClientHook } from "../hooks/searchClients/hook.factory";
 import ServiceCard from "../components/ServiceCard";
 
 const RESULT_NUMBER = 3
-const useMatcherHook = getHook('elastic')
+const useMatcherHook = getSearchClientHook('elastic')
 
 export default function Home() {
   const [message, setMessage] = useState<string>()

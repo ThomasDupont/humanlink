@@ -20,9 +20,9 @@ const robotoCondensed = Roboto_Condensed({
 const theme = createTheme({
   palette: {
       primary: {
-          main: '#2f45ff',
-          light: '#85a8ff',
-          dark: '#0000ff'
+          light: '#dbeafe',
+          main: '#77b5fe',
+          dark: '#397ff8'
       },
       secondary: {
         main: '#0F0F0F'
