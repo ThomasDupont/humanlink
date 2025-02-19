@@ -1,7 +1,6 @@
 import { Box, Button, CardMedia, Container, Grid2 as Grid, IconButton, InputAdornment, TextField, Typography } from "@mui/material"
 import { FormEvent, useState, KeyboardEvent } from "react";
 import ForwardIcon from '@mui/icons-material/Forward';
-import VerifiedIcon from '@mui/icons-material/Verified';
 import { Search } from "@mui/icons-material";
 import { getSearchClientHook } from "../hooks/searchClients/hook.factory";
 import ServiceCard from "../components/ServiceCard";
