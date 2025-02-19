@@ -1,12 +1,42 @@
 import { Box, Button, CardMedia, Container, Grid2 as Grid, IconButton, InputAdornment, TextField, Typography } from "@mui/material"
-import { FormEvent, useState, KeyboardEvent } from "react";
+import { FormEvent, useState, KeyboardEvent, useEffect } from "react";
 import ForwardIcon from '@mui/icons-material/Forward';
 import { Search } from "@mui/icons-material";
 import { getSearchClientHook } from "../hooks/searchClients/hook.factory";
 import ServiceCard from "../components/ServiceCard";
+import { StyledGrid } from "@/materials/styledElement";
 
 const RESULT_NUMBER = 3
 const useMatcherHook = getSearchClientHook('elastic')
+
+const SwitchText = () => {
+  const texts = [
+    "J'ai un problème avec mon chat",
+    "Je veux détourer des images",
+    "Il me faut un site web"
+  ]
+  const [current, setCurrent] = useState(0)
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (current === texts.length - 1) {
+        setCurrent(0)
+      } else {
+        setCurrent(c => c + 1)
+      }
+    }, 4000)
+
+    return () => clearInterval(interval)
+  })
+  
+  return <Box
+    sx={{
+      mt: 1
+    }}
+  >
+    <Typography variant="body1" component="p">Exemple : &#xAB; <i>{texts[current]}</i> &#xBB;</Typography>
+  </Box>
+}
 
 export default function Home() {
   const [message, setMessage] = useState<string>()
@@ -38,23 +68,7 @@ export default function Home() {
             mt: 20,
           }}
         >
-          <Grid size={{ xs: 12, md: 6}} sx={(t) => ({
-              borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
-              boxShadow: 1,
-              textAlign: 'center',
-              backgroundColor: 'white',
-              padding: '16px',
-              color: 'secondary',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              alignContent: 'center',
-              alignItems: 'center',
-              gap: 4,
-              '&:hover': {
-                boxShadow: `0px 0px 2px 2px ${t.palette.primary.main}`,
-              }
-            })}>
+          <StyledGrid size={{ xs: 12, md: 6}}>
             <Typography variant="body1" component="h1" >Nous sélectionnons et certifions nos freelances pour garantir le meilleur à vos projets</Typography>
             <CardMedia
               component="img"
@@ -62,30 +76,15 @@ export default function Home() {
               image="certified-people.svg"
               alt="Live from space album cover"
             />
-          </Grid>
-          <Grid size={{ xs: 12, md: 6}} sx={(t) => ({
-            borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
-            boxShadow: 1,
-            textAlign: 'center',
-            backgroundColor: 'white',
-            padding: '16px',
-            color: 'secondary',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            alignContent: 'center',
-            alignItems: 'center',
-            '&:hover': {
-                boxShadow: `0px 0px 2px 2px ${t.palette.primary.main}`,
-              }
-          })}>
+          </StyledGrid>
+          <StyledGrid size={{ xs: 12, md: 6}}>
             <Typography variant="body1" component="p">Paiement uniquement après la livraison de votre commande</Typography>
             <Box
               sx={{
                 display: 'flex',
                 flexDirection: 'row',
                 justifyContent: 'space-between',
-                gap: 4,
+                gap: { xs: 0, md: 4 },
                 alignItems: 'center'
               }}
             >
@@ -103,7 +102,7 @@ export default function Home() {
                 alt="Live from space album cover"
               />
             </Box>
-          </Grid>
+          </StyledGrid>
         </Grid>
         
         <Box
@@ -126,6 +125,7 @@ export default function Home() {
                 onKeyDown={e => e.key === 'Enter' && handleSubmit(e)}
                 slotProps={{
                   input: {
+                    spellCheck: 'false',
                     endAdornment:
                       <InputAdornment position="end" sx={{
                         mr: 1
@@ -134,7 +134,9 @@ export default function Home() {
                           type="submit"
                           edge="end"
                         >
-                          <Search color="primary" fontSize='large' />
+                          <Search fontSize='large' sx={t => ({
+                            color: t.palette.primary.dark
+                          })} />
                         </IconButton>
                       </InputAdornment>
                     
@@ -146,6 +148,7 @@ export default function Home() {
                 })}
                 />
           </form>
+          <SwitchText />
         </Box>
         <Box
           sx={{

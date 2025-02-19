@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { styled } from '@mui/material/styles';
 import { AppBar, Toolbar, IconButton, Container, Divider, Drawer, Box, Typography } from '@mui/material';
-import { AccountCircle, Home, Menu as MenuIcon } from '@mui/icons-material';
+import { AccountCircle, Menu as MenuIcon, Message, NotificationsRounded } from '@mui/icons-material';
 import { CloseRounded as CloseRoundedIcon } from '@mui/icons-material';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -20,6 +20,23 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   padding: '8px 12px',
 }));
 
+const Icons = ({ mobile }: { mobile: boolean }) => {
+  return <Box
+    sx={{
+      display: mobile ? { xs: 'block', md: 'none' } : { xs: 'none', md: 'block' },
+    }}
+  >
+    <IconButton><NotificationsRounded color='secondary' fontSize='medium' /></IconButton>
+    <IconButton><Message color='secondary' fontSize='medium' /></IconButton>
+    <IconButton><AccountCircle color='secondary' fontSize='medium' /></IconButton>
+  </Box>
+}
+
+const Title = () => {
+  return <Link href="/">
+  <Typography color='primary.dark' fontWeight={700} variant="h5" component="p">HumanLink</Typography>
+</Link>
+}
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -45,19 +62,11 @@ export default function Header() {
         <StyledToolbar variant="dense" disableGutters>
           <Box sx={{ flexGrow: 1, display :{ xs: 'none', md: 'flex' }, alignItems: 'center', px: 4 }}>
             <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 4 }}>
-              <Link href="/">
-                <Typography color='primary' fontWeight={700} variant="h5" component="p">HumanLink</Typography>
-              </Link>
+              <Title />
               <Box sx={{pt: '4px'}}><Typography color='secondary' variant="body1" component="p">Les meilleurs des freelances à votre service</Typography></Box>
             </Box>
           </Box>
-          <Box
-            sx={{
-              display: { xs: 'none', md: 'block' },
-            }}
-          >
-            <IconButton><AccountCircle color='secondary' fontSize='medium' /></IconButton>
-          </Box>
+          <Icons mobile={false} />
           <Box sx={{ display: { xs: 'flex', md: 'none' }, justifyContent: 'space-between', gap: 12, width: '100%' }}>
             <Link href="/">
                 <Typography sx={{pt: '4px'}} color='primary' fontWeight={700} variant="h5" component="p">HumanLink</Typography>
@@ -86,15 +95,9 @@ export default function Header() {
                     <CloseRoundedIcon />
                   </IconButton>
                 </Box>
-                <Link href="/"><Typography variant="h5" component="p">HumanLink</Typography></Link>
+                <Title />
                 <Divider sx={{ my: 4 }} />
-                <Box
-                  sx={{
-                    textAlign: 'center',
-                  }}
-                >
-                  <Home />
-                </Box>
+                <Icons mobile={true} />
               </Box>
             </Drawer>
           </Box>

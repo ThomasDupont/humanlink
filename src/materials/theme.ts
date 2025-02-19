@@ -1,5 +1,4 @@
 import { createTheme } from '@mui/material/styles';
-
 import { Roboto, Roboto_Condensed } from 'next/font/google';
 
 const roboto = Roboto({
@@ -19,15 +18,17 @@ const robotoCondensed = Roboto_Condensed({
 
 const theme = createTheme({
   palette: {
-      primary: {
-          50: '#eff6ff',
-          light: '#dbeafe',
-          main: '#77b5fe',
-          dark: '#397ff8'
-      },
-      secondary: {
-        main: '#0F0F0F'
-      }
+    primary: {
+      50: '#eff6ff',
+      light: '#dbeafe',
+      main: '#77b5fe',
+      dark: '#397ff8'
+    },
+    secondary: {
+      50: '#f6f6f6',
+      100: '#e7e7e7',
+      main: '#0F0F0F'
+    }
   },
   typography: {
     fontFamily: roboto.style.fontFamily,

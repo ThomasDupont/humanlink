@@ -12,7 +12,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import ShareIcon from '@mui/icons-material/Share';
 import { Service } from '@/types/Services.type';
 import VerifiedIcon from '@mui/icons-material/Verified';
-import { Tooltip } from '@mui/material';
+import { Box, Tooltip } from '@mui/material';
 import { getUserHook } from '@/hooks/users/hook.factory';
 import { useEffect, useState } from 'react';
 import { User } from '@/types/User.type';
@@ -30,13 +30,16 @@ export default function ServiceCard({ service }: { service: Service }) {
   return user && (
     <Card
       variant='outlined'
-     sx={{ 
+     sx={t => ({ 
       width: 345, 
       minHeight: 410, 
       display: 'flex', 
       justifyContent: 'flex-end', 
-      flexDirection: 'column'
-    }}
+      flexDirection: 'column',
+      '&:hover': {
+        boxShadow: `0px 0px 1px 1px ${t.palette.primary.main}`,
+      }
+    })}
     >
         <Link href={`/service/${service.id}`} target='_blank'>
         <CardHeader
@@ -62,17 +65,27 @@ export default function ServiceCard({ service }: { service: Service }) {
         />
         <CardContent>
             <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-            {service.title}
+              {service.title}
             </Typography>
         </CardContent>
       </Link>
-      <CardActions disableSpacing sx={{ mt: "auto" }}>
-        <IconButton aria-label="add to favorites">
-          <FavoriteIcon />
-        </IconButton>
-        <IconButton aria-label="share">
-          <ShareIcon />
-        </IconButton>
+      <CardActions disableSpacing sx={{ 
+        mt: "auto",
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'space-between'
+      }}>
+        <Box>
+          <IconButton aria-label="add to favorites">
+            <FavoriteIcon />
+          </IconButton>
+          <IconButton aria-label="share">
+            <ShareIcon />
+          </IconButton>
+        </Box>
+        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+            <strong>À partir de 50€</strong>
+        </Typography>
       </CardActions>
     </Card>
   );

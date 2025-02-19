@@ -1,6 +1,7 @@
 import { User } from "@/types/User.type"
 import { HookInterface } from "./hook.interface"
 import fakeUsers from './fixtures.json'
+import { useCallback } from "react"
 
 type FakeProfile = {
     picture: {
@@ -24,9 +25,9 @@ export const useUser = (): HookInterface => {
         country: profile.location.country
     })
 
-    const getUserById = async (id: string): Promise<User | null> => {
+    const getUserById = useCallback(async (id: string): Promise<User | null> => {
         return parseUser((fakeUsers as FakeProfiles).results[parseInt(id, 10)]) ?? null
-    }
+    }, [])
 
     return { getUserById }
 }
