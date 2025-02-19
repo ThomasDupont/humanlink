@@ -3,5 +3,7 @@ a {
 }
 
 body {
-
+  background-image: linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)), url('/background.jpg');
+  background-position: center;
+  background-size: cover;
 }

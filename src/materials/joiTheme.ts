@@ -1,4 +1,4 @@
-import { createTheme } from '@mui/material/styles';
+import { extendTheme } from '@mui/joy';
 
 import { Roboto, Roboto_Condensed } from 'next/font/google';
 
@@ -17,25 +17,30 @@ const robotoCondensed = Roboto_Condensed({
   variable: '--font-roboto-condensed',
 })
 
-const theme = createTheme({
-  palette: {
-      primary: {
-          50: '#eff6ff',
-          light: '#dbeafe',
-          main: '#77b5fe',
-          dark: '#397ff8'
-      },
-      secondary: {
-        main: '#0F0F0F'
-      }
+const theme = extendTheme({
+    colorSchemes: {
+        light: {
+            palette: {
+                identity: {
+                    100: '#dbeafe',
+                    300: '#77b5fe',
+                    500: '#397ff8'
+                },
+                secondary: {
+                    950: '#0F0F0F'
+                }
+            },
+        }
+    },
+  fontFamily: {
+    body: roboto.style.fontFamily
   },
   typography: {
-    fontFamily: roboto.style.fontFamily,
     h1: {
       fontFamily: robotoCondensed.style.fontFamily,
       fontWeight: 400,
       fontSize: 72
-    }
+    },
   },
 });
 

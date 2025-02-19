@@ -15,6 +15,7 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   backdropFilter: 'blur(24px)',
   border: '1px solid',
   borderColor: theme.palette.divider,
+  backgroundColor: 'white',
   boxShadow: theme.shadows[1],
   padding: '8px 12px',
 }));

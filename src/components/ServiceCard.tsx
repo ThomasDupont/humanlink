@@ -28,7 +28,16 @@ export default function ServiceCard({ service }: { service: Service }) {
     }, [service.id])
 
   return user && (
-    <Card sx={{ width: 345, minHeight: 410, display: 'flex', justifyContent: 'flex-end', flexDirection: 'column' }}>
+    <Card
+      variant='outlined'
+     sx={{ 
+      width: 345, 
+      minHeight: 410, 
+      display: 'flex', 
+      justifyContent: 'flex-end', 
+      flexDirection: 'column'
+    }}
+    >
         <Link href={`/service/${service.id}`} target='_blank'>
         <CardHeader
             avatar={<Avatar sx={{ bgcolor: red[500] }} aria-label="recipe" src={user.thumbnail} />}

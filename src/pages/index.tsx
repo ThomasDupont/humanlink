@@ -1,5 +1,7 @@
-import { Box, Button, Container, Grid2 as Grid, IconButton, InputAdornment, TextField, Typography } from "@mui/material"
+import { Box, Button, CardMedia, Container, Grid2 as Grid, IconButton, InputAdornment, TextField, Typography } from "@mui/material"
 import { FormEvent, useState, KeyboardEvent } from "react";
+import ForwardIcon from '@mui/icons-material/Forward';
+import VerifiedIcon from '@mui/icons-material/Verified';
 import { Search } from "@mui/icons-material";
 import { getSearchClientHook } from "../hooks/searchClients/hook.factory";
 import ServiceCard from "../components/ServiceCard";
@@ -37,11 +39,71 @@ export default function Home() {
             mt: 20,
           }}
         >
-          <Grid size={{ xs: 12, md: 6}}>
+          <Grid size={{ xs: 12, md: 6}} sx={(t) => ({
+              borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
+              boxShadow: 1,
+              textAlign: 'center',
+              backgroundColor: 'white',
+              padding: '16px',
+              color: 'secondary',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              alignContent: 'center',
+              alignItems: 'center',
+              gap: 4,
+              '&:hover': {
+                boxShadow: `0px 0px 2px 2px ${t.palette.primary.main}`,
+              }
+            })}>
             <Typography variant="body1" component="h1" >Nous sélectionnons et certifions nos freelances pour garantir le meilleur à vos projets</Typography>
+            <CardMedia
+              component="img"
+              sx={{ width: 150, height: 100 }}
+              image="certified-people.svg"
+              alt="Live from space album cover"
+            />
           </Grid>
-          <Grid size={{ xs: 12, md: 6}}>
-            <Typography variant="body1" component="p" fontWeight={500}>Paiement uniquement après la livraison de votre commande</Typography>
+          <Grid size={{ xs: 12, md: 6}} sx={(t) => ({
+            borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
+            boxShadow: 1,
+            textAlign: 'center',
+            backgroundColor: 'white',
+            padding: '16px',
+            color: 'secondary',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            alignContent: 'center',
+            alignItems: 'center',
+            '&:hover': {
+                boxShadow: `0px 0px 2px 2px ${t.palette.primary.main}`,
+              }
+          })}>
+            <Typography variant="body1" component="p">Paiement uniquement après la livraison de votre commande</Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                gap: 4,
+                alignItems: 'center'
+              }}
+            >
+              <CardMedia
+                component="img"
+                sx={{ width: 150, height: 80 }}
+                image="satisfaction.svg"
+                alt="Live from space album cover"
+              />
+              <ForwardIcon fontSize="large" />
+              <CardMedia
+                component="img"
+                sx={{ width: 150, height: 80 }}
+                image="paiement.svg"
+                alt="Live from space album cover"
+              />
+            </Box>
           </Grid>
         </Grid>
         
@@ -80,6 +142,9 @@ export default function Home() {
                   },
                   htmlInput: { maxLength: 1000 },
                 }}
+                sx={() => ({
+                  backgroundColor: 'white',
+                })}
                 />
           </form>
         </Box>
