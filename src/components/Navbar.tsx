@@ -1,10 +1,19 @@
-import { useEffect, useState } from 'react';
-import { styled } from '@mui/material/styles';
-import { AppBar, Toolbar, IconButton, Container, Divider, Drawer, Box, Typography } from '@mui/material';
-import { AccountCircle, Menu as MenuIcon, Message, NotificationsRounded } from '@mui/icons-material';
-import { CloseRounded as CloseRoundedIcon } from '@mui/icons-material';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react'
+import { styled } from '@mui/material/styles'
+import {
+  AppBar,
+  Toolbar,
+  IconButton,
+  Container,
+  Divider,
+  Drawer,
+  Box,
+  Typography
+} from '@mui/material'
+import { AccountCircle, Menu as MenuIcon, Message, NotificationsRounded } from '@mui/icons-material'
+import { CloseRounded as CloseRoundedIcon } from '@mui/icons-material'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   display: 'flex',
@@ -17,62 +26,96 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   borderColor: theme.palette.divider,
   backgroundColor: 'white',
   boxShadow: theme.shadows[1],
-  padding: '8px 12px',
-}));
+  padding: '8px 12px'
+}))
 
 const Icons = ({ mobile }: { mobile: boolean }) => {
-  return <Box
-    sx={{
-      display: mobile ? { xs: 'block', md: 'none' } : { xs: 'none', md: 'block' },
-    }}
-  >
-    <IconButton><NotificationsRounded color='secondary' fontSize='medium' /></IconButton>
-    <IconButton><Message color='secondary' fontSize='medium' /></IconButton>
-    <IconButton><AccountCircle color='secondary' fontSize='medium' /></IconButton>
-  </Box>
+  return (
+    <Box
+      sx={{
+        display: mobile ? { xs: 'block', md: 'none' } : { xs: 'none', md: 'block' }
+      }}
+    >
+      <IconButton>
+        <NotificationsRounded color="secondary" fontSize="medium" />
+      </IconButton>
+      <IconButton>
+        <Message color="secondary" fontSize="medium" />
+      </IconButton>
+      <IconButton>
+        <AccountCircle color="secondary" fontSize="medium" />
+      </IconButton>
+    </Box>
+  )
 }
 
 const Title = () => {
-  return <Link href="/">
-  <Typography color='primary.dark' fontWeight={700} variant="h5" component="p">HumanLink</Typography>
-</Link>
+  return (
+    <Link href="/">
+      <Typography color="primary.dark" fontWeight={700} variant="h5" component="p">
+        HumanLink
+      </Typography>
+    </Link>
+  )
 }
 
 export default function Header() {
-  const [open, setOpen] = useState(false);
-  const { pathname } = useRouter();
+  const [open, setOpen] = useState(false)
+  const { pathname } = useRouter()
 
   const toggleDrawer = (newOpen: boolean) => () => {
-    setOpen(newOpen);
-  };
+    setOpen(newOpen)
+  }
 
   useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+    setOpen(false)
+  }, [pathname])
 
   return (
     <AppBar
-      color='transparent'
+      component={'header'}
+      color="transparent"
       sx={{
         boxShadow: 0,
-        mt: 'calc(var(--template-frame-height, 0px) + 28px)',
+        mt: 'calc(var(--template-frame-height, 0px) + 28px)'
       }}
     >
       <Container maxWidth="xl">
         <StyledToolbar variant="dense" disableGutters>
-          <Box sx={{ flexGrow: 1, display :{ xs: 'none', md: 'flex' }, alignItems: 'center', px: 4 }}>
+          <Box
+            sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, alignItems: 'center', px: 4 }}
+          >
             <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 4 }}>
               <Title />
-              <Box sx={{pt: '4px'}}><Typography color='secondary' variant="body1" component="p">Les meilleurs des freelances à votre service</Typography></Box>
+              <Box sx={{ pt: '4px' }}>
+                <Typography color="secondary" variant="body1" component="p">
+                  Les meilleurs des freelances à votre service
+                </Typography>
+              </Box>
             </Box>
           </Box>
           <Icons mobile={false} />
-          <Box sx={{ display: { xs: 'flex', md: 'none' }, justifyContent: 'space-between', gap: 12, width: '100%' }}>
+          <Box
+            sx={{
+              display: { xs: 'flex', md: 'none' },
+              justifyContent: 'space-between',
+              gap: 12,
+              width: '100%'
+            }}
+          >
             <Link href="/">
-                <Typography sx={{pt: '4px'}} color='primary' fontWeight={700} variant="h5" component="p">HumanLink</Typography>
+              <Typography
+                sx={{ pt: '4px' }}
+                color="primary"
+                fontWeight={700}
+                variant="h5"
+                component="p"
+              >
+                HumanLink
+              </Typography>
             </Link>
             <IconButton aria-label="Menu button" onClick={toggleDrawer(true)}>
-              <MenuIcon color='secondary' />
+              <MenuIcon color="secondary" />
             </IconButton>
             <Drawer
               anchor="top"
@@ -80,15 +123,15 @@ export default function Header() {
               onClose={toggleDrawer(false)}
               PaperProps={{
                 sx: {
-                  top: 'var(--template-frame-height, 0px)',
-                },
+                  top: 'var(--template-frame-height, 0px)'
+                }
               }}
             >
               <Box sx={{ p: 2, backgroundColor: 'background.default' }}>
                 <Box
                   sx={{
                     display: 'flex',
-                    justifyContent: 'flex-end',
+                    justifyContent: 'flex-end'
                   }}
                 >
                   <IconButton onClick={toggleDrawer(false)}>
@@ -104,5 +147,5 @@ export default function Header() {
         </StyledToolbar>
       </Container>
     </AppBar>
-  );
+  )
 }
