@@ -1,5 +1,5 @@
-import { User } from "@/types/User.type"
+import { User } from '@prisma/client'
 
 export type HookInterface = {
-    getUserById: (id: string) => Promise<User | null>
+  getUserById: (id: number) => Promise<User | null>
 }

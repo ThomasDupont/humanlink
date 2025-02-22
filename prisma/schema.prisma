@@ -1,0 +1,124 @@
+// npx prisma migrate dev --name init
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// USER
+
+enum OauthProvider {
+  google
+  linkedin
+}
+
+enum Country {
+  France
+  Germany
+  UnitedKingdom
+  Spain
+  Italy
+}
+
+model User {
+  id      Int      @id @default(autoincrement())
+  email   String   @unique
+  firstname    String
+  lastname   String
+  oauthProvider   OauthProvider
+  createdAt  DateTime @default(now())
+  isFreelance   Boolean
+  description   String
+  jobTitle    String
+  isCertified Boolean
+  certifiedDate   DateTime?
+  image     String?
+  country   Country
+  services      Service[]
+}
+
+// SERVICE
+
+enum Lang {
+  FR
+  EN
+}
+
+enum ServiceType {
+  digital
+  physical
+}
+
+enum Category {
+  GraphiqueAndDesign
+  MusicAndAudio
+  OnlineCourse
+  ProgrammingAndTech
+  MarketingAndDigital
+  LegalAdvice
+  OnlineShopManagement
+  Sale
+  CompanyCreation
+  IntellectualProperty
+  Assistance
+  BusinessPlan
+  MarketResearch
+  CorporateConsulting
+  HRConsulting
+  CustomerService
+  SustainableDevelopmentConsulting
+  ProductManagement
+  AIConsulting
+  Events
+  Coaching
+  CopywritingAndTranslation
+  Photography
+  Data
+  Leisure
+  VideoAndAnimation
+  Recruitment
+  DIY
+  Gardening
+}
+
+model Service {
+  id        Int     @id @default(autoincrement())
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  title     String
+  descriptionShort  String
+  description   String
+  createdAt   DateTime @default(now())
+  langs     Lang[]
+  type      ServiceType
+  localisation    String
+  renewable   Boolean
+  category  Category
+  images    String[]
+  prices     Price[]
+}
+
+// PRICE
+
+enum PriceType {
+  fix
+  percent
+  fixedPerItem
+}
+
+enum Currency {
+  EUR
+  USD
+}
+
+model Price {
+  id        Int     @id @default(autoincrement())
+  service   Service    @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId Int
+  type      PriceType
+  number    Int
+  currency  Currency
+}

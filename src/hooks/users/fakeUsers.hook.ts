@@ -1,33 +1,37 @@
-import { User } from "@/types/User.type"
-import { HookInterface } from "./hook.interface"
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { HookInterface } from './hook.interface'
 import fakeUsers from './fixtures.json'
-import { useCallback } from "react"
+import { useCallback } from 'react'
+import { Country, User } from '@prisma/client'
 
-type FakeProfile = {
-    picture: {
-        thumbnail: string
-    },
-    name: {
-        first: string
-        last: string
-    },
-    location: {
-        country: string
-    }
+type FakeProfile = (typeof fakeUsers.results)[0]
+
+const getRandomProfile = () => {
+  const index = Math.floor(Math.random() * fakeUsers.results.length)
+
+  return fakeUsers.results[index]
 }
-type FakeProfiles = { results: FakeProfile[] }
 
 export const useUser = (): HookInterface => {
-    const parseUser = (profile: FakeProfile): User => ({
-        thumbnail: profile.picture.thumbnail,
-        firstname: profile.name.first,
-        lastname: profile.name.last,
-        country: profile.location.country
-    })
+  const parseUser = (profile: FakeProfile): User => ({
+    image: profile.picture.thumbnail,
+    firstname: profile.name.first,
+    lastname: profile.name.last,
+    country: profile.location.country as Country,
+    email: profile.email,
+    oauthProvider: 'google',
+    id: 0,
+    createdAt: new Date(),
+    isFreelance: false,
+    description: '',
+    jobTitle: '',
+    isCertified: true,
+    certifiedDate: new Date()
+  })
 
-    const getUserById = useCallback(async (id: string): Promise<User | null> => {
-        return parseUser((fakeUsers as FakeProfiles).results[parseInt(id, 10)]) ?? null
-    }, [])
+  const getUserById = useCallback(async (id: number): Promise<User | null> => {
+    return parseUser(getRandomProfile()) ?? null
+  }, [])
 
-    return { getUserById }
+  return { getUserById }
 }

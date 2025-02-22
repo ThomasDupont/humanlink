@@ -1,6 +1,7 @@
-export type User = {
-    thumbnail: string
-    firstname: string
-    lastname: string
-    country: string
+import { Price, Service, User } from '@prisma/client'
+
+export type UserWithServicesWithPrices = User & {
+  services: (Service & {
+    prices: Price[]
+  })[]
 }

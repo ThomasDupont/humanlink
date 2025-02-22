@@ -155,42 +155,48 @@ export default function Home() {
           <pre className="bg-gray-100 p-2 rounded">{!ready ? 'Loading...' : ''}</pre>
         )}
       </Box>
-      {resultToShow?.length ? (
-        <Grid container spacing={2}>
-          {resultToShow.map((r, i) => {
-            return (
-              <Grid
-                key={i}
-                size={{ xs: 12, md: resultToShow.length <= 3 ? 12 / resultToShow.length : 4 }}
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center'
-                }}
-              >
-                <ServiceCard key={i} service={r} />
-              </Grid>
-            )
-          })}
-        </Grid>
-      ) : null}
-      {showMore && (
-        <Box
-          sx={{
-            width: '100%',
-            textAlign: 'center',
-            mt: 2
-          }}
-        >
-          <Button
-            onClick={() => setNumberResult(num => num + RESULT_NUMBER)}
-            variant="contained"
-            color="primary"
+      <Box
+        sx={{
+          mb: 10
+        }}
+      >
+        {resultToShow?.length ? (
+          <Grid container spacing={2}>
+            {resultToShow.map((r, i) => {
+              return (
+                <Grid
+                  key={i}
+                  size={{ xs: 12, md: resultToShow.length <= 3 ? 12 / resultToShow.length : 4 }}
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}
+                >
+                  <ServiceCard key={i} service={r} />
+                </Grid>
+              )
+            })}
+          </Grid>
+        ) : null}
+        {showMore && (
+          <Box
+            sx={{
+              width: '100%',
+              textAlign: 'center',
+              mt: 2
+            }}
           >
-            Voir plus
-          </Button>
-        </Box>
-      )}
+            <Button
+              onClick={() => setNumberResult(num => num + RESULT_NUMBER)}
+              variant="contained"
+              color="primary"
+            >
+              Voir plus
+            </Button>
+          </Box>
+        )}
+      </Box>
     </Container>
   )
 }
