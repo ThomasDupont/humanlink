@@ -22,12 +22,15 @@ export const appRouter = router({
             return await performSearchWithAlgolia(algolia)({ query: options.input.query })
         }
       }),
-    userById: publicProcedure.input(z.number()).query(async options => {
-      return await userOperations.getUserById(options.input)
-    }),
-    serviceById: publicProcedure.input(z.number()).query(async options => {
-      return await serviceOperations.getServiceById(options.input)
-    })
+    userById: publicProcedure
+      .input(z.number())
+      .query(options => userOperations.getUserById(options.input)),
+    userByIds: publicProcedure
+      .input(z.array(z.number()))
+      .query(options => userOperations.getUserByIds(options.input)),
+    serviceById: publicProcedure
+      .input(z.number())
+      .query(options => serviceOperations.getServiceById(options.input))
   })
 })
 

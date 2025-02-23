@@ -20,9 +20,16 @@ const theme = createTheme({
   palette: {
     primary: {
       50: '#eff6ff',
-      light: '#dbeafe',
-      main: '#77b5fe',
-      dark: '#397ff8'
+      100: '#dbeafe',
+      200: '#bedaff',
+      300: '#92c4fe',
+      400: '#5ea3fc',
+      main: '#397ff8',
+      600: '#235fed',
+      700: '#1b4ada',
+      800: '#1c3db1',
+      900: '#1d388b',
+      950: '#162455'
     },
     secondary: {
       50: '#f6f6f6',
@@ -38,6 +45,11 @@ const theme = createTheme({
       fontFamily: robotoCondensed.style.fontFamily,
       fontWeight: 400,
       fontSize: 72
+    },
+    h3: {
+      fontFamily: robotoCondensed.style.fontFamily,
+      fontWeight: 400,
+      fontSize: 28
     },
     h4: {
       fontFamily: robotoCondensed.style.fontFamily,

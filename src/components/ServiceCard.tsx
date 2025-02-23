@@ -13,20 +13,9 @@ import ShareIcon from '@mui/icons-material/Share'
 import { ServiceInElastic } from '@/types/Services.type'
 import VerifiedIcon from '@mui/icons-material/Verified'
 import { Box, Tooltip } from '@mui/material'
-import { getUserHook } from '@/hooks/users/hook.factory'
-import { useEffect, useState } from 'react'
 import { User } from '@prisma/client'
 
-const useUser = getUserHook('real')
-
-export default function ServiceCard({ service }: { service: ServiceInElastic }) {
-  const [user, setUser] = useState<User | null>(null)
-  const { getUserById } = useUser()
-
-  useEffect(() => {
-    getUserById(service.userId).then(setUser)
-  }, [service.id])
-
+export default function ServiceCard({ service, user }: { service: ServiceInElastic; user?: User }) {
   return (
     user && (
       <Card

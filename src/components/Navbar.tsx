@@ -52,7 +52,7 @@ const Icons = ({ mobile }: { mobile: boolean }) => {
 const Title = () => {
   return (
     <Link href="/">
-      <Typography color="primary.dark" fontWeight={700} variant="h5" component="p">
+      <Typography color="primary" fontWeight={700} variant="h5" component="p">
         HumanLink
       </Typography>
     </Link>

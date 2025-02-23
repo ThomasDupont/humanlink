@@ -9,22 +9,39 @@ import {
   TextField,
   Typography
 } from '@mui/material'
-import { FormEvent, useState, KeyboardEvent } from 'react'
+import { FormEvent, useState, KeyboardEvent, useEffect } from 'react'
 import ForwardIcon from '@mui/icons-material/Forward'
 import { Search } from '@mui/icons-material'
 import { getSearchClientHook } from '../hooks/searchClients/hook.factory'
 import ServiceCard from '../components/ServiceCard'
 import { StyledGrid } from '@/materials/styledElement'
 import { SwitchText } from '@/components/SwitchText'
+import { getUserHook } from '@/hooks/users/hook.factory'
+import { User } from '@prisma/client'
 
 const RESULT_NUMBER = 3
 const useMatcherHook = getSearchClientHook('elastic')
+const useUser = getUserHook('real')
 
 export default function Home() {
   const [message, setMessage] = useState<string>()
+  const [users, setUsers] = useState<User[]>([])
+  const [showSpinner, setShowSpinner] = useState<boolean>(false)
+
   const [numberResult, setNumberResult] = useState<number>(RESULT_NUMBER)
 
   const { query, ready, result } = useMatcherHook()
+
+  const { getUserByIds } = useUser()
+
+  useEffect(() => {
+    if (result) {
+      getUserByIds(result.map(service => service.userId)).then(users => {
+        setUsers(users)
+        setShowSpinner(false)
+      })
+    }
+  }, [result, getUserByIds])
 
   const resultToShow = result?.filter((_, i) => {
     return i < numberResult
@@ -37,7 +54,11 @@ export default function Home() {
   ) => {
     event.preventDefault()
 
-    if (message) query(message)
+    if (message) {
+      setNumberResult(RESULT_NUMBER)
+      setShowSpinner(true)
+      query(message)
+    }
   }
 
   return (
@@ -122,7 +143,7 @@ export default function Home() {
                       <Search
                         fontSize="large"
                         sx={t => ({
-                          color: t.palette.primary.dark
+                          color: t.palette.primary.main
                         })}
                       />
                     </IconButton>
@@ -160,6 +181,19 @@ export default function Home() {
           mb: 10
         }}
       >
+        {showSpinner && (
+          <CardMedia
+            height={100}
+            component="img"
+            image={'/spinner.gif'}
+            alt="service"
+            sx={{
+              width: '100px',
+              display: 'block',
+              margin: 'auto'
+            }}
+          />
+        )}
         {resultToShow?.length ? (
           <Grid container spacing={2}>
             {resultToShow.map((r, i) => {
@@ -173,7 +207,7 @@ export default function Home() {
                     alignItems: 'center'
                   }}
                 >
-                  <ServiceCard key={i} service={r} />
+                  <ServiceCard key={i} service={r} user={users.find(u => u.id === r.userId)} />
                 </Grid>
               )
             })}

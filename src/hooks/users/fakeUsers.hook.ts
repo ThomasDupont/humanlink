@@ -33,5 +33,7 @@ export const useUser = (): HookInterface => {
     return parseUser(getRandomProfile()) ?? null
   }, [])
 
-  return { getUserById }
+  const getUserByIds = (ids: number[]): Promise<User[]> => Promise.resolve([])
+
+  return { getUserById, getUserByIds }
 }

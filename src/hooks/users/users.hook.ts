@@ -16,5 +16,15 @@ export const useUser = (): HookInterface => {
     })
   }, [])
 
-  return { getUserById }
+  const getUserByIds = useCallback((ids: number[]) => {
+    return trpcUtils.get.userByIds.fetch(ids).then(users => {
+      return users.map(user => ({
+        ...user,
+        createdAt: new Date(user.createdAt),
+        certifiedDate: user.certifiedDate ? new Date(user.certifiedDate) : null
+      }))
+    })
+  }, [])
+
+  return { getUserById, getUserByIds }
 }

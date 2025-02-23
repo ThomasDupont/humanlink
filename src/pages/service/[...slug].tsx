@@ -1,11 +1,48 @@
 import { useCheckUrl } from '@/hooks/checkUrl.hook'
-import { StyledGrid } from '@/materials/styledElement'
+import { StyledBadge, StyledGrid } from '@/materials/styledElement'
 import { ServiceFromDB } from '@/types/Services.type'
 import { trpc } from '@/utils/trpc'
-import { Container, Grid2 as Grid, Typography } from '@mui/material'
+import { Payment, Schedule, TipsAndUpdates, Verified } from '@mui/icons-material'
+import {
+  Avatar,
+  Box,
+  Button,
+  CardMedia,
+  Container,
+  Divider,
+  Grid2 as Grid,
+  List,
+  ListItem,
+  ListItemIcon,
+  Stack,
+  Typography
+} from '@mui/material'
+import { Currency, Price } from '@prisma/client'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import z from 'zod'
+
+const managePrice = (price: Price) => {
+  const priceCurrencyToDisplayCurrency = (currency: Currency) => {
+    const cur = {
+      [Currency.EUR]: '{price} €',
+      [Currency.USD]: '$ {price}'
+    }
+
+    return cur[currency]
+  }
+
+  const stringPrice = (price.number / 100).toString()
+
+  switch (price.type) {
+    case 'fix':
+      return `À partir de : ${priceCurrencyToDisplayCurrency(price.currency).replace('{price}', stringPrice)}`
+    case 'fixedPerItem':
+      return `À partir de : ${priceCurrencyToDisplayCurrency(price.currency).replace('{price}', stringPrice)} par réalisation`
+    case 'percent':
+      return `Commission de ${stringPrice}%`
+  }
+}
 
 function Service({ userId, serviceId }: { userId: number; serviceId: number }) {
   const { data: user, status } = trpc.get.userById.useQuery(userId)
@@ -26,6 +63,8 @@ function Service({ userId, serviceId }: { userId: number; serviceId: number }) {
     return <p>Service non trouvé</p>
   }
 
+  const price = managePrice(service.prices[0])
+
   return (
     <Container maxWidth="lg">
       <Grid
@@ -35,10 +74,113 @@ function Service({ userId, serviceId }: { userId: number; serviceId: number }) {
           pt: 20
         }}
       >
-        <StyledGrid size={{ xs: 12, md: 6 }}>
-          <Typography variant="body1" component="h1">
+        <Grid
+          size={{ xs: 12, md: 8 }}
+          sx={{
+            mb: 10
+          }}
+        >
+          <Typography gutterBottom variant="h3" component="h1">
             {service.title}
           </Typography>
+          <Typography gutterBottom variant="body1">
+            {service.descriptionShort}
+          </Typography>
+          <Divider
+            sx={{
+              m: 4
+            }}
+          />
+          <Stack direction="row" spacing={2}>
+            <StyledBadge
+              overlap="circular"
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+              variant="dot"
+            >
+              <Avatar alt={`${user.firstname} ${user.lastname}`} src={user.image ?? undefined} />
+            </StyledBadge>
+            <Box>
+              <Stack direction="row" spacing={2}>
+                <Typography variant="body1">{`${user.firstname} ${user.lastname}`}</Typography>
+                <Verified
+                  sx={{
+                    color: 'primary.dark'
+                  }}
+                />
+              </Stack>
+              <Typography variant="body2">{user.description}</Typography>
+            </Box>
+          </Stack>
+          <Stack
+            direction="row"
+            justifyContent={'space-between'}
+            sx={{
+              mt: 4
+            }}
+          >
+            <Typography variant="body2">Langues : {service.langs.join(' | ')}</Typography>
+            <Typography variant="body2">#{service.category}</Typography>
+          </Stack>
+          <CardMedia
+            component="img"
+            image={`https://picsum.photos/1000/625?random=${service.id}`}
+            alt="service"
+            sx={t => ({
+              mt: 4,
+              borderRadius: `calc(${t.shape.borderRadius}px + 8px)`
+            })}
+          />
+          <Typography
+            variant="body1"
+            sx={{
+              mt: 4
+            }}
+          >
+            {service.description}
+          </Typography>
+        </Grid>
+        <StyledGrid
+          size={{ xs: 12, md: 4 }}
+          sx={t => ({
+            mb: 10,
+            position: 'sticky',
+            top: 160,
+            maxHeight: '500px',
+            '&:hover': {
+              boxShadow: t.shadows[1]
+            }
+          })}
+        >
+          <Typography variant="h4" component="p">
+            {price}
+          </Typography>
+          <List>
+            <ListItem>
+              <ListItemIcon>
+                <TipsAndUpdates />
+              </ListItemIcon>
+              <Typography variant="body2" component="p">
+                Prix et commissions négociables avec le prestataire
+              </Typography>
+            </ListItem>
+            <ListItem>
+              <ListItemIcon>
+                <Schedule />
+              </ListItemIcon>
+              <Typography variant="body2" component="p">
+                Répond en moins de 12 heures
+              </Typography>
+            </ListItem>
+            <ListItem>
+              <ListItemIcon>
+                <Payment />
+              </ListItemIcon>
+              <Typography variant="body2" component="p">
+                Paiement après validation de la prestation
+              </Typography>
+            </ListItem>
+          </List>
+          <Button variant="contained">Prendre contact</Button>
         </StyledGrid>
       </Grid>
     </Container>
