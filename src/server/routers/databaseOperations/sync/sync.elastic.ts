@@ -6,11 +6,11 @@ import { AxiosError, AxiosInstance } from 'axios'
 // const RETRY = 2
 
 export const syncElastic = (elastic: AxiosInstance) => {
-  const sync = async ({ id, ...rawService }: Service & { prices: Price[] }) => {
+  const sync = async ({ id, ...service }: Service & { prices: Price[] }) => {
     const request = {
       doc: {
-        ...rawService,
-        fulltext: `${rawService.title} ${rawService.descriptionShort} ${rawService.description}`
+        ...service,
+        fulltext: `${service.title} ${service.descriptionShort} ${service.description}`
       },
       doc_as_upsert: true
     }
