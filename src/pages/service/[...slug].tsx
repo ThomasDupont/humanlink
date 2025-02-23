@@ -18,7 +18,9 @@ function Service({ userId, serviceId }: { userId: number; serviceId: number }) {
     return <p>Error</p>
   }
 
-  const service: ServiceFromDB | undefined = user.services.find(service => service.id === serviceId)
+  const service: ServiceFromDB | undefined = user.services.find(
+    (service: ServiceFromDB) => service.id === serviceId
+  )
 
   if (!service) {
     return <p>Service non trouvé</p>
