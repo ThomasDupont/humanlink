@@ -110,7 +110,7 @@ function Service({ userId, serviceId }: { userId: number; serviceId: number }) {
                   }}
                 />
               </Stack>
-              <Typography variant="body2">{user.description}</Typography>
+              <Typography variant="body2">{user.jobTitle}</Typography>
             </Box>
           </Stack>
           <Stack
@@ -139,6 +139,17 @@ function Service({ userId, serviceId }: { userId: number; serviceId: number }) {
             }}
           >
             {service.description}
+          </Typography>
+          <Divider
+            sx={{
+              m: 4
+            }}
+          />
+          <Typography gutterBottom variant="h4" component="p">
+            À propos de {user.firstname} {user.lastname}
+          </Typography>
+          <Typography gutterBottom variant="body1">
+            {user.description}
           </Typography>
         </Grid>
         <StyledGrid
