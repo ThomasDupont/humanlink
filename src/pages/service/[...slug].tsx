@@ -1,5 +1,6 @@
 import { useCheckUrl } from '@/hooks/checkUrl.hook'
 import { StyledGrid } from '@/materials/styledElement'
+import { ServiceFromDB } from '@/types/Services.type'
 import { trpc } from '@/utils/trpc'
 import { Container, Grid2 as Grid, Typography } from '@mui/material'
 import { useRouter } from 'next/navigation'
@@ -17,7 +18,7 @@ function Service({ userId, serviceId }: { userId: number; serviceId: number }) {
     return <p>Error</p>
   }
 
-  const service = user.services.find(service => service.id === serviceId)
+  const service: ServiceFromDB | undefined = user.services.find(service => service.id === serviceId)
 
   if (!service) {
     return <p>Service non trouvé</p>
