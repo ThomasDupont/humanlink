@@ -92,13 +92,15 @@ function Service({ userId, serviceId }: { userId: number; serviceId: number }) {
             }}
           />
           <Stack direction="row" spacing={2}>
-            <StyledBadge
-              overlap="circular"
-              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-              variant="dot"
-            >
-              <Avatar alt={`${user.firstname} ${user.lastname}`} src={user.image ?? undefined} />
-            </StyledBadge>
+            <Box>
+              <StyledBadge
+                overlap="circular"
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                variant="dot"
+              >
+                <Avatar alt={`${user.firstname} ${user.lastname}`} src={user.image ?? undefined} />
+              </StyledBadge>
+            </Box>
             <Box>
               <Stack direction="row" spacing={2}>
                 <Typography variant="body1">{`${user.firstname} ${user.lastname}`}</Typography>
