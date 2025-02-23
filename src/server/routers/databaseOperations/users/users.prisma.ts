@@ -1,4 +1,4 @@
-import { UserWithServicesWithPrices } from '@/types/user.type'
+import { UserWithServicesWithPrices } from '@/types/User.type'
 import { PrismaClient, User } from '@prisma/client'
 
 export const userCrud = (prisma: PrismaClient) => {
