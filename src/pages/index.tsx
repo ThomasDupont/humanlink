@@ -18,12 +18,24 @@ import { StyledGrid } from '@/materials/styledElement'
 import { SwitchText } from '@/components/SwitchText'
 import { getUserHook } from '@/hooks/users/hook.factory'
 import { User } from '@prisma/client'
+import { GetStaticProps } from 'next'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation } from 'next-i18next'
 
 const RESULT_NUMBER = 3
 const useMatcherHook = getSearchClientHook('elastic')
 const useUser = getUserHook('real')
 
+export const getStaticProps: GetStaticProps = async ({ locale }) => {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale ?? 'en', ['common', 'home']))
+    }
+  }
+}
+
 export default function Home() {
+  const { t } = useTranslation('home')
   const [message, setMessage] = useState<string>()
   const [users, setUsers] = useState<User[]>([])
   const [showSpinner, setShowSpinner] = useState<boolean>(false)
@@ -72,7 +84,7 @@ export default function Home() {
       >
         <StyledGrid size={{ xs: 12, md: 6 }}>
           <Typography variant="body1" component="h1">
-            Nous sélectionnons et certifions nos freelances pour garantir le meilleur à vos projets
+            {t('textHeadline1')}
           </Typography>
           <CardMedia
             component="img"
@@ -83,7 +95,7 @@ export default function Home() {
         </StyledGrid>
         <StyledGrid size={{ xs: 12, md: 6 }}>
           <Typography variant="body1" component="p">
-            Paiement uniquement après la livraison de votre commande
+            {t('textHeadline2')}
           </Typography>
           <Box
             sx={{
@@ -122,7 +134,7 @@ export default function Home() {
             type="textarea"
             variant="outlined"
             color="primary"
-            label="Décrivez votre besoin ou votre projet"
+            label={t('textfieldPlaceholder')}
             onChange={e => setMessage(e.target.value)}
             value={message}
             fullWidth
@@ -158,12 +170,8 @@ export default function Home() {
           />
         </form>
         <SwitchText
-          texts={[
-            "J'ai un problème avec mon chat",
-            'Je veux détourer des images',
-            'Il me faut un site web'
-          ]}
-          prefix="Exemple :"
+          texts={[t('exampleSearch1'), t('exampleSearch2'), t('exampleSearch3')]}
+          prefix={`${t('example')} :`}
         />
       </Box>
       <Box

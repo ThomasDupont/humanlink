@@ -1,5 +1,6 @@
 import { Instagram, LinkedIn } from '@mui/icons-material'
 import { Box, Container, IconButton, Typography } from '@mui/material'
+import { useTranslation } from 'next-i18next'
 
 const linkBoxStyle = {
   display: 'flex',
@@ -17,6 +18,8 @@ const linkTypoStyle = {
 }
 
 export const Footer = () => {
+  const { t } = useTranslation('common')
+
   return (
     <Container
       component={'footer'}
@@ -67,50 +70,50 @@ export const Footer = () => {
         >
           <Box sx={linkBoxStyle}>
             <Typography gutterBottom variant="h4" component={'p'}>
-              Société
+              {t('company')}
             </Typography>
             <Typography sx={linkTypoStyle} variant="body1">
-              Mentions légales
+              {t('legals')}
             </Typography>
             <Typography sx={linkTypoStyle} variant="body1">
-              Politique de confidentialité
+              {t('privacy')}
             </Typography>
             <Typography sx={linkTypoStyle} variant="body1">
-              Carrière
+              {t('job')}
             </Typography>
             <Typography sx={linkTypoStyle} variant="body1">
-              Contact
+              {t('contact')}
             </Typography>
           </Box>
           <Box sx={linkBoxStyle}>
             <Typography gutterBottom variant="h4" component={'p'}>
-              Services
+              {t('services')}
             </Typography>
             <Typography sx={linkTypoStyle} variant="body1">
-              dashboard freelance
+              {t('freelanceDashboard')}
             </Typography>
             <Typography sx={linkTypoStyle} variant="body1">
-              dashboard client
+              {t('customerDashboard')}
             </Typography>
             <Typography sx={linkTypoStyle} variant="body1">
-              messagerie
+              {t('chat')}
             </Typography>
             <Typography sx={linkTypoStyle} variant="body1">
-              Profil
+              {t('profile')}
             </Typography>
           </Box>
           <Box sx={linkBoxStyle}>
             <Typography gutterBottom variant="h4" component={'p'}>
-              A propos
+              {t('about')}
             </Typography>
             <Typography sx={linkTypoStyle} variant="body1">
-              Qui sommes-nous ?
+              {t('whoWeAre')}
             </Typography>
             <Typography sx={linkTypoStyle} variant="body1">
-              Nos engagements
+              {t('ourEngagment')}
             </Typography>
             <Typography sx={linkTypoStyle} variant="body1">
-              Notre vision
+              {t('ourVision')}
             </Typography>
           </Box>
         </Box>

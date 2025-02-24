@@ -1,8 +1,11 @@
-import { useCheckUrl } from '@/hooks/checkUrl.hook'
+import BaseModal from '@/components/BaseModal'
+import LoginModal from '@/components/Modals/Login.modal'
+import { useAuthSession } from '@/hooks/nextAuth.hook'
 import { StyledBadge, StyledGrid } from '@/materials/styledElement'
 import { ServiceFromDB } from '@/types/Services.type'
 import { trpc } from '@/utils/trpc'
 import { Payment, Schedule, TipsAndUpdates, Verified } from '@mui/icons-material'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import {
   Avatar,
   Box,
@@ -18,9 +21,10 @@ import {
   Typography
 } from '@mui/material'
 import { Currency, Price } from '@prisma/client'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { GetStaticPaths, GetStaticProps } from 'next'
+import { useState } from 'react'
 import z from 'zod'
+import { useTranslation } from 'next-i18next'
 
 const managePrice = (price: Price) => {
   const priceCurrencyToDisplayCurrency = (currency: Currency) => {
@@ -44,8 +48,54 @@ const managePrice = (price: Price) => {
   }
 }
 
-function Service({ userId, serviceId }: { userId: number; serviceId: number }) {
+export const getStaticPaths: GetStaticPaths = ({ locales }) => {
+  const paths = locales
+    ? locales.map(locale => ({
+        params: { slug: ['10', '12'] },
+        locale
+      }))
+    : [{ params: { slug: ['10', '12'] }, locale: 'en' }]
+
+  return {
+    paths,
+    fallback: 'blocking'
+  }
+}
+
+const slugSchema = z.array(z.string().regex(/^\d+$/)).length(2)
+
+type Props = {
+  userId: number
+  serviceId: number
+}
+
+export const getStaticProps: GetStaticProps<Props> = async ({ locale, params }) => {
+  const slug = params?.slug || []
+
+  const validation = slugSchema.safeParse(slug)
+
+  if (!validation.success) {
+    return { notFound: true }
+  }
+
+  const [userId, serviceId] = validation.data.map(Number)
+
+  return {
+    props: {
+      userId,
+      serviceId,
+      ...(await serverSideTranslations(locale ?? 'en', ['service', 'common']))
+    }
+  }
+}
+
+export default function Service({ userId, serviceId }: Props) {
+  const { t } = useTranslation('service')
+
   const { data: user, status } = trpc.get.userById.useQuery(userId)
+  const [openLoginModal, setOpenLoginModal] = useState<boolean>(false)
+
+  const { connectedStatus } = useAuthSession()
 
   if (!user) {
     return <p>Loading...</p>
@@ -60,10 +110,14 @@ function Service({ userId, serviceId }: { userId: number; serviceId: number }) {
   )
 
   if (!service) {
-    return <p>Service non trouvé</p>
+    return <p>{t('notFoundService')}</p>
   }
 
   const price = managePrice(service.prices[0])
+
+  const openChatOrLoginModal = () => {
+    setOpenLoginModal(true)
+  }
 
   return (
     <Container maxWidth="lg">
@@ -120,7 +174,9 @@ function Service({ userId, serviceId }: { userId: number; serviceId: number }) {
               mt: 4
             }}
           >
-            <Typography variant="body2">Langues : {service.langs.join(' | ')}</Typography>
+            <Typography variant="body2">
+              {t('langs')} : {service.langs.join(' | ')}
+            </Typography>
             <Typography variant="body2">#{service.category}</Typography>
           </Stack>
           <CardMedia
@@ -146,7 +202,7 @@ function Service({ userId, serviceId }: { userId: number; serviceId: number }) {
             }}
           />
           <Typography gutterBottom variant="h4" component="p">
-            À propos de {user.firstname} {user.lastname}
+            {t('aboutOf')} {user.firstname} {user.lastname}
           </Typography>
           <Typography gutterBottom variant="body1">
             {user.description}
@@ -173,7 +229,7 @@ function Service({ userId, serviceId }: { userId: number; serviceId: number }) {
                 <TipsAndUpdates />
               </ListItemIcon>
               <Typography variant="body2" component="p">
-                Prix et commissions négociables avec le prestataire
+                {t('priceAndCommissionsTradable')}
               </Typography>
             </ListItem>
             <ListItem>
@@ -181,7 +237,7 @@ function Service({ userId, serviceId }: { userId: number; serviceId: number }) {
                 <Schedule />
               </ListItemIcon>
               <Typography variant="body2" component="p">
-                Répond en moins de 12 heures
+                {t('answerInLessThan')} 12 {t('hours')}
               </Typography>
             </ListItem>
             <ListItem>
@@ -189,39 +245,18 @@ function Service({ userId, serviceId }: { userId: number; serviceId: number }) {
                 <Payment />
               </ListItemIcon>
               <Typography variant="body2" component="p">
-                Paiement après validation de la prestation
+                {t('paiementAfterValidation')}
               </Typography>
             </ListItem>
           </List>
-          <Button variant="contained">Prendre contact</Button>
+          <Button onClick={() => openChatOrLoginModal()} variant="contained">
+            {t('takeContact')}
+          </Button>
+          <BaseModal open={openLoginModal} handleClose={() => setOpenLoginModal(false)}>
+            <LoginModal />
+          </BaseModal>
         </StyledGrid>
       </Grid>
     </Container>
   )
-}
-
-const urlParamsCodec = z.tuple([z.string(), z.string(), z.coerce.number(), z.coerce.number()])
-
-export default function DecodeParam() {
-  const { validateUrlParam } = useCheckUrl(urlParamsCodec)
-  const [ids, setids] = useState<[number, number]>()
-  const router = useRouter()
-
-  useEffect(() => {
-    const params = validateUrlParam(location.pathname)
-
-    if (params.success) {
-      setids(params.data.slice(params.data.length - 2) as [number, number])
-    } else {
-      router.push('/404')
-    }
-  }, [])
-
-  if (!ids) {
-    return <p>Loading...</p>
-  }
-
-  const [userId, serviceId] = ids
-
-  return <Service userId={userId} serviceId={serviceId} />
 }

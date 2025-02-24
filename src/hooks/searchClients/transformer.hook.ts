@@ -1,4 +1,3 @@
-'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { HookInterface } from './hook.interface'
 import { ServiceInElastic } from '@/types/Services.type'

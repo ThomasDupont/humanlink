@@ -8,12 +8,15 @@ import {
   Divider,
   Drawer,
   Box,
-  Typography
+  Typography,
+  Avatar
 } from '@mui/material'
 import { AccountCircle, Menu as MenuIcon, Message, NotificationsRounded } from '@mui/icons-material'
 import { CloseRounded as CloseRoundedIcon } from '@mui/icons-material'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import { useSession } from 'next-auth/react'
+import { useTranslation } from 'next-i18next'
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   display: 'flex',
@@ -29,7 +32,14 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   padding: '8px 12px'
 }))
 
+const SmallAvatar = styled(Avatar)(() => ({
+  width: 24,
+  height: 24
+}))
+
 const Icons = ({ mobile }: { mobile: boolean }) => {
+  const { data: session } = useSession()
+
   return (
     <Box
       sx={{
@@ -43,7 +53,11 @@ const Icons = ({ mobile }: { mobile: boolean }) => {
         <Message color="secondary" fontSize="medium" />
       </IconButton>
       <IconButton>
-        <AccountCircle color="secondary" fontSize="medium" />
+        {session ? (
+          <SmallAvatar src={session?.user?.image ?? undefined} />
+        ) : (
+          <AccountCircle color="secondary" fontSize="medium" />
+        )}
       </IconButton>
     </Box>
   )
@@ -60,7 +74,9 @@ const Title = () => {
 }
 
 export default function Header() {
+  const { t } = useTranslation('common')
   const [open, setOpen] = useState(false)
+
   const { pathname } = useRouter()
 
   const toggleDrawer = (newOpen: boolean) => () => {
@@ -89,7 +105,7 @@ export default function Header() {
               <Title />
               <Box sx={{ pt: '4px' }}>
                 <Typography color="secondary" variant="body1" component="p">
-                  Les meilleurs des freelances à votre service
+                  {t('navbarHeadline')}
                 </Typography>
               </Box>
             </Box>

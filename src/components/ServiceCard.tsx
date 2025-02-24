@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import CardMedia from '@mui/material/CardMedia'
@@ -16,6 +17,7 @@ import { Box, Tooltip } from '@mui/material'
 import { User } from '@prisma/client'
 
 export default function ServiceCard({ service, user }: { service: ServiceInElastic; user?: User }) {
+  const router = useRouter()
   return (
     user && (
       <Card
@@ -31,7 +33,7 @@ export default function ServiceCard({ service, user }: { service: ServiceInElast
           }
         })}
       >
-        <Link href={`/service/${user.id}/${service.id}`} target="_blank">
+        <Link href={`/${router.locale ?? 'en'}/service/${user.id}/${service.id}`} target="_blank">
           <CardHeader
             avatar={
               <Avatar
