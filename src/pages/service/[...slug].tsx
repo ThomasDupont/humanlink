@@ -70,6 +70,7 @@ type Props = {
 }
 
 export const getStaticProps: GetStaticProps<Props> = async ({ locale, params }) => {
+  console.log(`📢 Chargement des traductions pour locale : ${locale}`)
   const slug = params?.slug || []
 
   const validation = slugSchema.safeParse(slug)
