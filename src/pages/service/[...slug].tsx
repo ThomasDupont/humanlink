@@ -1,6 +1,6 @@
 import BaseModal from '@/components/BaseModal'
 import LoginModal from '@/components/Modals/Login.modal'
-import { useAuthSession } from '@/hooks/nextAuth.hook'
+// import { useAuthSession } from '@/hooks/nextAuth.hook'
 import { StyledBadge, StyledGrid } from '@/materials/styledElement'
 import { ServiceFromDB } from '@/types/Services.type'
 import { trpc } from '@/utils/trpc'
@@ -95,7 +95,7 @@ export default function Service({ userId, serviceId }: Props) {
   const { data: user, status } = trpc.get.userById.useQuery(userId)
   const [openLoginModal, setOpenLoginModal] = useState<boolean>(false)
 
-  const { connectedStatus } = useAuthSession()
+  // const { connectedStatus } = useAuthSession()
 
   if (!user) {
     return <p>Loading...</p>
