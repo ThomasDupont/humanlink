@@ -22,7 +22,7 @@ import {
 } from '@mui/material'
 import { Currency, Price } from '@prisma/client'
 import { GetStaticPaths, GetStaticProps } from 'next'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import z from 'zod'
 import { useTranslation } from 'next-i18next'
 
@@ -90,7 +90,12 @@ export const getStaticProps: GetStaticProps<Props> = async ({ locale, params }) 
 }
 
 export default function Service({ userId, serviceId }: Props) {
-  const { t } = useTranslation('service')
+  const { t, i18n } = useTranslation('service')
+
+  useEffect(() => {
+    console.log('Locale active :', i18n.language)
+    console.log('Traductions chargées :', i18n.store.data)
+  }, [i18n.language])
 
   const { data: user, status } = trpc.get.userById.useQuery(userId)
   const [openLoginModal, setOpenLoginModal] = useState<boolean>(false)
