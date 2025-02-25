@@ -17,6 +17,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useSession } from 'next-auth/react'
 import { useTranslation } from 'next-i18next'
+import BaseModal from './BaseModal'
+import AccountModal from './Modals/Account.modal'
+import LoginModal from './Modals/Login.modal'
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   display: 'flex',
@@ -39,6 +42,8 @@ const SmallAvatar = styled(Avatar)(() => ({
 
 const Icons = ({ mobile }: { mobile: boolean }) => {
   const { data: session } = useSession()
+  const [openAccountModal, setOpenAccountModal] = useState(false)
+  const [openLoginModal, setOpenLoginModal] = useState(false)
 
   return (
     <Box
@@ -54,9 +59,26 @@ const Icons = ({ mobile }: { mobile: boolean }) => {
       </IconButton>
       <IconButton>
         {session ? (
-          <SmallAvatar src={session?.user?.image ?? undefined} />
+          <>
+            <SmallAvatar
+              onClick={() => setOpenAccountModal(true)}
+              src={session?.user?.image ?? undefined}
+            />
+            <BaseModal open={openAccountModal} handleClose={() => setOpenAccountModal(false)}>
+              <AccountModal user={session.user} />
+            </BaseModal>
+          </>
         ) : (
-          <AccountCircle color="secondary" fontSize="medium" />
+          <>
+            <AccountCircle
+              onClick={() => setOpenLoginModal(true)}
+              color="secondary"
+              fontSize="medium"
+            />
+            <BaseModal open={openLoginModal} handleClose={() => setOpenLoginModal(false)}>
+              <LoginModal />
+            </BaseModal>
+          </>
         )}
       </IconButton>
     </Box>
