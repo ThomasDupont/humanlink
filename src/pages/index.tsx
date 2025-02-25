@@ -12,8 +12,8 @@ import {
 import { FormEvent, useState, KeyboardEvent, useEffect } from 'react'
 import ForwardIcon from '@mui/icons-material/Forward'
 import { Search } from '@mui/icons-material'
-import { getSearchClientHook } from '../hooks/searchClients/hook.factory'
-import ServiceCard from '../components/ServiceCard'
+import { getSearchClientHook } from '@/hooks/searchClients/hook.factory'
+import ServiceCard from '@/components/ServiceCard'
 import { StyledGrid } from '@/materials/styledElement'
 import { SwitchText } from '@/components/SwitchText'
 import { getUserHook } from '@/hooks/users/hook.factory'
@@ -21,6 +21,7 @@ import { User } from '@prisma/client'
 import { GetStaticProps } from 'next'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import { useTranslation } from 'next-i18next'
+import { Spinner } from '@/components/Spinner'
 
 const RESULT_NUMBER = 3
 const useMatcherHook = getSearchClientHook('elastic')
@@ -189,19 +190,7 @@ export default function Home() {
           mb: 10
         }}
       >
-        {showSpinner && (
-          <CardMedia
-            height={100}
-            component="img"
-            image={'/spinner.gif'}
-            alt="service"
-            sx={{
-              width: '100px',
-              display: 'block',
-              margin: 'auto'
-            }}
-          />
-        )}
+        {showSpinner && <Spinner />}
         {resultToShow?.length ? (
           <Grid container spacing={2}>
             {resultToShow.map((r, i) => {

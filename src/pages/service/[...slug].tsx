@@ -22,9 +22,12 @@ import {
 } from '@mui/material'
 import { Currency, Price } from '@prisma/client'
 import { GetStaticPaths, GetStaticProps } from 'next'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import z from 'zod'
 import { useTranslation } from 'next-i18next'
+import { notFound } from 'next/navigation'
+import { logger } from '../../server/logger'
+import { Spinner } from '../../components/Spinner'
 
 const managePrice = (price: Price) => {
   const priceCurrencyToDisplayCurrency = (currency: Currency) => {
@@ -70,7 +73,6 @@ type Props = {
 }
 
 export const getStaticProps: GetStaticProps<Props> = async ({ locale, params }) => {
-  console.log(`📢 Chargement des traductions pour locale : ${locale}`)
   const slug = params?.slug || []
 
   const validation = slugSchema.safeParse(slug)
@@ -91,24 +93,51 @@ export const getStaticProps: GetStaticProps<Props> = async ({ locale, params }) 
 }
 
 export default function Service({ userId, serviceId }: Props) {
-  const { t, i18n } = useTranslation('service')
+  const { t } = useTranslation('service')
 
+  /*
   useEffect(() => {
     console.log('Locale active :', i18n.language)
     console.log('Traductions chargées :', i18n.store.data)
   }, [i18n.language])
+  */
 
-  const { data: user, status } = trpc.get.userById.useQuery(userId)
+  const { data: user, status, error } = trpc.get.userById.useQuery(userId)
   const [openLoginModal, setOpenLoginModal] = useState<boolean>(false)
 
   // const { connectedStatus } = useAuthSession()
 
   if (!user) {
-    return <p>Loading...</p>
+    return (
+      <Container maxWidth="lg">
+        <Box
+          sx={{
+            pt: 20
+          }}
+        >
+          <Spinner />
+        </Box>
+      </Container>
+    )
   }
 
   if (status === 'error') {
-    return <p>Error</p>
+    logger.error({
+      error: 'trpcError',
+      message: error.message,
+      errorDetail: error
+    })
+    return (
+      <Container maxWidth="lg">
+        <Box
+          sx={{
+            pt: 20
+          }}
+        >
+          <Typography variant="body1">{error.message}</Typography>
+        </Box>
+      </Container>
+    )
   }
 
   const service: ServiceFromDB | undefined = user.services.find(
@@ -116,7 +145,7 @@ export default function Service({ userId, serviceId }: Props) {
   )
 
   if (!service) {
-    return <p>{t('notFoundService')}</p>
+    return notFound()
   }
 
   const price = managePrice(service.prices[0])
