@@ -1,6 +1,6 @@
 import BaseModal from '@/components/BaseModal'
 import LoginModal from '@/components/Modals/Login.modal'
-// import { useAuthSession } from '@/hooks/nextAuth.hook'
+import { useAuthSession } from '@/hooks/nextAuth.hook'
 import { StyledBadge, StyledGrid } from '@/materials/styledElement'
 import { ServiceFromDB } from '@/types/Services.type'
 import { trpc } from '@/utils/trpc'
@@ -20,7 +20,6 @@ import {
   Stack,
   Typography
 } from '@mui/material'
-import { Currency, Price } from '@prisma/client'
 import { GetStaticPaths, GetStaticProps } from 'next'
 import { useState } from 'react'
 import z from 'zod'
@@ -28,28 +27,7 @@ import { useTranslation } from 'next-i18next'
 import { notFound } from 'next/navigation'
 import { logger } from '../../server/logger'
 import { Spinner } from '../../components/Spinner'
-
-const managePrice = (price: Price) => {
-  const priceCurrencyToDisplayCurrency = (currency: Currency) => {
-    const cur = {
-      [Currency.EUR]: '{price} €',
-      [Currency.USD]: '$ {price}'
-    }
-
-    return cur[currency]
-  }
-
-  const stringPrice = (price.number / 100).toString()
-
-  switch (price.type) {
-    case 'fix':
-      return `À partir de : ${priceCurrencyToDisplayCurrency(price.currency).replace('{price}', stringPrice)}`
-    case 'fixedPerItem':
-      return `À partir de : ${priceCurrencyToDisplayCurrency(price.currency).replace('{price}', stringPrice)} par réalisation`
-    case 'percent':
-      return `Commission de ${stringPrice}%`
-  }
-}
+import { useManagePrice } from '../../hooks/managePrice.hook'
 
 export const getStaticPaths: GetStaticPaths = ({ locales }) => {
   const paths = locales
@@ -94,6 +72,7 @@ export const getStaticProps: GetStaticProps<Props> = async ({ locale, params }) 
 
 export default function Service({ userId, serviceId }: Props) {
   const { t } = useTranslation('service')
+  const { managePrice } = useManagePrice()
 
   /*
   useEffect(() => {
@@ -105,7 +84,7 @@ export default function Service({ userId, serviceId }: Props) {
   const { data: user, status, error } = trpc.get.userById.useQuery(userId)
   const [openLoginModal, setOpenLoginModal] = useState<boolean>(false)
 
-  // const { connectedStatus } = useAuthSession()
+  const { connectedStatus } = useAuthSession()
 
   if (!user) {
     return (
@@ -151,7 +130,10 @@ export default function Service({ userId, serviceId }: Props) {
   const price = managePrice(service.prices[0])
 
   const openChatOrLoginModal = () => {
-    setOpenLoginModal(true)
+    if (connectedStatus === 'unauthenticated') {
+      setOpenLoginModal(true)
+    } else {
+    }
   }
 
   return (

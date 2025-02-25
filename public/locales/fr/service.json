@@ -6,5 +6,8 @@
   "hours": "heures",
   "answerInLessThan": "Répond en moins de",
   "paiementAfterValidation": "Paiement après validation de la prestation",
-  "takeContact": "Prendre contact"
+  "takeContact": "Prendre contact",
+  "startFrom": "À partir de ",
+  "perItem": "par réalisation",
+  "feesOf": "Commission de"
 }
