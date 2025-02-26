@@ -28,6 +28,7 @@ import { notFound } from 'next/navigation'
 import { logger } from '../../server/logger'
 import { Spinner } from '../../components/Spinner'
 import { useManagePrice } from '../../hooks/managePrice.hook'
+import { useRouter } from 'next/router'
 
 export const getStaticPaths: GetStaticPaths = ({ locales }) => {
   const paths = locales
@@ -73,6 +74,7 @@ export const getStaticProps: GetStaticProps<Props> = async ({ locale, params }) 
 export default function Service({ userId, serviceId }: Props) {
   const { t } = useTranslation('service')
   const { managePrice } = useManagePrice()
+  const router = useRouter()
 
   /*
   useEffect(() => {
@@ -81,7 +83,7 @@ export default function Service({ userId, serviceId }: Props) {
   }, [i18n.language])
   */
 
-  const { data: user, status, error } = trpc.get.userById.useQuery(userId)
+  const { data: user, status, error } = trpc.get.userById.useQuery(userId) // @todo use a slug
   const [openLoginModal, setOpenLoginModal] = useState<boolean>(false)
 
   const { connectedStatus } = useAuthSession()
@@ -120,7 +122,7 @@ export default function Service({ userId, serviceId }: Props) {
   }
 
   const service: ServiceFromDB | undefined = user.services.find(
-    (service: ServiceFromDB) => service.id === serviceId
+    (service: ServiceFromDB) => service.id === serviceId // @todo use a slug ??
   )
 
   if (!service) {
@@ -133,6 +135,7 @@ export default function Service({ userId, serviceId }: Props) {
     if (connectedStatus === 'unauthenticated') {
       setOpenLoginModal(true)
     } else {
+      router.push(`/${router.locale ?? 'en'}/chat?userId=${user.id}&serviceId=${service.id}`)
     }
   }
 

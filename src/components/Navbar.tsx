@@ -9,7 +9,8 @@ import {
   Drawer,
   Box,
   Typography,
-  Avatar
+  Avatar,
+  Button
 } from '@mui/material'
 import { AccountCircle, Menu as MenuIcon, Message, NotificationsRounded } from '@mui/icons-material'
 import { CloseRounded as CloseRoundedIcon } from '@mui/icons-material'
@@ -41,47 +42,63 @@ const SmallAvatar = styled(Avatar)(() => ({
 }))
 
 const Icons = ({ mobile }: { mobile: boolean }) => {
+  const { t } = useTranslation('common')
+
   const { data: session } = useSession()
   const [openAccountModal, setOpenAccountModal] = useState(false)
   const [openLoginModal, setOpenLoginModal] = useState(false)
 
   return (
-    <Box
-      sx={{
-        display: mobile ? { xs: 'block', md: 'none' } : { xs: 'none', md: 'block' }
-      }}
-    >
-      <IconButton>
-        <NotificationsRounded color="secondary" fontSize="medium" />
-      </IconButton>
-      <IconButton>
-        <Message color="secondary" fontSize="medium" />
-      </IconButton>
-      <IconButton>
-        {session ? (
-          <>
-            <SmallAvatar
-              onClick={() => setOpenAccountModal(true)}
-              src={session?.user?.image ?? undefined}
-            />
-            <BaseModal open={openAccountModal} handleClose={() => setOpenAccountModal(false)}>
-              <AccountModal user={session.user} />
-            </BaseModal>
-          </>
-        ) : (
-          <>
-            <AccountCircle
-              onClick={() => setOpenLoginModal(true)}
-              color="secondary"
-              fontSize="medium"
-            />
-            <BaseModal open={openLoginModal} handleClose={() => setOpenLoginModal(false)}>
-              <LoginModal />
-            </BaseModal>
-          </>
-        )}
-      </IconButton>
-    </Box>
+    <>
+      <Box
+        sx={{
+          pr: 4
+        }}
+      >
+        <Link href={`/concept`} target="blank">
+          <Button variant="text" color="secondary">
+            {t('ourConcept')}
+          </Button>
+        </Link>
+      </Box>
+
+      <Box
+        sx={{
+          display: mobile ? { xs: 'block', md: 'none' } : { xs: 'none', md: 'block' }
+        }}
+      >
+        <IconButton>
+          <NotificationsRounded color="secondary" fontSize="medium" />
+        </IconButton>
+        <IconButton>
+          <Message color="secondary" fontSize="medium" />
+        </IconButton>
+        <IconButton>
+          {session ? (
+            <>
+              <SmallAvatar
+                onClick={() => setOpenAccountModal(true)}
+                src={session?.user?.image ?? undefined}
+              />
+              <BaseModal open={openAccountModal} handleClose={() => setOpenAccountModal(false)}>
+                <AccountModal user={session.user} />
+              </BaseModal>
+            </>
+          ) : (
+            <>
+              <AccountCircle
+                onClick={() => setOpenLoginModal(true)}
+                color="secondary"
+                fontSize="medium"
+              />
+              <BaseModal open={openLoginModal} handleClose={() => setOpenLoginModal(false)}>
+                <LoginModal />
+              </BaseModal>
+            </>
+          )}
+        </IconButton>
+      </Box>
+    </>
   )
 }
 
