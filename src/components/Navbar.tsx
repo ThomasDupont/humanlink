@@ -52,11 +52,12 @@ const Icons = ({ mobile }: { mobile: boolean }) => {
     <>
       <Box
         sx={{
-          pr: 4
+          pr: 4,
+          display: mobile ? { xs: 'block', md: 'none' } : { xs: 'none', md: 'block' }
         }}
       >
-        <Link href={`/concept`} target="blank">
-          <Button variant="text" color="secondary">
+        <Link href={`/concept`} target="_blank">
+          <Button variant={mobile ? 'contained' : 'text'} color="secondary">
             {t('ourConcept')}
           </Button>
         </Link>
@@ -70,9 +71,13 @@ const Icons = ({ mobile }: { mobile: boolean }) => {
         <IconButton>
           <NotificationsRounded color="secondary" fontSize="medium" />
         </IconButton>
-        <IconButton>
-          <Message color="secondary" fontSize="medium" />
-        </IconButton>
+        {session && (
+          <Link href={`/chat`} target="_blank">
+            <IconButton>
+              <Message color="secondary" fontSize="medium" />
+            </IconButton>
+          </Link>
+        )}
         <IconButton>
           {session ? (
             <>

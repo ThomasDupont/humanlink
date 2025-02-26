@@ -209,7 +209,7 @@ export default function Concept() {
           <Trans t={t} i18nKey="gigEconomyText3" />
         </Typography>
         <Box maxWidth={'lg'} display={'flex'} flexDirection={'row'} justifyContent={'center'}>
-          <Link href="/" target="blank">
+          <Link href="/" target="_blank">
             <Button color="primary" variant="contained">
               {t('gigEconomyButton')}
             </Button>
