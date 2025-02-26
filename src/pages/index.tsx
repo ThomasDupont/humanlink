@@ -90,7 +90,7 @@ export default function Home() {
           <CardMedia
             component="img"
             sx={{ width: 150, height: 100 }}
-            image="certified-people.svg"
+            image="/illustrations/certified-people.svg"
             alt="Live from space album cover"
           />
         </StyledGrid>
@@ -110,14 +110,14 @@ export default function Home() {
             <CardMedia
               component="img"
               sx={{ width: 150, height: 80 }}
-              image="satisfaction.svg"
+              image="/illustrations/satisfaction.svg"
               alt="Live from space album cover"
             />
             <ForwardIcon fontSize="large" />
             <CardMedia
               component="img"
               sx={{ width: 150, height: 80 }}
-              image="paiement.svg"
+              image="/illustrations/paiement.svg"
               alt="Live from space album cover"
             />
           </Box>

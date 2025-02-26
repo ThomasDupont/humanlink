@@ -45,6 +45,11 @@ const theme = createTheme({
       fontWeight: 400,
       fontSize: 72
     },
+    h2: {
+      fontFamily: robotoCondensed.style.fontFamily,
+      fontWeight: 400,
+      fontSize: 36
+    },
     h3: {
       fontFamily: robotoCondensed.style.fontFamily,
       fontWeight: 400,

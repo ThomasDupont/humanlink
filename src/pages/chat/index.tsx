@@ -84,11 +84,11 @@ const Conversation = ({ userId }: { userId: number }) => {
         >
           <Divider />
           <Box
-            sx={t => ({
+            sx={{
               width: '100%',
               pl: 4,
               pr: 4
-            })}
+            }}
           >
             <TextField
               type="textarea"
