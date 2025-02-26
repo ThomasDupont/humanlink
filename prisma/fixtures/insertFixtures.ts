@@ -10,7 +10,12 @@ const prisma = new PrismaClient().$extends(withAccelerate())
 
 async function main() {
   const servicesWithPrice = services.map((service, index) => {
-    const { index: i, ...rawPrice } = prices[index]
+    const price = prices[index]
+
+    if (!price) {
+      return
+    }
+    const { index: i, ...rawPrice } = price
 
     return {
       ...service,
@@ -20,6 +25,10 @@ async function main() {
 
   for (let i = 0; i < users.length; i++) {
     const user = users[i]
+
+    if (!user) {
+      return
+    }
 
     const prismaUser = await prisma.user
       .delete({
@@ -43,8 +52,11 @@ async function main() {
     }
 
     const servicesOfUser = servicesWithPrice
-      .filter(service => service.index === i)
-      .map(({ index, ...raw }) => raw)
+      .filter(service => service!.index === i)
+      .map(el => {
+        const { index, ...raw } = el!
+        return raw
+      })
 
     const enrichedUser = {
       ...user,

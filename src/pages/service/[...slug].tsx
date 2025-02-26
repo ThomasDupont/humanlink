@@ -64,8 +64,8 @@ export const getStaticProps: GetStaticProps<Props> = async ({ locale, params }) 
 
   return {
     props: {
-      userId,
-      serviceId,
+      userId: userId ?? 0,
+      serviceId: serviceId ?? 0,
       ...(await serverSideTranslations(locale ?? 'en', ['service', 'common']))
     }
   }
@@ -126,10 +126,18 @@ export default function Service({ userId, serviceId }: Props) {
   )
 
   if (!service) {
+    console.error(`Service ${serviceId} not found`)
     return notFound()
   }
 
-  const price = managePrice(service.prices[0])
+  const priceInService = service.prices[0]
+
+  if (!priceInService) {
+    console.error(`Service ${serviceId} has no price`)
+    return notFound()
+  }
+
+  const price = managePrice(priceInService)
 
   const openChatOrLoginModal = () => {
     if (connectedStatus === 'unauthenticated') {

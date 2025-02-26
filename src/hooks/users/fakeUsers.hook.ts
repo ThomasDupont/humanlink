@@ -30,7 +30,8 @@ export const useUser = (): HookInterface => {
   })
 
   const getUserById = useCallback(async (id: number): Promise<User | null> => {
-    return parseUser(getRandomProfile()) ?? null
+    const fakeUser = getRandomProfile()
+    return fakeUser ? parseUser(fakeUser) : null
   }, [])
 
   const getUserByIds = (ids: number[]): Promise<User[]> => Promise.resolve([])

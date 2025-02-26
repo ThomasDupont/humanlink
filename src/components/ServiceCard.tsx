@@ -18,8 +18,10 @@ import { User } from '@prisma/client'
 
 export default function ServiceCard({ service, user }: { service: ServiceInElastic; user?: User }) {
   const router = useRouter()
+  const priceInService = service.prices[0]
   return (
-    user && (
+    user &&
+    priceInService && (
       <Card
         variant="outlined"
         sx={t => ({
@@ -87,7 +89,7 @@ export default function ServiceCard({ service, user }: { service: ServiceInElast
             </IconButton>
           </Box>
           <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-            <strong>À partir de {Math.floor(service.prices[0].number / 100)}€</strong>
+            <strong>À partir de {Math.floor(priceInService.number / 100)}€</strong>
           </Typography>
         </CardActions>
       </Card>
