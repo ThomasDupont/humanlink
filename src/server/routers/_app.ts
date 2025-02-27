@@ -5,6 +5,7 @@ import { performSearchWithAlgolia } from './searchService/searchWithAlgolia'
 import { elastic } from './searchService/elasticClient'
 import { algolia } from './searchService/algoliaClient'
 import { serviceOperations, userOperations } from './databaseOperations/prisma.provider'
+import config from '@/config'
 
 export const appRouter = router({
   healthcheck: publicProcedure.query(() => 'yay!'),
@@ -13,9 +14,7 @@ export const appRouter = router({
     serviceList: publicProcedure
       .input(z.object({ query: z.string(), limit: z.number().optional().default(3) }))
       .query(async options => {
-        const SEARCH_PROVIDER = 'elastic' as 'algolia' | 'elastic'
-
-        switch (SEARCH_PROVIDER) {
+        switch (config.backendSearchProvider) {
           case 'elastic':
             return await performSearchWithElastic(elastic)({ query: options.input.query })
           case 'algolia':

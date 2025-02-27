@@ -22,10 +22,11 @@ import { GetStaticProps } from 'next'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import { useTranslation } from 'next-i18next'
 import { Spinner } from '@/components/Spinner'
+import config from '@/config'
 
 const RESULT_NUMBER = 3
-const useMatcherHook = getSearchClientHook('elastic')
-const useUser = getUserHook('real')
+const useMatcherHook = getSearchClientHook(config.searchHookProvider)
+const useUser = getUserHook(config.userHookProvider)
 
 export const getStaticProps: GetStaticProps = async ({ locale }) => {
   return {
