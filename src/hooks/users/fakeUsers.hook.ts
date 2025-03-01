@@ -26,7 +26,8 @@ export const useUser = (): HookInterface => {
     description: '',
     jobTitle: '',
     isCertified: true,
-    certifiedDate: new Date()
+    certifiedDate: new Date(),
+    roles: ['USER']
   })
 
   const getUserById = useCallback(async (id: number): Promise<User | null> => {

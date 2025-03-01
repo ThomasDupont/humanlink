@@ -1,4 +1,4 @@
-// npx prisma migrate dev --name init
+// npx prisma migrate dev
 generator client {
   provider = "prisma-client-js"
 }
@@ -21,6 +21,12 @@ enum Country {
   UnitedKingdom
   Spain
   Italy
+  USA
+}
+
+enum Role {
+  USER
+  ADMIN
 }
 
 model User {
@@ -37,6 +43,7 @@ model User {
   certifiedDate   DateTime?
   image     String?
   country   Country
+  roles   Role[]
   services      Service[]
 }
 

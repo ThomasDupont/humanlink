@@ -2,7 +2,7 @@ import { UserWithServicesWithPrices } from '@/types/User.type'
 import { PrismaClient, User } from '@prisma/client'
 
 export const userCrud = (prisma: PrismaClient) => {
-  const createUser = (user: Omit<User, 'id'>): Promise<User> => {
+  const createUser = (user: Omit<User, 'id' | 'createdAt'>): Promise<User> => {
     return prisma.user.create({
       data: user
     })
@@ -36,6 +36,12 @@ export const userCrud = (prisma: PrismaClient) => {
     })
   }
 
+  const getUserByEmailWithoutService = (email: string): Promise<User | null> => {
+    return prisma.user.findUnique({
+      where: { email }
+    })
+  }
+
   const getUserByIds = (ids: number[]): Promise<UserWithServicesWithPrices[]> => {
     return prisma.user.findMany({
       where: {
@@ -53,5 +59,12 @@ export const userCrud = (prisma: PrismaClient) => {
     })
   }
 
-  return { createUser, updateUser, deleteUser, getUserById, getUserByIds }
+  return {
+    createUser,
+    updateUser,
+    deleteUser,
+    getUserById,
+    getUserByIds,
+    getUserByEmailWithoutService
+  }
 }

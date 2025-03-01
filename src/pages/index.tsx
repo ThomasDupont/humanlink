@@ -12,11 +12,11 @@ import {
 import { FormEvent, useState, KeyboardEvent, useEffect } from 'react'
 import ForwardIcon from '@mui/icons-material/Forward'
 import { Search } from '@mui/icons-material'
-import { getSearchClientHook } from '@/hooks/searchClients/hook.factory'
+import getSearchClientHook from '@/hooks/searchClients/hook.factory'
 import ServiceCard from '@/components/ServiceCard'
 import { StyledGrid } from '@/materials/styledElement'
 import { SwitchText } from '@/components/SwitchText'
-import { getUserHook } from '@/hooks/users/hook.factory'
+import getUserHook from '@/hooks/users/hook.factory'
 import { User } from '@prisma/client'
 import { GetStaticProps } from 'next'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
@@ -25,8 +25,8 @@ import { Spinner } from '@/components/Spinner'
 import config from '@/config'
 
 const RESULT_NUMBER = 3
-const useMatcherHook = getSearchClientHook(config.searchHookProvider)
-const useUser = getUserHook(config.userHookProvider)
+const useMatcherHook = getSearchClientHook[config.searchHookProvider]
+const useUser = getUserHook[config.userHookProvider]
 
 export const getStaticProps: GetStaticProps = async ({ locale }) => {
   return {

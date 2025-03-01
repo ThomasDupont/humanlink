@@ -21,7 +21,7 @@ import {
   Typography
 } from '@mui/material'
 import { GetStaticPaths, GetStaticProps } from 'next'
-import { useState } from 'react'
+import { ReactElement, useState } from 'react'
 import z from 'zod'
 import { useTranslation } from 'next-i18next'
 import { notFound } from 'next/navigation'
@@ -29,6 +29,20 @@ import { logger } from '../../server/logger'
 import { Spinner } from '../../components/Spinner'
 import { useManagePrice } from '../../hooks/managePrice.hook'
 import { useRouter } from 'next/router'
+
+const Base = ({ children }: { children: ReactElement }) => {
+  return (
+    <Container maxWidth="lg">
+      <Box
+        sx={{
+          pt: 20
+        }}
+      >
+        {children}
+      </Box>
+    </Container>
+  )
+}
 
 export const getStaticPaths: GetStaticPaths = ({ locales }) => {
   const paths = locales
@@ -86,19 +100,13 @@ export default function Service({ userId, serviceId }: Props) {
   const { data: user, status, error } = trpc.get.userById.useQuery(userId) // @todo use a slug
   const [openLoginModal, setOpenLoginModal] = useState<boolean>(false)
 
-  const { connectedStatus } = useAuthSession()
+  const { user: me } = useAuthSession()
 
   if (!user) {
     return (
-      <Container maxWidth="lg">
-        <Box
-          sx={{
-            pt: 20
-          }}
-        >
-          <Spinner />
-        </Box>
-      </Container>
+      <Base>
+        <Spinner />
+      </Base>
     )
   }
 
@@ -109,15 +117,9 @@ export default function Service({ userId, serviceId }: Props) {
       errorDetail: error
     })
     return (
-      <Container maxWidth="lg">
-        <Box
-          sx={{
-            pt: 20
-          }}
-        >
-          <Typography variant="body1">{error.message}</Typography>
-        </Box>
-      </Container>
+      <Base>
+        <Typography variant="body1">{error.message}</Typography>
+      </Base>
     )
   }
 
@@ -140,7 +142,7 @@ export default function Service({ userId, serviceId }: Props) {
   const price = managePrice(priceInService)
 
   const openChatOrLoginModal = () => {
-    if (connectedStatus === 'unauthenticated') {
+    if (!me) {
       setOpenLoginModal(true)
     } else {
       router.push(`/${router.locale ?? 'en'}/chat?userId=${user.id}&serviceId=${service.id}`)

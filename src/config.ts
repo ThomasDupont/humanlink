@@ -1,6 +1,7 @@
 export type UserHookProvider = 'real' | 'fake'
 export type SearchHookProvider = 'elastic' | 'transformer'
 export type BackendSearchProvider = 'algolia' | 'elastic'
+export type SuportedLocale = 'fr' | 'en'
 
 type Config = {
   userHookProvider: UserHookProvider

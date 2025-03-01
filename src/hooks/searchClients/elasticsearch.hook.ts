@@ -3,7 +3,7 @@ import { HookInterface } from './hook.interface'
 import { useState } from 'react'
 import { ServiceInElastic } from '@/types/Services.type'
 
-export const useElasticSearch: HookInterface = () => {
+export const useElasticSearch = (): HookInterface => {
   const [result, setResult] = useState<ServiceInElastic[]>()
   const trpcUtils = trpc.useUtils()
 

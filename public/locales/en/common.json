@@ -1,4 +1,7 @@
 {
+  "errors": {
+    "401": "You have no access to this page, thank to log you."
+  },
   "navbarHeadline": "The best freelancers at your service",
   "company": "Company",
   "services": "Services",
@@ -20,5 +23,14 @@
   "signOut": "Log out",
   "myDashboard": "My dashboard",
   "withLinkedin": "with LinkedIn",
-  "withGoogle": "with Google"
+  "withGoogle": "with Google",
+  "profilePageTitle": "My profile",
+  "firstname": "firstname",
+  "lastname": "lastname",
+  "email": "email",
+  "oauthProvider": "Connected with",
+  "creationDate": "Signup date",
+  "isFreelance": "Freelance profile",
+  "yes": "yes",
+  "no": "no"
 }

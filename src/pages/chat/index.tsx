@@ -137,9 +137,9 @@ const Contacts = () => {
 
 export default function Chat() {
   const router = useRouter()
-  const { connectedStatus } = useAuthSession()
+  const { user } = useAuthSession()
 
-  if (connectedStatus === 'unauthenticated') {
+  if (!user) {
     return <p>Not connected</p>
   }
 

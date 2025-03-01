@@ -1,4 +1,7 @@
 {
+  "errors": {
+    "401": "Vous n'avez pas accès à cette page, merci de vous connecter."
+  },
   "navbarHeadline": "Les meilleurs des freelances à votre service",
   "company": "Société",
   "services": "Services",
@@ -19,6 +22,15 @@
   "accountManagementTitle": "Mon profil",
   "signOut": "Se déconnecter",
   "myDashboard": "Mon tableau de bord",
-  "withLinkedin": "avec Linkedin",
-  "withGoogle": "avec Google"
+  "withLinkedin": "avec LinkedIn",
+  "withGoogle": "avec Google",
+  "profilePageTitle": "Mon profil",
+  "firstname": "prénom",
+  "lastname": "nom",
+  "email": "email",
+  "oauthProvider": "Connecté via",
+  "creationDate": "Date d'inscription",
+  "isFreelance": "Profil de freelance",
+  "yes": "oui",
+  "no": "non"
 }

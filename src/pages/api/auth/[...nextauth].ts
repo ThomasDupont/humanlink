@@ -1,12 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { env } from '@/server/env'
-import NextAuth from 'next-auth'
+import NextAuth, { NextAuthOptions } from 'next-auth'
 import LinkedinProvider, { LinkedInProfile } from 'next-auth/providers/linkedin'
 import GoogleProvider from 'next-auth/providers/google'
-import { NextAuthJsUser } from '@/types/User.type'
+import { User } from '@prisma/client'
+import { userOperations } from '@/server/routers/databaseOperations/prisma.provider'
+import { logger } from '@/server/logger'
 
-export const authOptions = {
-  // Configure one or more authentication providers
+export const authOptions: NextAuthOptions = {
+  secret: env.AUTH_SECRET,
   providers: [
     LinkedinProvider({
       clientId: env.LINKEDIN_ID,
@@ -32,27 +34,52 @@ export const authOptions = {
     })
   ],
   callbacks: {
-    async jwt(args: any) {
-      if (args.account) {
-        args.token.provider = args.account.provider
-        args.token.firstname = args.profile.given_name
-        args.token.lastname = args.profile.family_name
-        args.token.locale = args.profile.locale
-      }
-      return args.token
-    },
-    session({ session, token }: any) {
-      const user: NextAuthJsUser = {
-        ...session.user,
-        provider: token.provider,
-        firstname: token.firstname,
-        lastname: token.lastname,
-        locale: token.locale
+    async signIn({ user, account, profile }: any) {
+      const dbUser: Omit<User, 'id' | 'createdAt'> = {
+        firstname: profile.given_name,
+        lastname: profile.family_name,
+        image: user.image,
+        email: user.email,
+        oauthProvider: account.provider,
+        isCertified: false,
+        isFreelance: false,
+        description: '',
+        jobTitle: '',
+        certifiedDate: null,
+        roles: ['USER'],
+        country: 'USA'
       }
 
-      // db creation
+      try {
+        const userExists = await userOperations.getUserByEmailWithoutService(dbUser.email)
+
+        if (!userExists) {
+          await userOperations.createUser(dbUser)
+        }
+      } catch (e: unknown) {
+        logger.error({
+          error: 'database_error',
+          message: (e as Error).message,
+          errorDetail: e
+        })
+
+        return false
+      }
+
+      return true
+    },
+    jwt({ token, account, profile }: any) {
+      if (account) {
+        token.provider = account.provider
+        token.firstname = profile.given_name
+        token.lastname = profile.family_name
+        token.locale = profile.locale
+      }
+      return token
+    },
+    async session({ session }: any) {
       return {
-        user: user,
+        user: { email: session.user.email },
         expires: session.expires
       }
     }

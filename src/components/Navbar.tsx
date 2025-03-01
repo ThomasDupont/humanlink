@@ -16,11 +16,11 @@ import { AccountCircle, Menu as MenuIcon, Message, NotificationsRounded } from '
 import { CloseRounded as CloseRoundedIcon } from '@mui/icons-material'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useSession } from 'next-auth/react'
 import { useTranslation } from 'next-i18next'
 import BaseModal from './BaseModal'
 import AccountModal from './Modals/Account.modal'
 import LoginModal from './Modals/Login.modal'
+import { useAuthSession } from '@/hooks/nextAuth.hook'
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   display: 'flex',
@@ -44,7 +44,7 @@ const SmallAvatar = styled(Avatar)(() => ({
 const Icons = ({ mobile }: { mobile: boolean }) => {
   const { t } = useTranslation('common')
 
-  const { data: session } = useSession()
+  const { user } = useAuthSession()
   const [openAccountModal, setOpenAccountModal] = useState(false)
   const [openLoginModal, setOpenLoginModal] = useState(false)
 
@@ -71,7 +71,7 @@ const Icons = ({ mobile }: { mobile: boolean }) => {
         <IconButton>
           <NotificationsRounded color="secondary" fontSize="medium" />
         </IconButton>
-        {session && (
+        {user && (
           <Link href={`/chat`} target="_blank">
             <IconButton>
               <Message color="secondary" fontSize="medium" />
@@ -79,14 +79,14 @@ const Icons = ({ mobile }: { mobile: boolean }) => {
           </Link>
         )}
         <IconButton>
-          {session ? (
+          {user ? (
             <>
               <SmallAvatar
                 onClick={() => setOpenAccountModal(true)}
-                src={session?.user?.image ?? undefined}
+                src={user.image ?? undefined}
               />
               <BaseModal open={openAccountModal} handleClose={() => setOpenAccountModal(false)}>
-                <AccountModal user={session.user} />
+                <AccountModal user={user} />
               </BaseModal>
             </>
           ) : (

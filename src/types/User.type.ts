@@ -1,4 +1,4 @@
-import { OauthProvider, Price, Service, User } from '@prisma/client'
+import { Price, Service, User } from '@prisma/client'
 
 export type UserWithServicesWithPrices = User & {
   services: (Service & {
@@ -6,12 +6,7 @@ export type UserWithServicesWithPrices = User & {
   })[]
 }
 
-export type NextAuthJsUser = {
-  name: string
-  image: string
-  email: string
-  provider: OauthProvider
-  firstname: string
-  lastname: string
-  locale?: string
+export type NextAuthJsUserError = {
+  message: string
+  cause: string
 }

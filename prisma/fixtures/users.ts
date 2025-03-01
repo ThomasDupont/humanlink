@@ -13,7 +13,8 @@ const users: Omit<User, 'id'>[] = [
     isCertified: true,
     certifiedDate: new Date('2020-05-10T12:00:00.000Z'),
     image: 'https://randomuser.me/api/portraits/women/66.jpg',
-    country: 'France'
+    country: 'France',
+    roles: ['USER']
   },
   {
     email: 'sandro.garcia@example.com',
@@ -27,7 +28,8 @@ const users: Omit<User, 'id'>[] = [
     isCertified: false,
     certifiedDate: null,
     image: 'https://randomuser.me/api/portraits/men/75.jpg',
-    country: 'Spain'
+    country: 'Spain',
+    roles: ['USER']
   },
   {
     email: 'sara.colin@example.com',
@@ -41,7 +43,8 @@ const users: Omit<User, 'id'>[] = [
     isCertified: true,
     certifiedDate: new Date('2021-08-15T10:30:00.000Z'),
     image: 'https://randomuser.me/api/portraits/women/66.jpg',
-    country: 'France'
+    country: 'France',
+    roles: ['USER']
   },
   {
     email: 'alois.hubert@example.com',
@@ -55,7 +58,8 @@ const users: Omit<User, 'id'>[] = [
     isCertified: true,
     certifiedDate: new Date('2020-10-05T14:20:00.000Z'),
     image: 'https://randomuser.me/api/portraits/men/96.jpg',
-    country: 'France'
+    country: 'France',
+    roles: ['USER']
   },
   {
     email: 'gaetan.leroy@example.com',
@@ -69,7 +73,8 @@ const users: Omit<User, 'id'>[] = [
     isCertified: false,
     certifiedDate: null,
     image: 'https://randomuser.me/api/portraits/men/20.jpg',
-    country: 'France'
+    country: 'France',
+    roles: ['USER']
   },
   {
     email: 'amaury.fernandez@example.com',
@@ -83,7 +88,8 @@ const users: Omit<User, 'id'>[] = [
     isCertified: true,
     certifiedDate: new Date('2021-12-12T09:30:00.000Z'),
     image: 'https://randomuser.me/api/portraits/men/95.jpg',
-    country: 'Spain'
+    country: 'Spain',
+    roles: ['USER']
   },
   {
     email: 'ugo.duval@example.com',
@@ -97,7 +103,8 @@ const users: Omit<User, 'id'>[] = [
     isCertified: true,
     certifiedDate: new Date('2022-07-15T10:00:00.000Z'),
     image: 'https://randomuser.me/api/portraits/men/92.jpg',
-    country: 'France'
+    country: 'France',
+    roles: ['USER']
   },
   {
     email: 'lino.marchand@example.com',
@@ -111,7 +118,8 @@ const users: Omit<User, 'id'>[] = [
     isCertified: true,
     certifiedDate: new Date('2019-03-22T15:45:00.000Z'),
     image: 'https://randomuser.me/api/portraits/men/62.jpg',
-    country: 'France'
+    country: 'France',
+    roles: ['USER']
   },
   {
     email: 'berenice.francois@example.com',
@@ -126,7 +134,8 @@ const users: Omit<User, 'id'>[] = [
     isCertified: false,
     certifiedDate: null,
     image: 'https://randomuser.me/api/portraits/women/81.jpg',
-    country: 'France'
+    country: 'France',
+    roles: ['USER']
   },
   {
     email: 'eleonore.berger@example.com',
@@ -141,7 +150,8 @@ const users: Omit<User, 'id'>[] = [
     isCertified: true,
     certifiedDate: new Date('2021-05-10T08:30:00.000Z'),
     image: 'https://randomuser.me/api/portraits/women/45.jpg',
-    country: 'France'
+    country: 'France',
+    roles: ['USER']
   },
   {
     email: 'adele.schmitt@example.com',
@@ -155,7 +165,8 @@ const users: Omit<User, 'id'>[] = [
     isCertified: true,
     certifiedDate: new Date('2020-06-18T12:00:00.000Z'),
     image: 'https://randomuser.me/api/portraits/women/6.jpg',
-    country: 'France'
+    country: 'France',
+    roles: ['USER']
   },
   {
     email: 'meline.fontai@example.com',
@@ -169,7 +180,8 @@ const users: Omit<User, 'id'>[] = [
     isCertified: false,
     certifiedDate: null,
     image: 'https://randomuser.me/api/portraits/women/20.jpg',
-    country: 'France'
+    country: 'France',
+    roles: ['USER']
   },
   {
     email: 'leandro.laurent@example.com',
@@ -183,7 +195,8 @@ const users: Omit<User, 'id'>[] = [
     isCertified: true,
     certifiedDate: new Date('2021-09-12T14:00:00.000Z'),
     image: 'https://randomuser.me/api/portraits/men/78.jpg',
-    country: 'France'
+    country: 'France',
+    roles: ['USER']
   },
   {
     email: 'naomi.vincent@example.com',
@@ -197,7 +210,8 @@ const users: Omit<User, 'id'>[] = [
     isCertified: false,
     certifiedDate: null,
     image: 'https://randomuser.me/api/portraits/women/15.jpg',
-    country: 'France'
+    country: 'France',
+    roles: ['USER']
   },
   {
     email: 'ines.dumas@example.com',
@@ -211,7 +225,8 @@ const users: Omit<User, 'id'>[] = [
     isCertified: true,
     certifiedDate: new Date('2022-11-08T10:15:00.000Z'),
     image: 'https://randomuser.me/api/portraits/women/51.jpg',
-    country: 'France'
+    country: 'France',
+    roles: ['USER']
   },
   {
     email: 'sasha.boyer@example.com',
@@ -225,7 +240,8 @@ const users: Omit<User, 'id'>[] = [
     isCertified: false,
     certifiedDate: null,
     image: 'https://randomuser.me/api/portraits/men/23.jpg',
-    country: 'France'
+    country: 'France',
+    roles: ['USER']
   },
   {
     email: 'elio.chevalier@example.com',
@@ -239,7 +255,8 @@ const users: Omit<User, 'id'>[] = [
     isCertified: true,
     certifiedDate: new Date('2020-04-20T06:00:00.000Z'),
     image: 'https://randomuser.me/api/portraits/men/28.jpg',
-    country: 'France'
+    country: 'France',
+    roles: ['USER']
   },
   {
     email: 'martin.bertrand@example.com',
@@ -253,7 +270,8 @@ const users: Omit<User, 'id'>[] = [
     isCertified: true,
     certifiedDate: new Date('2023-02-15T09:30:00.000Z'),
     image: 'https://randomuser.me/api/portraits/men/5.jpg',
-    country: 'France'
+    country: 'France',
+    roles: ['USER']
   },
   {
     email: 'laura.dasilva@example.com',
@@ -267,7 +285,8 @@ const users: Omit<User, 'id'>[] = [
     isCertified: true,
     certifiedDate: new Date('2018-09-01T08:00:00.000Z'),
     image: 'https://randomuser.me/api/portraits/women/16.jpg',
-    country: 'France'
+    country: 'France',
+    roles: ['USER']
   },
   {
     email: 'erwan.leroux@example.com',
@@ -281,7 +300,8 @@ const users: Omit<User, 'id'>[] = [
     isCertified: false,
     certifiedDate: null,
     image: 'https://randomuser.me/api/portraits/men/90.jpg',
-    country: 'France'
+    country: 'France',
+    roles: ['USER']
   }
 ]
 

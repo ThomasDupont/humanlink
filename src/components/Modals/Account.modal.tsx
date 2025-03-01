@@ -1,8 +1,9 @@
 import { Avatar, Box, ButtonBase, List, ListItem, styled, Typography } from '@mui/material'
 import { signOut } from 'next-auth/react'
 import { useTranslation } from 'next-i18next'
-import { NextAuthJsUser } from '@/types/User.type'
 import { Email } from '@mui/icons-material'
+import Link from 'next/link'
+import { User } from '@prisma/client'
 
 const StyledButton = styled(ButtonBase)(({ theme }) => ({
   border: 'solid 1px',
@@ -14,7 +15,7 @@ const StyledButton = styled(ButtonBase)(({ theme }) => ({
   }
 }))
 
-export default function AccountModal({ user }: { user: NextAuthJsUser }) {
+export default function AccountModal({ user }: { user: User }) {
   const { t } = useTranslation('common')
   return (
     <Box
@@ -33,8 +34,10 @@ export default function AccountModal({ user }: { user: NextAuthJsUser }) {
       <Typography gutterBottom variant="h4" component="p">
         {t('accountManagementTitle')}
       </Typography>
-      <Avatar src={user.image} />
-      <Typography variant="body1">{user.name}</Typography>
+      <Avatar src={user.image ?? undefined} />
+      <Typography variant="body1">
+        {user.firstname} {user.lastname}
+      </Typography>
       <Box
         sx={{
           display: 'flex',
@@ -47,6 +50,17 @@ export default function AccountModal({ user }: { user: NextAuthJsUser }) {
         <Typography variant="body1"> {user.email}</Typography>
       </Box>
       <List>
+        <ListItem>
+          <Link
+            href={'/profile'}
+            target="_blank"
+            style={{
+              color: 'black' // overrride, no other solution
+            }}
+          >
+            <StyledButton>{t('profilePageTitle')}</StyledButton>
+          </Link>
+        </ListItem>
         <ListItem>
           <StyledButton>{t('myDashboard')}</StyledButton>
         </ListItem>

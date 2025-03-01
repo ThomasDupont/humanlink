@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { HookInterface } from './hook.interface'
 import { ServiceInElastic } from '@/types/Services.type'
 
-export const useTransformer: HookInterface = () => {
+export const useTransformer = (): HookInterface => {
   const worker = useRef<Worker | null>(null)
 
   const [result, setResult] = useState<ServiceInElastic[]>()
