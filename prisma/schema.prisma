@@ -30,21 +30,23 @@ enum Role {
 }
 
 model User {
-  id      Int      @id @default(autoincrement())
-  email   String   @unique
-  firstname    String
-  lastname   String
-  oauthProvider   OauthProvider
-  createdAt  DateTime @default(now())
+  id            Int           @id @default(autoincrement())
+  email         String        @unique
+  firstname     String
+  lastname      String
+  oauthProvider OauthProvider
+  createdAt     DateTime      @default(now())
   isFreelance   Boolean
   description   String
-  jobTitle    String
-  isCertified Boolean
-  certifiedDate   DateTime?
-  image     String?
-  country   Country
-  roles   Role[]
+  jobTitle      String
+  isCertified   Boolean
+  certifiedDate DateTime?
+  image         String?
+  country       Country
+  roles         Role[]
   services      Service[]
+  messages1     Message[]     @relation("sender")
+  messages2     Message[]     @relation("receiver")
 }
 
 // SERVICE
@@ -92,20 +94,20 @@ enum Category {
 }
 
 model Service {
-  id        Int     @id @default(autoincrement())
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    Int
-  title     String
-  descriptionShort  String
-  description   String
-  createdAt   DateTime @default(now())
-  langs     Lang[]
-  type      ServiceType
-  localisation    String
-  renewable   Boolean
-  category  Category
-  images    String[]
-  prices     Price[]
+  id               Int         @id @default(autoincrement())
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId           Int
+  title            String
+  descriptionShort String
+  description      String
+  createdAt        DateTime    @default(now())
+  langs            Lang[]
+  type             ServiceType
+  localisation     String
+  renewable        Boolean
+  category         Category
+  images           String[]
+  prices           Price[]
 }
 
 // PRICE
@@ -122,10 +124,22 @@ enum Currency {
 }
 
 model Price {
-  id        Int     @id @default(autoincrement())
-  service   Service    @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  id        Int       @id @default(autoincrement())
+  service   Service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   serviceId Int
   type      PriceType
   number    Int
   currency  Currency
+}
+
+model Message {
+  id         Int       @id @default(autoincrement())
+  createdAt  DateTime  @default(now())
+  user1      User?     @relation("sender", fields: [senderId], references: [id], onDelete: SetNull)
+  senderId   Int?
+  user2      User?     @relation("receiver", fields: [receiverId], references: [id], onDelete: SetNull)
+  receiverId Int?
+  message    String
+  readAt     DateTime?
+  // offerId Int?
 }

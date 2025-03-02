@@ -16,7 +16,8 @@ import { z } from 'zod'
 import { useAuthSession } from '@/hooks/nextAuth.hook'
 import { trpc } from '../../utils/trpc'
 import { Send } from '@mui/icons-material'
-import { useState } from 'react'
+import { FormEvent, useState, KeyboardEvent } from 'react'
+import { parseMessage, useConversation } from '@/hooks/chat/conversation.hook'
 
 export const getStaticProps: GetStaticProps = async ({ locale }) => {
   return {
@@ -37,9 +38,28 @@ const qsValidator = z.object({
     .optional()
 })
 
-const Conversation = ({ userId }: { userId: number }) => {
+const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
   const { data: user } = trpc.get.userById.useQuery(userId)
   const [message, setMessage] = useState<string>()
+  const { mutateAsync } = trpc.protectedMutation.sendMessage.useMutation()
+
+  const { queue, addSentMessageToQueue } = useConversation(userId)
+
+  const handleSubmitMessage = (e: FormEvent<HTMLFormElement> | KeyboardEvent<HTMLDivElement>) => {
+    e.preventDefault()
+
+    if (!message) {
+      return
+    }
+
+    mutateAsync({
+      receiverId: userId,
+      message
+    }).then(msg => {
+      addSentMessageToQueue(parseMessage(msg))
+      setMessage('')
+    })
+  }
 
   return (
     user && (
@@ -75,7 +95,45 @@ const Conversation = ({ userId }: { userId: number }) => {
           </Box>
           <Divider />
         </Box>
-        <Box id="main"></Box>
+        <Box
+          id="main"
+          display={'flex'}
+          flexDirection={'column'}
+          justifyContent={'flex-end'}
+          sx={{
+            height: '100%',
+            m: 2
+          }}
+        >
+          {[...queue].reverse().map(message => {
+            return (
+              <Box
+                key={message.id}
+                display={'flex'}
+                flexDirection={'row'}
+                justifyContent={message.receiverId === userId ? 'flex-end' : 'flex-start'}
+                sx={{
+                  mt: 1,
+                  mb: 1
+                }}
+              >
+                <Typography
+                  variant="body1"
+                  sx={t => ({
+                    borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
+                    boxShadow: t.shadows[1],
+                    textAlign: 'center',
+                    backgroundColor:
+                      message.receiverId === userId ? t.palette.primary[100] : 'white',
+                    padding: 1
+                  })}
+                >
+                  {message.message}{' '}
+                </Typography>
+              </Box>
+            )
+          })}
+        </Box>
         <Box
           id="footer"
           sx={{
@@ -90,40 +148,42 @@ const Conversation = ({ userId }: { userId: number }) => {
               pr: 4
             }}
           >
-            <TextField
-              type="textarea"
-              variant="standard"
-              color="primary"
-              label={'Votre message'}
-              onChange={e => setMessage(e.target.value)}
-              value={message}
-              multiline
-              fullWidth
-              minRows={1}
-              slotProps={{
-                input: {
-                  spellCheck: 'false',
-                  endAdornment: (
-                    <InputAdornment
-                      position="end"
-                      sx={{
-                        mr: 1
-                      }}
-                    >
-                      <IconButton type="submit" edge="end">
-                        <Send
-                          fontSize="medium"
-                          sx={t => ({
-                            color: t.palette.primary.main
-                          })}
-                        />
-                      </IconButton>
-                    </InputAdornment>
-                  )
-                },
-                htmlInput: { maxLength: 200 }
-              }}
-            />
+            <form onSubmit={handleSubmitMessage}>
+              <TextField
+                type="textarea"
+                variant="standard"
+                color="primary"
+                label={'Votre message'}
+                onChange={e => setMessage(e.target.value)}
+                value={message}
+                multiline
+                fullWidth
+                minRows={1}
+                slotProps={{
+                  input: {
+                    spellCheck: 'false',
+                    endAdornment: (
+                      <InputAdornment
+                        position="end"
+                        sx={{
+                          mr: 1
+                        }}
+                      >
+                        <IconButton type="submit" edge="end">
+                          <Send
+                            fontSize="medium"
+                            sx={t => ({
+                              color: t.palette.primary.main
+                            })}
+                          />
+                        </IconButton>
+                      </InputAdornment>
+                    )
+                  },
+                  htmlInput: { maxLength: 200 }
+                }}
+              />
+            </form>
           </Box>
         </Box>
       </Box>
@@ -160,7 +220,9 @@ export default function Chat() {
         }}
       >
         <Contacts />
-        {conversationWithUserId && <Conversation userId={conversationWithUserId} />}
+        {conversationWithUserId && (
+          <Conversation userId={conversationWithUserId} serviceId={parsedQuery.data.serviceId} />
+        )}
       </Box>
     </Container>
   )

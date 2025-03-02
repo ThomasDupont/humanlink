@@ -54,7 +54,11 @@ export const authOptions: NextAuthOptions = {
         const userExists = await userOperations.getUserByEmailWithoutService(dbUser.email)
 
         if (!userExists) {
-          await userOperations.createUser(dbUser)
+          const createdUser = await userOperations.createUser(dbUser)
+
+          account.id = createdUser.id
+        } else {
+          account.id = userExists.id
         }
       } catch (e: unknown) {
         logger.error({
@@ -73,13 +77,14 @@ export const authOptions: NextAuthOptions = {
         token.provider = account.provider
         token.firstname = profile.given_name
         token.lastname = profile.family_name
+        token.id = account.id
         token.locale = profile.locale
       }
       return token
     },
-    async session({ session }: any) {
+    async session({ session, token }: any) {
       return {
-        user: { email: session.user.email },
+        user: { email: session.user.email, id: token.id },
         expires: session.expires
       }
     }

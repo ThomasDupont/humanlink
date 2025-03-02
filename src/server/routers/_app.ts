@@ -1,6 +1,10 @@
 import { createCallerFactory, publicProcedure, router } from '../trpc'
 import { z } from 'zod'
-import { serviceOperations, userOperations } from './databaseOperations/prisma.provider'
+import {
+  messageOperations,
+  serviceOperations,
+  userOperations
+} from './databaseOperations/prisma.provider'
 import config from '@/config'
 import searchFactory from './searchService/search.factory'
 import { protectedprocedure } from './middlewares'
@@ -24,7 +28,35 @@ export const appRouter = router({
       .query(options => serviceOperations.getServiceById(options.input))
   }),
   protectedGet: router({
-    me: protectedprocedure.query(({ ctx }) => userMe(ctx.session.user.email).run())
+    me: protectedprocedure.query(({ ctx }) => userMe(ctx.session.user.email).run()),
+    conversation: protectedprocedure
+      .input(
+        z.object({
+          receiverId: z.number()
+        })
+      )
+      .query(options =>
+        messageOperations.getConversation({
+          receiverId: options.input.receiverId,
+          senderId: options.ctx.session.user.id
+        })
+      )
+  }),
+  protectedMutation: router({
+    sendMessage: protectedprocedure
+      .input(
+        z.object({
+          receiverId: z.number(),
+          message: z.string().min(1).max(200)
+        })
+      )
+      .mutation(options =>
+        messageOperations.sendMessage({
+          senderId: options.ctx.session.user.id,
+          receiverId: options.input.receiverId,
+          message: options.input.message
+        })
+      )
   })
 })
 
