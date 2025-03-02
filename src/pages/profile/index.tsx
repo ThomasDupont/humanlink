@@ -44,7 +44,7 @@ export default function Profile({ locale }: { locale: SuportedLocale }) {
             mb: 10
           }}
         >
-          {t('errors[401]')}
+          {t('401errors')}
         </Typography>
       </Base>
     )

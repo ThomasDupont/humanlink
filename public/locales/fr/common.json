@@ -1,7 +1,6 @@
 {
-  "errors": {
-    "401": "Vous n'avez pas accès à cette page, merci de vous connecter."
-  },
+  "401errors": "Vous n'avez pas accès à cette page, merci de vous connecter.",
+
   "navbarHeadline": "Les meilleurs des freelances à votre service",
   "company": "Société",
   "services": "Services",

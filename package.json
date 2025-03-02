@@ -10,7 +10,8 @@
     "test:unit": "vitest",
     "prisma:insert-fixtures": "export NODE_ENV=development && npx tsx prisma/fixtures/insertFixtures.ts",
     "prisma:sync-elastic": "export NODE_ENV=development && dotenv -- npx tsx prisma/script/syncServicesToElastic.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "prepare": "husky"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
@@ -32,6 +33,7 @@
     "axios": "^1.7.9",
     "date-fns": "^4.1.0",
     "dotenv": "16.4.7",
+    "effect": "^3.13.4",
     "i18next": "^24.2.2",
     "next": "15.1.7",
     "next-auth": "^4.24.11",
@@ -55,6 +57,7 @@
     "dotenv-cli": "^8.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.1.7",
+    "husky": "^9.1.7",
     "jsdom": "^26.0.0",
     "prettier": "^3.5.1",
     "prisma": "6.4.0",

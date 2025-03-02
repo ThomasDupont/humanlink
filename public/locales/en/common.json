@@ -1,7 +1,6 @@
 {
-  "errors": {
-    "401": "You have no access to this page, thank to log you."
-  },
+  "401errors": "You have no access to this page, thank to log you.",
+
   "navbarHeadline": "The best freelancers at your service",
   "company": "Company",
   "services": "Services",

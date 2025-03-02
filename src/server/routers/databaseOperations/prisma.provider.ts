@@ -4,6 +4,7 @@ import { userCrud } from './users/users.prisma'
 import { servicesCrud } from './services/services.prisma'
 import { deleteRecord, sync } from './sync/sync'
 import { logger } from '@/server/logger'
+import { Context, Effect } from 'effect'
 
 const prisma = new PrismaClient({
   log: [
@@ -50,3 +51,10 @@ export const serviceOperations = servicesCrud(
   sync,
   deleteRecord
 )
+
+export class UserOperations extends Context.Tag('userOperations')<
+  UserOperations,
+  typeof userOperations
+>() {}
+
+export const effectUserOperations = Effect.provideService(UserOperations, userOperations)

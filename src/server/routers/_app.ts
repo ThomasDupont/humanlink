@@ -3,9 +3,8 @@ import { z } from 'zod'
 import { serviceOperations, userOperations } from './databaseOperations/prisma.provider'
 import config from '@/config'
 import searchFactory from './searchService/search.factory'
-import { TRPCError } from '@trpc/server'
 import { protectedprocedure } from './middlewares'
-import { logger } from '../logger'
+import { userMe } from './trpcProcedures/get.trpc'
 
 export const appRouter = router({
   get: router({
@@ -25,32 +24,7 @@ export const appRouter = router({
       .query(options => serviceOperations.getServiceById(options.input))
   }),
   protectedGet: router({
-    me: protectedprocedure.query(async ({ ctx }) => {
-      try {
-        const user = await userOperations.getUserByEmailWithoutService(ctx.session.user.email)
-
-        if (!user) {
-          logger.error({
-            cause: 'incoherent_session_and_db_data',
-            message: `${ctx.session.user.email} not found on db`,
-            detailedError: {}
-          })
-          throw new TRPCError({
-            code: 'NOT_FOUND'
-          })
-        }
-        return user
-      } catch (e: unknown) {
-        logger.error({
-          cause: 'database_error',
-          message: `${ctx.session.user.email} db error ${(e as Error).message}`,
-          detailedError: e
-        })
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR'
-        })
-      }
-    })
+    me: protectedprocedure.query(({ ctx }) => userMe(ctx.session.user.email).run())
   })
 })
 
