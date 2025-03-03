@@ -47,7 +47,7 @@ export const appRouter = router({
       .input(
         z.object({
           receiverId: z.number(),
-          message: z.string().min(1).max(200)
+          message: z.string().min(1).max(1000)
         })
       )
       .mutation(options =>

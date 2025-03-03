@@ -161,6 +161,7 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
                 label={'Votre message'}
                 onChange={e => setMessage(e.target.value)}
                 value={message}
+                helperText={`${message?.length ?? 0} / 1000`}
                 multiline
                 fullWidth
                 minRows={1}
@@ -185,7 +186,7 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
                       </InputAdornment>
                     )
                   },
-                  htmlInput: { maxLength: 200 }
+                  htmlInput: { maxLength: 1000 }
                 }}
               />
             </form>

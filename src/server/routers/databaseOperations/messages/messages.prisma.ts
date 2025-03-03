@@ -45,8 +45,18 @@ export const messageCrud = (prisma: PrismaClient) => {
     })
   }
 
+  const setMessageIsRead = ({ id, timestamp }: { id: number; timestamp: number }) => {
+    return prisma.message.update({
+      where: { id },
+      data: {
+        readAt: new Date(timestamp)
+      }
+    })
+  }
+
   return {
     sendMessage,
-    getConversation
+    getConversation,
+    setMessageIsRead
   }
 }
