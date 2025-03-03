@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { format } from 'date-fns'
 import { SuportedLocale } from '@/config'
 import { localeToDateFnsLocale } from '@/utils/localeToDateFnsLocale'
+import { Spinner } from '@/components/Spinner'
 
 const Base = ({ children }: { children: ReactElement }) => {
   return (
@@ -31,10 +32,18 @@ export const getStaticProps: GetStaticProps = async ({ locale }) => {
 }
 
 export default function Profile({ locale }: { locale: SuportedLocale }) {
-  const { user } = useAuthSession()
+  const { user, error } = useAuthSession()
   const { t } = useTranslation('common')
 
-  if (!user) {
+  if (!user && !error) {
+    return (
+      <Base>
+        <Spinner />
+      </Base>
+    )
+  }
+
+  if (error) {
     return (
       <Base>
         <Typography

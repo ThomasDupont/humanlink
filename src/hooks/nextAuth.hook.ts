@@ -2,10 +2,20 @@ import { NextAuthJsUserError } from '@/types/User.type'
 import { trpc } from '@/utils/trpc'
 import { User } from '@prisma/client'
 
-export const useAuthSession = (): {
-  user: User | null
-  error: NextAuthJsUserError | null
-} => {
+type UserAuthSessionReturn =
+  | {
+      user: null
+      error: null
+    }
+  | {
+      user: null
+      error: NextAuthJsUserError
+    }
+  | {
+      user: User
+      error: null
+    }
+export const useAuthSession = (): UserAuthSessionReturn => {
   const query = trpc.protectedGet.me.useQuery()
 
   if (query.isFetching || !query.data) {

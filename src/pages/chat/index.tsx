@@ -18,6 +18,7 @@ import { trpc } from '../../utils/trpc'
 import { Send } from '@mui/icons-material'
 import { FormEvent, useState, KeyboardEvent } from 'react'
 import { parseMessage, useConversation } from '@/hooks/chat/conversation.hook'
+import { Spinner } from '@/components/Spinner'
 
 export const getStaticProps: GetStaticProps = async ({ locale }) => {
   return {
@@ -39,7 +40,7 @@ const qsValidator = z.object({
 })
 
 const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
-  const { data: user } = trpc.get.userById.useQuery(userId)
+  const { data: user, isFetching } = trpc.get.userById.useQuery(userId)
   const [message, setMessage] = useState<string>()
   const { mutateAsync } = trpc.protectedMutation.sendMessage.useMutation()
 
@@ -59,6 +60,10 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
       addSentMessageToQueue(parseMessage(msg))
       setMessage('')
     })
+  }
+
+  if (isFetching) {
+    return <Spinner />
   }
 
   return (

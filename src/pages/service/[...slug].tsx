@@ -90,13 +90,6 @@ export default function Service({ userId, serviceId }: Props) {
   const { managePrice } = useManagePrice()
   const router = useRouter()
 
-  /*
-  useEffect(() => {
-    console.log('Locale active :', i18n.language)
-    console.log('Traductions chargées :', i18n.store.data)
-  }, [i18n.language])
-  */
-
   const { data: user, status, error } = trpc.get.userById.useQuery(userId) // @todo use a slug
   const [openLoginModal, setOpenLoginModal] = useState<boolean>(false)
 
@@ -283,7 +276,9 @@ export default function Service({ userId, serviceId }: Props) {
             {t('takeContact')}
           </Button>
           <BaseModal open={openLoginModal} handleClose={() => setOpenLoginModal(false)}>
-            <LoginModal />
+            <LoginModal
+              callbackUrl={`/${router.locale ?? 'en'}/chat?userId=${user.id}&serviceId=${service.id}`}
+            />
           </BaseModal>
         </StyledGrid>
       </Grid>
