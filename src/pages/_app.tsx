@@ -10,7 +10,7 @@ import '../styles/globals.css'
 
 function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   return (
-    <SessionProvider session={session}>
+    <SessionProvider session={session} refetchOnWindowFocus={false}>
       <ThemeProvider theme={theme}>
         <Layout>
           <Component {...pageProps} />
