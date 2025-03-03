@@ -31,5 +31,11 @@
   "creationDate": "Signup date",
   "isFreelance": "Freelance profile",
   "yes": "yes",
-  "no": "no"
+  "no": "no",
+  "activateFreelance": "Configure your freelance profile",
+  "description": "description",
+  "descriptionHelpText": "Add a description on your profile will activate the freelance mode.",
+  "jobTitle": "Job title",
+  "save": "save",
+  "saved": "saved"
 }

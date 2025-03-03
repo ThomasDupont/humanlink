@@ -7,12 +7,14 @@ type Config = {
   userHookProvider: UserHookProvider
   searchHookProvider: SearchHookProvider
   backendSearchProvider: BackendSearchProvider
+  authorizeHTMLTagForDescription: string[]
 }
 
 const config: Config = {
   userHookProvider: 'real',
   searchHookProvider: 'elastic',
-  backendSearchProvider: 'elastic'
+  backendSearchProvider: 'elastic',
+  authorizeHTMLTagForDescription: ['p', 'strong', 'br', 'ul', 'li', 'em', 'u']
 }
 
 export default config

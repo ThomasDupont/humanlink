@@ -9,6 +9,7 @@ import config from '@/config'
 import searchFactory from './searchService/search.factory'
 import { protectedprocedure } from './middlewares'
 import { userMe } from './trpcProcedures/get.trpc'
+import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
 
 export const appRouter = router({
   get: router({
@@ -56,7 +57,13 @@ export const appRouter = router({
           receiverId: options.input.receiverId,
           message: options.input.message
         })
-      )
+      ),
+    user: router({
+      description: protectedprocedure.input(z.string().transform(cleanHtmlTag)).mutation(() => {
+        // update user & isFreelance
+      }),
+      jobTitle: protectedprocedure.input(z.string()).mutation(() => {})
+    })
   })
 })
 

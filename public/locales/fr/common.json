@@ -31,5 +31,11 @@
   "creationDate": "Date d'inscription",
   "isFreelance": "Profil de freelance",
   "yes": "oui",
-  "no": "non"
+  "no": "non",
+  "activateFreelance": "Configurer votre profil freelance",
+  "description": "description",
+  "descriptionHelpText": "Ajouter une description à votre profil active le mode freelance.",
+  "jobTitle": "Votre fonction",
+  "save": "sauvegarder",
+  "saved": "sauvegardé"
 }

@@ -18,13 +18,6 @@ type UserAuthSessionReturn =
 export const useAuthSession = (): UserAuthSessionReturn => {
   const query = trpc.protectedGet.me.useQuery()
 
-  if (query.isFetching || !query.data) {
-    return {
-      user: null,
-      error: null
-    }
-  }
-
   if (query.isError) {
     return {
       user: null,
@@ -32,6 +25,13 @@ export const useAuthSession = (): UserAuthSessionReturn => {
         cause: query.error.message,
         message: query.error.message
       }
+    }
+  }
+
+  if (query.isFetching || !query.data) {
+    return {
+      user: null,
+      error: null
     }
   }
 
