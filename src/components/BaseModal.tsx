@@ -8,12 +8,7 @@ type BaseModalProps = {
 }
 export default function BaseModal({ children, open, handleClose }: BaseModalProps) {
   return (
-    <Modal
-      open={open}
-      onClose={handleClose}
-      aria-labelledby="modal-modal-title"
-      aria-describedby="modal-modal-description"
-    >
+    <Modal open={open} onClose={handleClose}>
       <Fade in={open}>
         <Box
           sx={t => ({

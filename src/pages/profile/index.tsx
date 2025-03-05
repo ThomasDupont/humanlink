@@ -7,20 +7,23 @@ import {
   Container,
   Grid2 as Grid,
   Snackbar,
+  Switch,
   TextField,
   Typography
 } from '@mui/material'
+import DOMPurify from 'dompurify'
 import { GetStaticProps } from 'next'
 import dynamic from 'next/dynamic'
 import 'react-quill/dist/quill.snow.css'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
-import { FormEvent, ReactElement, useMemo, useState } from 'react'
+import { FormEvent, ReactElement, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { format } from 'date-fns'
-import { SuportedLocale } from '@/config'
+import config, { SuportedLocale } from '@/config'
 import { localeToDateFnsLocale } from '@/utils/localeToDateFnsLocale'
 import { Spinner } from '@/components/Spinner'
 import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
+import { trpc } from '@/utils/trpc'
 
 const Base = ({ children }: { children: ReactElement }) => {
   return (
@@ -45,12 +48,24 @@ export const getStaticProps: GetStaticProps = async ({ locale }) => {
 }
 
 export default function Profile({ locale }: { locale: SuportedLocale }) {
-  const { user, error } = useAuthSession()
+  const { user, error, refetch } = useAuthSession()
+
+  const [jobTitle, setJobTitle] = useState(user?.jobTitle ?? '')
+  const [description, setDescription] = useState(user?.description ?? '')
+  const [isFreelance, setIsFreelance] = useState(user?.isFreelance ?? false)
+
   const { t } = useTranslation('common')
-  const [showFreelanceConfiguration, setShowFreelanceConfiguration] = useState(false)
-  const [jobTitle, setJobTitle] = useState(user?.jobTitle)
-  const [description, setDescription] = useState(user?.description)
   const [openSnackBar, setOpenSnackBar] = useState(false)
+  const [formError, setFormError] = useState<string>()
+  const { mutateAsync } = trpc.protectedMutation.user.profile.useMutation()
+
+  useEffect(() => {
+    if (user) {
+      setJobTitle(user.jobTitle)
+      setDescription(user.description)
+      setIsFreelance(user.isFreelance)
+    }
+  }, [user])
 
   const ReactQuill = useMemo(() => dynamic(() => import('react-quill'), { ssr: false }), [])
 
@@ -78,18 +93,31 @@ export default function Profile({ locale }: { locale: SuportedLocale }) {
     )
   }
 
-  const handleSubmitJobTitle = (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
 
-    setOpenSnackBar(true)
-  }
+    if (description && description.length > config.userInteraction.descriptionMaxLen) {
+      console.error('Desc too long')
+      setFormError('descriptionTooLong')
+      setOpenSnackBar(true)
+      return
+    }
 
-  const handleSubmitDescription = (e: FormEvent) => {
-    e.preventDefault()
+    if (jobTitle && jobTitle.length > config.userInteraction.jobTitleMaxLen) {
+      console.error('job title too long')
+      setFormError('jobTitleTooLong')
+      setOpenSnackBar(true)
+      return
+    }
 
-    console.log(description)
-
-    setOpenSnackBar(true)
+    mutateAsync({
+      description: description ?? '',
+      jobTitle: jobTitle ?? '',
+      isFreelance
+    }).then(() => {
+      setOpenSnackBar(true)
+      refetch()
+    })
   }
 
   const parsedCreatedDate = format(user.createdAt, 'PPP', { locale: localeToDateFnsLocale(locale) })
@@ -108,11 +136,11 @@ export default function Profile({ locale }: { locale: SuportedLocale }) {
         >
           <Alert
             onClose={() => setOpenSnackBar(false)}
-            severity="success"
+            severity={formError ? 'error' : 'success'}
             variant="filled"
             sx={{ width: '100%' }}
           >
-            {t('saved')}
+            {formError ? t(formError) : t('saved')}
           </Alert>
         </Snackbar>
         <Box
@@ -139,150 +167,146 @@ export default function Profile({ locale }: { locale: SuportedLocale }) {
                 width: 100
               }}
             />
-            <Grid container rowSpacing={4}>
-              <Grid size={6}>
-                <Typography variant="h4" component={'p'}>
-                  {t('firstname')} & {t('lastname')}
-                </Typography>
-              </Grid>
-              <Grid size={6}>
-                <Typography variant="body1">
-                  {user.firstname} {user.lastname}
-                </Typography>
-              </Grid>
-              <Grid size={6}>
-                <Typography variant="h4" component={'p'}>
-                  {t('email')}
-                </Typography>
-              </Grid>
-              <Grid size={6}>
-                <Typography variant="body1">{user.email}</Typography>
-              </Grid>
-              <Grid size={6}>
-                <Typography variant="h4" component={'p'}>
-                  {t('oauthProvider')}
-                </Typography>
-              </Grid>
-              <Grid size={6}>
-                <Typography variant="body1">{user.oauthProvider}</Typography>
-              </Grid>
-              <Grid size={6}>
-                <Typography variant="h4" component={'p'}>
-                  {t('creationDate')}
-                </Typography>
-              </Grid>
-              <Grid size={6}>
-                <Typography variant="body1">{parsedCreatedDate}</Typography>
-              </Grid>
-              <Grid size={6}>
-                <Typography variant="h4" component={'p'}>
-                  {t('isFreelance')}
-                </Typography>
-              </Grid>
-              <Grid size={6}>
-                <Typography variant="body1">{user.isFreelance ? t('yes') : t('no')}</Typography>
-              </Grid>
-              <Grid size={6} display={'flex'} flexDirection={'column'} justifyContent={'center'}>
-                <Typography variant="h4" component={'p'}>
-                  {t('jobTitle')}
-                </Typography>
-              </Grid>
-              <Grid size={6}>
-                <form onSubmit={handleSubmitJobTitle}>
-                  <Box display={'flex'} flexDirection={'row'} gap={4}>
-                    <TextField
-                      onChange={e => setJobTitle(e.target.value)}
-                      variant="outlined"
-                      fullWidth
-                      value={jobTitle}
+            <form onSubmit={handleSubmit}>
+              <Grid container rowSpacing={4}>
+                <Grid size={6}>
+                  <Typography variant="h4" component={'p'}>
+                    {t('firstname')} & {t('lastname')}
+                  </Typography>
+                </Grid>
+                <Grid size={6}>
+                  <Typography variant="body1">
+                    {user.firstname} {user.lastname}
+                  </Typography>
+                </Grid>
+
+                <Grid size={6}>
+                  <Typography variant="h4" component={'p'}>
+                    {t('email')}
+                  </Typography>
+                </Grid>
+                <Grid size={6}>
+                  <Typography variant="body1">{user.email}</Typography>
+                </Grid>
+
+                <Grid size={6}>
+                  <Typography variant="h4" component={'p'}>
+                    {t('oauthProvider')}
+                  </Typography>
+                </Grid>
+                <Grid size={6}>
+                  <Typography variant="body1">{user.oauthProvider}</Typography>
+                </Grid>
+
+                <Grid size={6}>
+                  <Typography variant="h4" component={'p'}>
+                    {t('creationDate')}
+                  </Typography>
+                </Grid>
+                <Grid size={6}>
+                  <Typography variant="body1">{parsedCreatedDate}</Typography>
+                </Grid>
+
+                <Grid size={6}>
+                  <Typography variant="h4" component={'p'}>
+                    {t('isFreelance')}
+                  </Typography>
+                </Grid>
+                <Grid size={6}>
+                  <Typography variant="body1">{user.isFreelance ? t('yes') : t('no')}</Typography>
+                </Grid>
+
+                <Grid size={6} display={'flex'} flexDirection={'column'} justifyContent={'center'}>
+                  <Typography variant="h4" component={'p'}>
+                    {t('jobTitle')}
+                  </Typography>
+                </Grid>
+                <Grid size={6}>
+                  <TextField
+                    onChange={e => setJobTitle(e.target.value)}
+                    variant="outlined"
+                    fullWidth
+                    value={jobTitle}
+                  />
+                </Grid>
+
+                <Grid size={2}>
+                  <Typography variant="h4" component={'p'}>
+                    {t('description')}
+                  </Typography>
+                </Grid>
+                <Grid size={10}>
+                  <Box width={'100%'} minHeight={100}>
+                    <ReactQuill
+                      modules={{
+                        toolbar: [['bold', 'italic', 'underline'], [{ list: 'bullet' }]]
+                      }}
+                      theme="snow"
+                      value={description}
+                      onChange={v => setDescription(cleanHtmlTag(DOMPurify)(v))}
                     />
-                    <Button
-                      type="submit"
-                      variant="outlined"
-                      color="primary"
+                    <Typography variant="body2">{t('descriptionHelpText')}</Typography>
+                  </Box>
+
+                  {description && (
+                    <Box
                       sx={{
-                        height: 54,
-                        minWidth: 120
+                        mt: 4
                       }}
                     >
-                      {t('save')}
-                    </Button>
-                  </Box>
-                </form>
-              </Grid>
-              {!user.isFreelance && (
-                <Grid size={12} display={'flex'} flexDirection={'row'} justifyContent={'center'}>
-                  <Button
-                    onClick={() => setShowFreelanceConfiguration(true)}
-                    variant="contained"
-                    color="primary"
-                  >
-                    {t('activateFreelance')}
-                  </Button>
-                </Grid>
-              )}
-              {showFreelanceConfiguration && (
-                <>
-                  <Grid size={2}>
-                    <Typography variant="h4" component={'p'}>
-                      {t('description')}
-                    </Typography>
-                  </Grid>
-                  <Grid size={10}>
-                    <form onSubmit={handleSubmitDescription}>
-                      <Box display={'flex'} flexDirection={'row'} gap={4}>
-                        <Box width={'100%'} minHeight={100}>
-                          <ReactQuill
-                            modules={{
-                              toolbar: [['bold', 'italic', 'underline'], [{ list: 'bullet' }]]
-                            }}
-                            theme="snow"
-                            value={description}
-                            onChange={v => setDescription(cleanHtmlTag(v))}
-                          />
-                          <Typography variant="body2">{t('descriptionHelpText')}</Typography>
-                        </Box>
-                        <Button
-                          type="submit"
-                          variant="outlined"
-                          color="primary"
-                          sx={{
-                            height: 54,
-                            minWidth: 120
-                          }}
-                        >
-                          {t('save')}
-                        </Button>
-                      </Box>
-                    </form>
-                    {description && (
-                      <Box
+                      <Typography
+                        variant="h4"
+                        component={'p'}
                         sx={{
-                          mt: 4
+                          mb: 2
                         }}
                       >
-                        <Typography
-                          variant="h4"
-                          component={'p'}
-                          sx={{
-                            mb: 2
-                          }}
-                        >
-                          Preview description
-                        </Typography>
-                        <Box
-                          dangerouslySetInnerHTML={{ __html: description }}
-                          sx={{
-                            backgroundColor: 'white',
-                            p: 1
-                          }}
-                        ></Box>
-                      </Box>
-                    )}
-                  </Grid>
-                </>
-              )}
-            </Grid>
+                        Preview description
+                      </Typography>
+                      <Box
+                        dangerouslySetInnerHTML={{
+                          __html: description.slice(0, config.userInteraction.descriptionMaxLen)
+                        }}
+                        sx={{
+                          backgroundColor: 'white',
+                          p: 1
+                        }}
+                      ></Box>
+                    </Box>
+                  )}
+                </Grid>
+
+                <Grid size={6}>
+                  <Typography variant="h4" component={'p'}>
+                    {t('freelanceMode')}
+                  </Typography>
+                </Grid>
+                <Grid size={6}>
+                  <Switch checked={isFreelance} onChange={e => setIsFreelance(e.target.checked)} />
+                </Grid>
+              </Grid>
+              <Box
+                width={'100%'}
+                display={'flex'}
+                flexDirection={'column'}
+                alignItems={'center'}
+                sx={{
+                  mt: 4
+                }}
+              >
+                <Button
+                  type="submit"
+                  variant="outlined"
+                  color="primary"
+                  sx={{
+                    height: 54,
+                    width: 120
+                  }}
+                >
+                  {t('save')}
+                </Button>
+              </Box>
+            </form>
           </Box>
         </Box>
       </Box>

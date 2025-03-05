@@ -1,6 +1,9 @@
 import config from '@/config'
 import DOMPurify from 'dompurify'
 
-export const cleanHtmlTag = (input: string): string => {
-  return DOMPurify.sanitize(input, { ALLOWED_TAGS: config.authorizeHTMLTagForDescription })
-}
+type DOMPurifyType = typeof DOMPurify
+export const cleanHtmlTag =
+  ({ sanitize }: DOMPurifyType) =>
+  (input: string): string => {
+    return sanitize(input, { ALLOWED_TAGS: config.authorizeHTMLTagForDescription })
+  }

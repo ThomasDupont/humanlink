@@ -1,4 +1,6 @@
 import { createCallerFactory, publicProcedure, router } from '../trpc'
+import DOMPurify from 'dompurify'
+import { JSDOM } from 'jsdom'
 import { z } from 'zod'
 import {
   messageOperations,
@@ -48,7 +50,7 @@ export const appRouter = router({
       .input(
         z.object({
           receiverId: z.number(),
-          message: z.string().min(1).max(1000)
+          message: z.string().min(1).max(config.userInteraction.messageMaxLen)
         })
       )
       .mutation(options =>
@@ -59,10 +61,26 @@ export const appRouter = router({
         })
       ),
     user: router({
-      description: protectedprocedure.input(z.string().transform(cleanHtmlTag)).mutation(() => {
-        // update user & isFreelance
-      }),
-      jobTitle: protectedprocedure.input(z.string()).mutation(() => {})
+      profile: protectedprocedure
+        .input(
+          z.object({
+            description: z
+              .string()
+              .min(0)
+              .max(config.userInteraction.descriptionMaxLen)
+              .transform(cleanHtmlTag(DOMPurify(new JSDOM('<!DOCTYPE html>').window))),
+            jobTitle: z.string().min(0).max(config.userInteraction.jobTitleMaxLen),
+            isFreelance: z.boolean()
+          })
+        )
+        .mutation(options =>
+          userOperations.updateUser({
+            id: options.ctx.session.user.id,
+            description: options.input.description,
+            jobTitle: options.input.jobTitle,
+            isFreelance: options.input.isFreelance
+          })
+        )
     })
   })
 })

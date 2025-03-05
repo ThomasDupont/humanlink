@@ -8,7 +8,7 @@ export const userCrud = (prisma: PrismaClient) => {
     })
   }
 
-  const updateUser = (user: User) => {
+  const updateUser = (user: Partial<User> & Pick<User, 'id'>) => {
     return prisma.user.update({
       where: {
         id: user.id

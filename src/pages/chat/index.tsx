@@ -1,6 +1,7 @@
 import {
   Avatar,
   Box,
+  Button,
   Container,
   Divider,
   IconButton,
@@ -19,6 +20,9 @@ import { Send } from '@mui/icons-material'
 import { FormEvent, useState, KeyboardEvent } from 'react'
 import { parseMessage, useConversation } from '@/hooks/chat/conversation.hook'
 import { Spinner } from '@/components/Spinner'
+import config from '@/config'
+import BaseModal from '@/components/BaseModal'
+import CreateOfferModal from '@/components/Modals/CreateOffer.modal'
 
 export const getStaticProps: GetStaticProps = async ({ locale }) => {
   return {
@@ -42,6 +46,7 @@ const qsValidator = z.object({
 const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
   const { data: user, isFetching } = trpc.get.userById.useQuery(userId)
   const [message, setMessage] = useState<string>()
+  const [openCreateOfferModal, setOpenCreateOfferModal] = useState(false)
   const { mutateAsync } = trpc.protectedMutation.sendMessage.useMutation()
 
   const { queue, addSentMessageToQueue } = useConversation(userId)
@@ -142,7 +147,7 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
         <Box
           id="footer"
           sx={{
-            height: 100
+            height: user.isFreelance ? 208 : 100
           }}
         >
           <Divider />
@@ -161,7 +166,7 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
                 label={'Votre message'}
                 onChange={e => setMessage(e.target.value)}
                 value={message}
-                helperText={`${message?.length ?? 0} / 1000`}
+                helperText={`${message?.length ?? 0} / ${config.userInteraction.messageMaxLen}`}
                 multiline
                 fullWidth
                 minRows={1}
@@ -186,12 +191,22 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
                       </InputAdornment>
                     )
                   },
-                  htmlInput: { maxLength: 1000 }
+                  htmlInput: { maxLength: config.userInteraction.messageMaxLen }
                 }}
               />
             </form>
+            {user.isFreelance && (
+              <Box display={'flex'} flexDirection={'row'} justifyContent={'flex-end'}>
+                <Button onClick={() => setOpenCreateOfferModal(true)} variant="outlined">
+                  Proposer une offre
+                </Button>
+              </Box>
+            )}
           </Box>
         </Box>
+        <BaseModal open={openCreateOfferModal} handleClose={() => setOpenCreateOfferModal(false)}>
+          <CreateOfferModal />
+        </BaseModal>
       </Box>
     )
   )

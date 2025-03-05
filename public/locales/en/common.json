@@ -1,5 +1,7 @@
 {
   "401errors": "You have no access to this page, thank to log you.",
+  "descriptionTooLong": "The description is too long",
+  "jobTitleTooLong": "The job title is too long",
 
   "navbarHeadline": "The best freelancers at your service",
   "company": "Company",
@@ -32,6 +34,7 @@
   "isFreelance": "Freelance profile",
   "yes": "yes",
   "no": "no",
+  "freelanceMode": "Freelance mode",
   "activateFreelance": "Configure your freelance profile",
   "description": "description",
   "descriptionHelpText": "Add a description on your profile will activate the freelance mode.",
