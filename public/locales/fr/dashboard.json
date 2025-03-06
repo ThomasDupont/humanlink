@@ -1,0 +1,9 @@
+{
+  "orders": "commandes",
+  "wallet": "wallet",
+  "services": "services",
+  "servicesManagement": "Gestion des services",
+  "ordersManagement": "Gestion des commandes",
+  "walletManagement": "Gestion du wallet",
+  "addService": "Ajouter un service"
+}

@@ -11,7 +11,11 @@ type Config = {
   userInteraction: {
     descriptionMaxLen: number
     jobTitleMaxLen: number
+    serviceTitleMaxLen: number
+    serviceShortDescriptionMaxLen: number
+    serviceDescriptionMaxLen: number
     messageMaxLen: number
+    fixedPriceMax: number
   }
 }
 
@@ -23,7 +27,11 @@ const config: Config = {
   userInteraction: {
     descriptionMaxLen: 2000,
     jobTitleMaxLen: 100,
-    messageMaxLen: 1000
+    serviceTitleMaxLen: 100,
+    serviceShortDescriptionMaxLen: 300,
+    serviceDescriptionMaxLen: 2000,
+    messageMaxLen: 1000,
+    fixedPriceMax: 50_000_00
   }
 }
 

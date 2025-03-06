@@ -23,6 +23,7 @@ import { Spinner } from '@/components/Spinner'
 import config from '@/config'
 import BaseModal from '@/components/BaseModal'
 import CreateOfferModal from '@/components/Modals/CreateOffer.modal'
+import { useTranslation } from 'react-i18next'
 
 export const getStaticProps: GetStaticProps = async ({ locale }) => {
   return {
@@ -44,6 +45,7 @@ const qsValidator = z.object({
 })
 
 const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
+  const { t } = useTranslation('chat')
   const { data: user, isFetching } = trpc.get.userById.useQuery(userId)
   const [message, setMessage] = useState<string>()
   const [openCreateOfferModal, setOpenCreateOfferModal] = useState(false)
@@ -163,7 +165,7 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
                 type="textarea"
                 variant="standard"
                 color="primary"
-                label={'Votre message'}
+                label={t('yourMessage')}
                 onChange={e => setMessage(e.target.value)}
                 value={message}
                 helperText={`${message?.length ?? 0} / ${config.userInteraction.messageMaxLen}`}

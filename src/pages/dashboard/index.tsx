@@ -1,7 +1,14 @@
+import { Spinner } from '@/components/Spinner'
+import { PatternMatching } from '@/types/utility.type'
+import { trpc } from '@/utils/trpc'
 import { Container, Box, Typography } from '@mui/material'
 import { GetStaticProps } from 'next'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
-import { ReactElement, useState } from 'react'
+import React, { ReactElement, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import OrdersItem from './Orders.item'
+import ServicesItem from './Services.item'
+import WalletItem from './Wallet.item'
 
 const Base = ({ children }: { children: ReactElement }) => {
   return (
@@ -25,12 +32,12 @@ enum Item {
 
 const dashboardViews = [
   {
-    item: Item.SERVICES,
-    freelanceOnly: true
-  },
-  {
     item: Item.ORDERS,
     freelanceOnly: false
+  },
+  {
+    item: Item.SERVICES,
+    freelanceOnly: true
   },
   {
     item: Item.WALLET,
@@ -38,7 +45,16 @@ const dashboardViews = [
   }
 ]
 
+const itemMatcher: PatternMatching<{
+  [K in Item]: () => ReactElement
+}> = {
+  [Item.ORDERS]: () => <OrdersItem />,
+  [Item.SERVICES]: () => <ServicesItem />,
+  [Item.WALLET]: () => <WalletItem />
+}
+
 const MenuItem = ({ title, selected }: { title: string; selected: boolean }) => {
+  const { t } = useTranslation('dashboard')
   return (
     <Box
       sx={t => ({
@@ -51,7 +67,7 @@ const MenuItem = ({ title, selected }: { title: string; selected: boolean }) => 
       })}
     >
       <Typography variant="h3" component={'p'}>
-        {title}
+        {t(title)}
       </Typography>
     </Box>
   )
@@ -60,7 +76,7 @@ const MenuItem = ({ title, selected }: { title: string; selected: boolean }) => 
 export const getStaticProps: GetStaticProps = async ({ locale }) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+      ...(await serverSideTranslations(locale ?? 'en', ['common', 'dashboard', 'service'])),
       locale
     }
   }
@@ -68,6 +84,40 @@ export const getStaticProps: GetStaticProps = async ({ locale }) => {
 
 export default function Dashboard() {
   const [selectedItem, setSelectedItem] = useState<Item>()
+  const { t } = useTranslation('common')
+
+  const { data: user, isFetching } = trpc.protectedGet.me.useQuery()
+
+  useEffect(() => {
+    if (user) {
+      setSelectedItem(user.isFreelance ? Item.SERVICES : Item.ORDERS)
+    }
+  }, [user?.email])
+
+  if (isFetching) {
+    return (
+      <Base>
+        <Spinner />
+      </Base>
+    )
+  }
+
+  if (!user) {
+    return (
+      <Base>
+        <Typography
+          align="center"
+          variant="h1"
+          sx={{
+            mb: 10
+          }}
+        >
+          {t('401errors')}
+        </Typography>
+      </Base>
+    )
+  }
+
   return (
     <Base>
       <>
@@ -89,17 +139,28 @@ export default function Dashboard() {
           <Box
             id="menu"
             sx={t => ({
-              width: '10%',
               borderRight: `solid 1px ${t.palette.secondary[100]}`
             })}
           >
-            {dashboardViews.map(item => (
-              <Box onClick={() => setSelectedItem(item.item)} key={item.item}>
-                <MenuItem selected={selectedItem === item.item} title={item.item} />
-              </Box>
-            ))}
+            {dashboardViews.map(item => {
+              if (item.freelanceOnly && user.isFreelance) {
+                return (
+                  <Box onClick={() => setSelectedItem(item.item)} key={item.item}>
+                    <MenuItem selected={selectedItem === item.item} title={item.item} />
+                  </Box>
+                )
+              } else if (!item.freelanceOnly) {
+                return (
+                  <Box onClick={() => setSelectedItem(item.item)} key={item.item}>
+                    <MenuItem selected={selectedItem === item.item} title={item.item} />
+                  </Box>
+                )
+              }
+            })}
           </Box>
-          <Box id="main"></Box>
+          <Box width={'100%'} id="main">
+            {selectedItem && itemMatcher[selectedItem]()}
+          </Box>
         </Box>
       </>
     </Base>

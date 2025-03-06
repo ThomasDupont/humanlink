@@ -65,7 +65,7 @@ export default function Profile({ locale }: { locale: SuportedLocale }) {
       setDescription(user.description)
       setIsFreelance(user.isFreelance)
     }
-  }, [user])
+  }, [user?.email])
 
   const ReactQuill = useMemo(() => dynamic(() => import('react-quill'), { ssr: false }), [])
 
@@ -264,6 +264,7 @@ export default function Profile({ locale }: { locale: SuportedLocale }) {
                         Preview description
                       </Typography>
                       <Box
+                        id="preview-desc"
                         dangerouslySetInnerHTML={{
                           __html: description.slice(0, config.userInteraction.descriptionMaxLen)
                         }}

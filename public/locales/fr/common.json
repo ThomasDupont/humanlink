@@ -36,9 +36,13 @@
   "no": "non",
   "freelanceMode": "Mode freelance",
   "activateFreelance": "Configurer votre profil freelance",
-  "description": "description",
   "descriptionHelpText": "Ajouter une description à votre profil active le mode freelance.",
   "jobTitle": "Votre fonction",
   "save": "sauvegarder",
-  "saved": "sauvegardé"
+  "saved": "sauvegardé",
+
+  "title": "titre",
+  "shortDescription": "courte description",
+  "description": "description",
+  "category": "Catégorie"
 }

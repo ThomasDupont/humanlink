@@ -8,12 +8,12 @@ a {
   text-decoration: none;
 }
 
-p,
+#preview-desc p,
 li {
   font-family: roboto;
 }
 
-li {
+#preview-desc li {
   margin-left: 16px;
 }
 

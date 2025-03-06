@@ -1,0 +1,9 @@
+{
+  "orders": "orders",
+  "wallet": "wallet",
+  "services": "services",
+  "servicesManagement": "Services management",
+  "ordersManagement": "Orders management",
+  "walletManagement": "Wallet management",
+  "addService": "Add a service"
+}
