@@ -1,5 +1,5 @@
 import BaseModal from '@/components/BaseModal'
-import CreateServiceModal from '@/components/Modals/CreateService.modal'
+import CreateOrUpdateServiceModal from '@/components/Modals/CreateOrUpdateServiceModal'
 import { Box, Button, Typography } from '@mui/material'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -22,7 +22,7 @@ export default function ServicesItem() {
         </Button>
       </Box>
       <BaseModal open={openAddServiceModal} handleClose={() => setOpenAddServiceModal(false)}>
-        <CreateServiceModal />
+        <CreateOrUpdateServiceModal />
       </BaseModal>
     </Box>
   )

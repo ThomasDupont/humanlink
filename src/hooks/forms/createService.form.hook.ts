@@ -1,8 +1,9 @@
 import config from '@/config'
 import { Category, Lang } from '@prisma/client'
 import { Effect, Exit } from 'effect'
-import { FormError } from './Errors'
+import { FormError } from '../../utils/effects/Errors'
 import { Schema } from 'effect'
+import { validateStringEffect, validateNumberEffect } from '@/utils/effects/validate.effect'
 
 const stringError = {
   message: () => 'value is not a string'
@@ -45,73 +46,44 @@ export enum ErrorsTag {
   Price = 'price'
 }
 
-const validateStringEffect =
-  <T extends typeof Schema.String>(codec: T, maxLen: number, tag: string) =>
-  (input: unknown) =>
-    Schema.decodeUnknown(codec)(input).pipe(
-      Effect.flatMap(value =>
-        Effect.if(value.length !== 0, {
-          onFalse: () => Effect.fail(FormError.of(tag)(new Error(`${tag} must be setted`))),
-          onTrue: () => Effect.succeed(value)
-        })
-      ),
-      Effect.flatMap(value =>
-        Effect.if(value.length < maxLen, {
-          onFalse: () =>
-            Effect.fail(FormError.of(tag)(new Error(`${tag} length exceed ${maxLen}`))),
-          onTrue: () => Effect.succeed(value)
-        })
-      ),
-      Effect.mapError(FormError.of(tag))
-    )
-
-const validateNumberEffect =
-  <T extends typeof Schema.Number>(codec: T, max: number, tag: string) =>
-  (input: unknown) =>
-    Schema.decodeUnknown(codec)(input).pipe(
-      Effect.flatMap(value =>
-        Effect.if(value < max, {
-          onFalse: () => Effect.fail(FormError.of(tag)(new Error(`${tag} length exceed ${max}`))),
-          onTrue: () => Effect.succeed(value)
-        })
-      ),
-      Effect.mapError(FormError.of(tag))
-    )
-
 const validateCategoryEffect = (input: unknown) =>
   Schema.decodeUnknown(category)(input).pipe(Effect.mapError(FormError.of(ErrorsTag.Category)))
+
 const validateLangsEffect = (input: unknown) =>
-  Schema.decodeUnknown(langs)(input).pipe(Effect.mapError(FormError.of(ErrorsTag.Langs)))
+  Schema.decodeUnknown(langs)(input).pipe(
+    Effect.flatMap(value =>
+      Effect.if(value.length > 0, {
+        onFalse: () => Effect.fail(FormError.of('lang')(new Error(`langs must be setted`))),
+        onTrue: () => Effect.succeed(value)
+      })
+    ),
+    Effect.mapError(FormError.of(ErrorsTag.Langs))
+  )
 
 export const useCreateServiceFormValidation = () => {
   const validate = (input: Partial<CreateServiceFormSchema>) => {
     const errors: FormError[] = []
-
-    validateStringEffect(
-      title,
-      config.userInteraction.serviceTitleMaxLen,
-      ErrorsTag.Title
-    )(input.title).pipe(
-      Effect.runSyncExit,
-      Exit.mapError(e => errors.push(e))
-    )
-
-    validateStringEffect(
-      description,
-      config.userInteraction.serviceDescriptionMaxLen,
-      ErrorsTag.Description
-    )(input.description).pipe(
-      Effect.runSyncExit,
-      Exit.mapError(e => errors.push(e))
-    )
-
-    validateStringEffect(
-      shortDescription,
-      config.userInteraction.serviceShortDescriptionMaxLen,
-      ErrorsTag.ShortDescription
-    )(input.shortDescription).pipe(
-      Effect.runSyncExit,
-      Exit.mapError(e => errors.push(e))
+    ;[
+      validateStringEffect(
+        title,
+        { max: config.userInteraction.serviceTitleMaxLen },
+        ErrorsTag.Title
+      )(input.title),
+      validateStringEffect(
+        description,
+        { max: config.userInteraction.serviceDescriptionMaxLen },
+        ErrorsTag.Description
+      )(input.description),
+      validateStringEffect(
+        shortDescription,
+        { max: config.userInteraction.serviceShortDescriptionMaxLen },
+        ErrorsTag.ShortDescription
+      )(input.shortDescription)
+    ].map(eff =>
+      eff.pipe(
+        Effect.runSyncExit,
+        Exit.mapError(e => errors.push(e))
+      )
     )
 
     validateCategoryEffect(input.category).pipe(
@@ -126,7 +98,7 @@ export const useCreateServiceFormValidation = () => {
 
     validateNumberEffect(
       price,
-      config.userInteraction.fixedPriceMax,
+      { max: config.userInteraction.fixedPriceMax },
       ErrorsTag.Price
     )(input.price).pipe(
       Effect.runSyncExit,

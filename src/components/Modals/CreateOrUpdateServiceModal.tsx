@@ -4,7 +4,7 @@ import {
   ErrorsTag,
   useCreateServiceFormValidation
 } from '@/hooks/forms/createService.form.hook'
-import { FormError } from '@/hooks/forms/Errors'
+import { FormError } from '@/utils/effects/Errors'
 import { categoryToArray, langsToArray } from '@/utils/retreatPrismaSchema'
 import {
   Alert,
@@ -12,7 +12,6 @@ import {
   Button,
   Checkbox,
   FormControl,
-  Input,
   InputLabel,
   ListItemText,
   MenuItem,
@@ -22,9 +21,15 @@ import {
   TextField,
   Typography
 } from '@mui/material'
+import { NumericFormat } from 'react-number-format'
 import { Category, Lang } from '@prisma/client'
-import { FormEvent, useState } from 'react'
+import { FormEvent, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import DOMPurify from 'dompurify'
+import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
+import 'react-quill/dist/quill.snow.css'
+import dynamic from 'next/dynamic'
+import { ServiceWithPrice } from '@/types/Services.type'
 
 const categories = categoryToArray(Category)
 const langs = langsToArray(Lang)
@@ -40,16 +45,16 @@ const MenuProps = {
   }
 }
 
-export default function CreateServiceModal() {
+export default function CreateOrUpdateServiceModal({ service }: { service?: ServiceWithPrice }) {
   const [formValues, setFormValues] = useState<
-    Omit<CreateServiceFormSchema, 'category'> & { category?: Category }
+    Omit<CreateServiceFormSchema, 'category' | 'price'> & { category?: Category; price?: number }
   >({
-    title: '',
-    shortDescription: '',
-    description: '',
-    category: undefined,
-    langs: [],
-    price: 0
+    title: service ? service.title : '',
+    shortDescription: service ? service.descriptionShort : '',
+    description: service ? service.description : '',
+    category: service ? service.category : undefined,
+    langs: service ? service.langs : [],
+    price: service && service.prices ? service.prices[0]?.number : undefined
   })
   const { t } = useTranslation('dashboard')
   const { t: commonT } = useTranslation('common')
@@ -59,6 +64,8 @@ export default function CreateServiceModal() {
   const [openSnackBar, setOpenSnackBar] = useState(false)
 
   const { validate } = useCreateServiceFormValidation()
+
+  const ReactQuill = useMemo(() => dynamic(() => import('react-quill'), { ssr: false }), [])
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -113,7 +120,7 @@ export default function CreateServiceModal() {
               <Select
                 variant="standard"
                 labelId="category"
-                value={formValues.category}
+                value={formValues.category ?? ''}
                 error={getErrorByTag(ErrorsTag.Category) !== null}
                 onChange={e =>
                   setFormValues(state => ({
@@ -164,21 +171,23 @@ export default function CreateServiceModal() {
                 width: '20%'
               }}
             >
-              <InputLabel htmlFor="price">Price €</InputLabel>
-              <Input
-                value={formValues.price}
-                onChange={e => {
-                  const n = parseInt(e.target.value, 10)
+              <NumericFormat
+                value={formValues.price ?? ''}
+                onValueChange={e => {
                   setFormValues(s => ({
                     ...s,
-                    price: isNaN(n) ? 0 : n
+                    price: e.floatValue
                   }))
                 }}
-                error={getErrorByTag(ErrorsTag.Price) !== null}
+                customInput={TextField}
+                thousandSeparator
+                decimalScale={2}
+                valueIsNumericString
+                allowNegative={false}
                 id="price"
-                aria-label="price"
-                type="number"
-                color="primary"
+                variant="standard"
+                label="Price €"
+                error={getErrorByTag(ErrorsTag.Price) !== null}
               />
             </FormControl>
           </Box>
@@ -227,30 +236,38 @@ export default function CreateServiceModal() {
               htmlInput: { maxLength: config.userInteraction.serviceShortDescriptionMaxLen }
             }}
           />
-          <TextField
-            type="textarea"
-            fullWidth
-            variant="standard"
-            color="primary"
-            minRows={4}
-            label={`${commonT('description')}`}
-            error={getErrorByTag(ErrorsTag.Description) !== null}
-            multiline
-            onChange={e =>
-              setFormValues(state => ({
-                ...state,
-                description: e.target.value
-              }))
-            }
-            value={formValues.description}
-            helperText={`${formValues.description.length} / ${config.userInteraction.serviceDescriptionMaxLen}`}
-            slotProps={{
-              input: {
-                spellCheck: 'false'
-              },
-              htmlInput: { maxLength: config.userInteraction.descriptionMaxLen }
-            }}
-          />
+          <Box
+            width={'100%'}
+            display={'flex'}
+            flexDirection={'column'}
+            justifyContent={'flex-start'}
+            textAlign={'left'}
+          >
+            <Box width={'100%'} minHeight={100}>
+              <Typography variant="body2">{commonT('description')}</Typography>
+              <ReactQuill
+                modules={{
+                  toolbar: [['bold', 'italic', 'underline'], [{ list: 'bullet' }]]
+                }}
+                theme="snow"
+                value={formValues.description}
+                onChange={v =>
+                  setFormValues(state => ({
+                    ...state,
+                    description: cleanHtmlTag(DOMPurify)(v)
+                  }))
+                }
+              />
+              <Typography variant="body2">
+                {`${formValues.description.length} / ${config.userInteraction.serviceDescriptionMaxLen}`}
+              </Typography>
+              {getErrorByTag(ErrorsTag.Description) && (
+                <Typography color="error" variant="body1">
+                  {getErrorByTag(ErrorsTag.Description)?.message}
+                </Typography>
+              )}
+            </Box>
+          </Box>
           <Button size="medium" type="submit" variant="contained">
             {commonT('save')}
           </Button>

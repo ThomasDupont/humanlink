@@ -1,13 +1,10 @@
 import { Price, PrismaClient, Service } from '@prisma/client'
-import { DeleteRecord, Sync } from '../sync/sync'
+import { ServiceWithPrice, ServiceWithPriceWithoutCreatedDateAndId } from '@/types/Services.type'
 
-type ServiceWithPrice = Service & {
-  prices: Price[]
-}
-export const servicesCrud = (prisma: PrismaClient, sync: Sync, deleteRecord: DeleteRecord) => {
-  const createService = async (service: Omit<ServiceWithPrice, 'id'>) => {
+export const servicesCrud = (prisma: PrismaClient) => {
+  const createService = async (service: ServiceWithPriceWithoutCreatedDateAndId) => {
     const { prices, ...rawService } = service
-    const insertedService = await prisma.service.create({
+    return await prisma.service.create({
       data: {
         ...rawService,
         prices: {
@@ -18,16 +15,12 @@ export const servicesCrud = (prisma: PrismaClient, sync: Sync, deleteRecord: Del
         prices: true
       }
     })
-
-    await sync(insertedService)
-
-    return insertedService
   }
 
-  const updateService = async (service: Service, prices?: Price[]) => {
+  const updateService = async (service: Omit<Service, 'createdAt'>, prices?: Price[]) => {
     const [updatedService, ...updatedPrices] = await prisma.$transaction([
       prisma.service.update({
-        where: { id: service.id },
+        where: { id: service.id, userId: service.userId },
         data: service
       }),
       ...(prices?.map(price =>
@@ -43,8 +36,6 @@ export const servicesCrud = (prisma: PrismaClient, sync: Sync, deleteRecord: Del
       prices: updatedPrices
     }
 
-    await sync(serviceWithPrice)
-
     return serviceWithPrice
   }
 
@@ -52,8 +43,6 @@ export const servicesCrud = (prisma: PrismaClient, sync: Sync, deleteRecord: Del
     await prisma.service.delete({
       where: { id }
     })
-
-    await deleteRecord(id)
   }
 
   const getServiceById = (id: number): Promise<ServiceWithPrice | null> => {

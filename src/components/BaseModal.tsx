@@ -8,7 +8,13 @@ type BaseModalProps = {
 }
 export default function BaseModal({ children, open, handleClose }: BaseModalProps) {
   return (
-    <Modal open={open} onClose={handleClose}>
+    <Modal
+      open={open}
+      onClose={handleClose}
+      sx={{
+        overflow: 'scroll'
+      }}
+    >
       <Fade in={open}>
         <Box
           sx={t => ({

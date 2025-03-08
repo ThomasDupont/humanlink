@@ -12,6 +12,8 @@ import searchFactory from './searchService/search.factory'
 import { protectedprocedure } from './middlewares'
 import { userMe } from './trpcProcedures/get.trpc'
 import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
+import { Category, Lang } from '@prisma/client'
+import { upsertService } from './trpcProcedures/upsert.trpc'
 
 export const appRouter = router({
   get: router({
@@ -81,6 +83,53 @@ export const appRouter = router({
             isFreelance: options.input.isFreelance
           })
         )
+    }),
+    service: router({
+      upsert: protectedprocedure
+        .input(
+          z.object({
+            id: z.number().optional(),
+            title: z.string().min(1).max(config.userInteraction.serviceTitleMaxLen),
+            shortDescription: z
+              .string()
+              .min(1)
+              .max(config.userInteraction.serviceShortDescriptionMaxLen),
+            description: z.string().min(1).max(config.userInteraction.descriptionMaxLen),
+            category: z.nativeEnum(Category),
+            langs: z.array(z.nativeEnum(Lang)),
+            prices: z.array(
+              z.object({
+                number: z.number().min(0).max(config.userInteraction.fixedPriceMax),
+                id: z.number().optional()
+              })
+            )
+          })
+        )
+        .mutation(options => {
+          return upsertService({
+            userId: options.ctx.session.user.id,
+            serviceId: options.input.id,
+            service: {
+              title: options.input.title,
+              description: options.input.description,
+              descriptionShort: options.input.shortDescription,
+              category: options.input.category,
+              langs: options.input.langs,
+              type: config.serviceTypeFromCategory[options.input.category],
+              // ---- MVP default
+              images: ['https://picsum.photos/1000/625'],
+              localisation: '',
+              renewable: false
+            },
+            prices: options.input.prices.map(price => ({
+              id: price.id ?? 0,
+              number: price.number,
+              // ---- MVP default
+              type: 'fix',
+              currency: 'EUR'
+            }))
+          }).run()
+        })
     })
   })
 })

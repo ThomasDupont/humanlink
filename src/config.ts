@@ -1,3 +1,5 @@
+import { Category, ServiceType } from '@prisma/client'
+
 export type UserHookProvider = 'real' | 'fake'
 export type SearchHookProvider = 'elastic' | 'transformer'
 export type BackendSearchProvider = 'algolia' | 'elastic'
@@ -17,6 +19,7 @@ type Config = {
     messageMaxLen: number
     fixedPriceMax: number
   }
+  serviceTypeFromCategory: Record<Category, ServiceType>
 }
 
 const config: Config = {
@@ -27,11 +30,19 @@ const config: Config = {
   userInteraction: {
     descriptionMaxLen: 2000,
     jobTitleMaxLen: 100,
-    serviceTitleMaxLen: 100,
+    serviceTitleMaxLen: 120,
     serviceShortDescriptionMaxLen: 300,
     serviceDescriptionMaxLen: 2000,
     messageMaxLen: 1000,
     fixedPriceMax: 50_000_00
+  },
+  serviceTypeFromCategory: {
+    ...(Object.fromEntries(Object.keys(Category).map(key => [key, 'digital'])) as Record<
+      Category,
+      ServiceType
+    >),
+    DIY: 'physical',
+    Gardening: 'physical'
   }
 }
 
