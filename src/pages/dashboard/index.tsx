@@ -1,6 +1,5 @@
 import { Spinner } from '@/components/Spinner'
 import { PatternMatching } from '@/types/utility.type'
-import { trpc } from '@/utils/trpc'
 import { Container, Box, Typography } from '@mui/material'
 import { GetStaticProps } from 'next'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
@@ -9,6 +8,7 @@ import { useTranslation } from 'react-i18next'
 import OrdersItem from './Orders.item'
 import ServicesItem from './Services.item'
 import WalletItem from './Wallet.item'
+import { useAuthSession } from '@/hooks/nextAuth.hook'
 
 const Base = ({ children }: { children: ReactElement }) => {
   return (
@@ -86,15 +86,15 @@ export default function Dashboard() {
   const [selectedItem, setSelectedItem] = useState<Item>()
   const { t } = useTranslation('common')
 
-  const { data: user, isFetching } = trpc.protectedGet.me.useQuery()
+  const auth = useAuthSession()
 
   useEffect(() => {
-    if (user) {
-      setSelectedItem(user.isFreelance ? Item.SERVICES : Item.ORDERS)
+    if (auth.user) {
+      setSelectedItem(auth.user.isFreelance ? Item.SERVICES : Item.ORDERS)
     }
-  }, [user?.email])
+  }, [auth.user?.email])
 
-  if (isFetching) {
+  if (!auth.user && !auth.error) {
     return (
       <Base>
         <Spinner />
@@ -102,7 +102,7 @@ export default function Dashboard() {
     )
   }
 
-  if (!user) {
+  if (auth.error) {
     return (
       <Base>
         <Typography
@@ -143,7 +143,7 @@ export default function Dashboard() {
             })}
           >
             {dashboardViews.map(item => {
-              if (item.freelanceOnly && user.isFreelance) {
+              if (item.freelanceOnly && auth.user.isFreelance) {
                 return (
                   <Box onClick={() => setSelectedItem(item.item)} key={item.item}>
                     <MenuItem selected={selectedItem === item.item} title={item.item} />

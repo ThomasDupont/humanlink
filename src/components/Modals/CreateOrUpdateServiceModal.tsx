@@ -30,6 +30,8 @@ import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
 import 'react-quill/dist/quill.snow.css'
 import dynamic from 'next/dynamic'
 import { ServiceWithPrice } from '@/types/Services.type'
+import { trpc } from '@/utils/trpc'
+import { Spinner } from '../Spinner'
 
 const categories = categoryToArray(Category)
 const langs = langsToArray(Lang)
@@ -45,7 +47,13 @@ const MenuProps = {
   }
 }
 
-export default function CreateOrUpdateServiceModal({ service }: { service?: ServiceWithPrice }) {
+export default function CreateOrUpdateServiceModal({
+  service,
+  handleClose
+}: {
+  service?: Omit<ServiceWithPrice, 'createdAt'>
+  handleClose: () => void
+}) {
   const [formValues, setFormValues] = useState<
     Omit<CreateServiceFormSchema, 'category' | 'price'> & { category?: Category; price?: number }
   >({
@@ -56,9 +64,12 @@ export default function CreateOrUpdateServiceModal({ service }: { service?: Serv
     langs: service ? service.langs : [],
     price: service && service.prices ? service.prices[0]?.number : undefined
   })
+  const [showSpinner, setShowSpinner] = useState(false)
   const { t } = useTranslation('dashboard')
   const { t: commonT } = useTranslation('common')
   const { t: serviceT } = useTranslation('service')
+
+  const { mutateAsync } = trpc.protectedMutation.service.upsert.useMutation()
 
   const [formErrors, setFormErrors] = useState<FormError[]>([])
   const [openSnackBar, setOpenSnackBar] = useState(false)
@@ -75,14 +86,42 @@ export default function CreateOrUpdateServiceModal({ service }: { service?: Serv
     setFormErrors(errors)
     if (errors.length) {
       setOpenSnackBar(true)
+      return
     }
+
+    const { price, langs, category, ...raws } = formValues
+
+    setShowSpinner(true)
+    mutateAsync({
+      ...raws,
+      category: category!,
+      langs: [...langs],
+      id: service?.id,
+      prices: [
+        {
+          number: price! * 100,
+          id: service?.prices[0]?.id
+        }
+      ]
+    })
+      .then(() => {
+        setOpenSnackBar(true)
+        setTimeout(() => handleClose(), 1000)
+      })
+      .catch(err => {
+        setFormErrors([err])
+        setOpenSnackBar(true)
+      })
+      .finally(() => setShowSpinner(false))
   }
 
   const getErrorByTag = (tag: ErrorsTag): FormError | null => {
     return formErrors.find(error => error.tag === tag) ?? null
   }
 
-  return (
+  return showSpinner ? (
+    <Spinner />
+  ) : (
     <Box
       sx={{
         overflowY: 'scroll',
@@ -101,7 +140,7 @@ export default function CreateOrUpdateServiceModal({ service }: { service?: Serv
         </Alert>
       </Snackbar>
       <Typography gutterBottom variant="h2" component={'p'}>
-        {t('addService')}
+        {service ? commonT('edit') : t('addService')}
       </Typography>
       <form onSubmit={handleSubmit}>
         <Box display={'flex'} flexDirection={'column'} gap={3} alignItems={'center'} margin={2}>

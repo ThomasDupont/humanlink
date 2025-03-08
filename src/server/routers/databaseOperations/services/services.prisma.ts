@@ -54,5 +54,14 @@ export const servicesCrud = (prisma: PrismaClient) => {
     })
   }
 
-  return { createService, updateService, getServiceById, deleteAServiceById }
+  const getuserServices = (userId: number): Promise<ServiceWithPrice[]> => {
+    return prisma.service.findMany({
+      where: { userId },
+      include: {
+        prices: true
+      }
+    })
+  }
+
+  return { createService, updateService, getServiceById, deleteAServiceById, getuserServices }
 }

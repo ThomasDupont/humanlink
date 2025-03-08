@@ -45,7 +45,10 @@ export const appRouter = router({
           receiverId: options.input.receiverId,
           senderId: options.ctx.session.user.id
         })
-      )
+      ),
+    userServices: protectedprocedure.query(({ ctx }) =>
+      serviceOperations.getuserServices(ctx.session.user.id)
+    )
   }),
   protectedMutation: router({
     sendMessage: protectedprocedure

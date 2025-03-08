@@ -5,6 +5,8 @@ import { Price, Service } from '@prisma/client'
 import { TRPCError } from '@trpc/server'
 import { effectSync, Sync } from '../databaseOperations/sync/sync'
 
+const RETRY = 1
+const RETRY_DELAY = 100
 type UpsertServiceArgs = {
   userId: number
   serviceId?: number
@@ -17,7 +19,7 @@ export const upsertServiceEffect = ({ userId, serviceId, service, prices }: Upse
     const serviceOperations = yield* ServiceOperation
     const sync = yield* Sync
 
-    const retryPolicy = Schedule.addDelay(Schedule.recurs(1), () => '100 millis')
+    const retryPolicy = Schedule.addDelay(Schedule.recurs(RETRY), () => `${RETRY_DELAY} millis`)
 
     return T.tryPromise({
       try: () =>

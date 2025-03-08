@@ -5,5 +5,6 @@
   "servicesManagement": "Gestion des services",
   "ordersManagement": "Gestion des commandes",
   "walletManagement": "Gestion du wallet",
-  "addService": "Ajouter un service"
+  "addService": "Ajouter un service",
+  "removeService": "Supprimer ce service ?"
 }
