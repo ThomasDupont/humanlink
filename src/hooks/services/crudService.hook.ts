@@ -6,5 +6,5 @@ export const useCrudService = () => {
   const { data: userServices, refetch: refetchUserServices } =
     trpc.protectedGet.userServices.useQuery()
 
-  return { upsertService, deleteService, userServices, refetchUserServices }
+  return { upsertService, deleteService, userServices: userServices ?? [], refetchUserServices }
 }

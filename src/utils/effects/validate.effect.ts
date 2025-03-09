@@ -39,3 +39,16 @@ export const validateNumberEffect =
       ),
       Effect.mapError(FormError.of(tag))
     )
+
+export const validateDateEffect =
+  <T extends typeof Schema.Date>(codec: T, { allowPast }: { allowPast: boolean }, tag: string) =>
+  (input: unknown) =>
+    Schema.decodeUnknown(codec)(input).pipe(
+      Effect.flatMap(value =>
+        Effect.if(allowPast || value > new Date(), {
+          onFalse: () => Effect.fail(FormError.of(tag)(new Error(`${tag} is in the past`))),
+          onTrue: () => Effect.succeed(value)
+        })
+      ),
+      Effect.mapError(FormError.of(tag))
+    )
