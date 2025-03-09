@@ -30,8 +30,8 @@ import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
 import 'react-quill/dist/quill.snow.css'
 import dynamic from 'next/dynamic'
 import { ServiceWithPrice } from '@/types/Services.type'
-import { trpc } from '@/utils/trpc'
 import { Spinner } from '../Spinner'
+import { useCrudService } from '@/hooks/services/crudService.hook'
 
 const categories = categoryToArray(Category)
 const langs = langsToArray(Lang)
@@ -65,14 +65,15 @@ export default function CreateOrUpdateServiceModal({
     price: service && service.prices ? service.prices[0]?.number : undefined
   })
   const [showSpinner, setShowSpinner] = useState(false)
+  const [openSnackBar, setOpenSnackBar] = useState(false)
+
   const { t } = useTranslation('dashboard')
   const { t: commonT } = useTranslation('common')
   const { t: serviceT } = useTranslation('service')
 
-  const { mutateAsync } = trpc.protectedMutation.service.upsert.useMutation()
+  const { upsertService } = useCrudService()
 
   const [formErrors, setFormErrors] = useState<FormError[]>([])
-  const [openSnackBar, setOpenSnackBar] = useState(false)
 
   const { validate } = useCreateServiceFormValidation()
 
@@ -92,7 +93,7 @@ export default function CreateOrUpdateServiceModal({
     const { price, langs, category, ...raws } = formValues
 
     setShowSpinner(true)
-    mutateAsync({
+    upsertService({
       ...raws,
       category: category!,
       langs: [...langs],
@@ -110,6 +111,7 @@ export default function CreateOrUpdateServiceModal({
       })
       .catch(err => {
         setFormErrors([err])
+        console.error(err)
         setOpenSnackBar(true)
       })
       .finally(() => setShowSpinner(false))

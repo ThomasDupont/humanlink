@@ -272,7 +272,11 @@ export default function Service({ userId, serviceId }: Props) {
               </Typography>
             </ListItem>
           </List>
-          <Button onClick={() => openChatOrLoginModal()} variant="contained">
+          <Button
+            disabled={me?.id === user.id}
+            onClick={() => openChatOrLoginModal()}
+            variant="contained"
+          >
             {t('takeContact')}
           </Button>
           <BaseModal open={openLoginModal} handleClose={() => setOpenLoginModal(false)}>

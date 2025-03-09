@@ -1,7 +1,7 @@
 import { Schedule, Effect as T } from 'effect'
 import { effectServiceOperations, ServiceOperation } from '../databaseOperations/prisma.provider'
 import { effectLogger, Logger } from '@/server/logger'
-import { Price, Service } from '@prisma/client'
+import { Price, Prisma, Service } from '@prisma/client'
 import { TRPCError } from '@trpc/server'
 import { effectSync, Sync } from '../databaseOperations/sync/sync'
 
@@ -46,6 +46,12 @@ export const upsertServiceEffect = ({ userId, serviceId, service, prices }: Upse
           message: `service ${serviceId} db upsert error`,
           detailedError: error
         })
+
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+          return new TRPCError({
+            code: 'NOT_FOUND'
+          })
+        }
         return new TRPCError({
           code: 'INTERNAL_SERVER_ERROR'
         })

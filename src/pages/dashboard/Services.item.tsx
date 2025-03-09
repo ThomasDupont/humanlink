@@ -1,8 +1,8 @@
 import BaseModal from '@/components/BaseModal'
-import CreateOrUpdateServiceModal from '@/components/Modals/CreateOrUpdateServiceModal'
-import DeleteAService from '@/components/Modals/DeleteAService'
+import CreateOrUpdateServiceModal from '@/components/Modals/CreateOrUpdateService.modal'
+import DeleteAService from '@/components/Modals/DeleteAService.modal'
+import { useCrudService } from '@/hooks/services/crudService.hook'
 import { ServiceWithPrice } from '@/types/Services.type'
-import { trpc } from '@/utils/trpc'
 import { MoreVert } from '@mui/icons-material'
 import {
   Box,
@@ -23,10 +23,12 @@ import { useTranslation } from 'react-i18next'
 
 const ServiceButton = ({
   setOpenAddServiceModal,
-  setOpenRemoveServiceModal
+  setOpenRemoveServiceModal,
+  openLink
 }: {
   setOpenAddServiceModal: () => void
   setOpenRemoveServiceModal: () => void
+  openLink: () => void
 }) => {
   const { t } = useTranslation('common')
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -79,6 +81,14 @@ const ServiceButton = ({
         >
           {t('delete')}
         </MenuItem>
+        <MenuItem
+          onClick={() => {
+            setAnchorEl(null)
+            openLink()
+          }}
+        >
+          {t('preview')}
+        </MenuItem>
       </Menu>
     </Box>
   )
@@ -89,7 +99,7 @@ export default function ServicesItem() {
   const [openAddServiceModal, setOpenAddServiceModal] = useState(false)
   const [openRemoveServiceModal, setOpenRemoveServiceModal] = useState(false)
   const [currentService, setCurrentService] = useState<Omit<ServiceWithPrice, 'createdAt'>>()
-  const { data: services, refetch } = trpc.protectedGet.userServices.useQuery()
+  const { userServices, refetchUserServices } = useCrudService()
 
   return (
     <Box
@@ -122,7 +132,7 @@ export default function ServicesItem() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {services?.map(service => (
+            {userServices?.map(service => (
               <TableRow key={service.id}>
                 <TableCell>{service.title}</TableCell>
                 <TableCell>
@@ -150,6 +160,9 @@ export default function ServicesItem() {
                       setCurrentService(service)
                       setOpenRemoveServiceModal(true)
                     }}
+                    openLink={() => {
+                      if (window) window.open(`service/${service.userId}/${service.id}`, '_blank')
+                    }}
                   />
                 </TableCell>
               </TableRow>
@@ -161,7 +174,7 @@ export default function ServicesItem() {
         <CreateOrUpdateServiceModal
           service={currentService}
           handleClose={() => {
-            refetch()
+            refetchUserServices()
             setOpenAddServiceModal(false)
           }}
         />
@@ -173,8 +186,8 @@ export default function ServicesItem() {
         >
           <DeleteAService
             id={currentService.id}
-            handleClose={() => {
-              refetch()
+            handleClose={type => {
+              if (type === 'yes') refetchUserServices()
               setOpenRemoveServiceModal(false)
             }}
           />

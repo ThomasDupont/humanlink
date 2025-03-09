@@ -40,8 +40,14 @@ export const servicesCrud = (prisma: PrismaClient) => {
   }
 
   const deleteAServiceById = async (id: number) => {
-    await prisma.service.delete({
+    return await prisma.service.delete({
       where: { id }
+    })
+  }
+
+  const deleteAServiceByIdAndUserId = async (id: number, userId: number) => {
+    return await prisma.service.delete({
+      where: { id, userId }
     })
   }
 
@@ -63,5 +69,12 @@ export const servicesCrud = (prisma: PrismaClient) => {
     })
   }
 
-  return { createService, updateService, getServiceById, deleteAServiceById, getuserServices }
+  return {
+    createService,
+    updateService,
+    getServiceById,
+    deleteAServiceById,
+    getuserServices,
+    deleteAServiceByIdAndUserId
+  }
 }

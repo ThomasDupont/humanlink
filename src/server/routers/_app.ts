@@ -14,6 +14,7 @@ import { userMe } from './trpcProcedures/get.trpc'
 import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
 import { Category, Lang } from '@prisma/client'
 import { upsertService } from './trpcProcedures/upsert.trpc'
+import { deleteAService } from './trpcProcedures/delete.trpc'
 
 export const appRouter = router({
   get: router({
@@ -58,11 +59,11 @@ export const appRouter = router({
           message: z.string().min(1).max(config.userInteraction.messageMaxLen)
         })
       )
-      .mutation(options =>
+      .mutation(({ input, ctx }) =>
         messageOperations.sendMessage({
-          senderId: options.ctx.session.user.id,
-          receiverId: options.input.receiverId,
-          message: options.input.message
+          senderId: ctx.session.user.id,
+          receiverId: input.receiverId,
+          message: input.message
         })
       ),
     user: router({
@@ -78,12 +79,12 @@ export const appRouter = router({
             isFreelance: z.boolean()
           })
         )
-        .mutation(options =>
+        .mutation(({ input, ctx }) =>
           userOperations.updateUser({
-            id: options.ctx.session.user.id,
-            description: options.input.description,
-            jobTitle: options.input.jobTitle,
-            isFreelance: options.input.isFreelance
+            id: ctx.session.user.id,
+            description: input.description,
+            jobTitle: input.jobTitle,
+            isFreelance: input.isFreelance
           })
         )
     }),
@@ -108,23 +109,23 @@ export const appRouter = router({
             )
           })
         )
-        .mutation(options => {
+        .mutation(({ input, ctx }) => {
           return upsertService({
-            userId: options.ctx.session.user.id,
-            serviceId: options.input.id,
+            userId: ctx.session.user.id,
+            serviceId: input.id,
             service: {
-              title: options.input.title,
-              description: options.input.description,
-              descriptionShort: options.input.shortDescription,
-              category: options.input.category,
-              langs: options.input.langs,
-              type: config.serviceTypeFromCategory[options.input.category],
+              title: input.title,
+              description: input.description,
+              descriptionShort: input.shortDescription,
+              category: input.category,
+              langs: input.langs,
+              type: config.serviceTypeFromCategory[input.category],
               // ---- MVP default
               images: ['https://picsum.photos/1000/625'],
               localisation: '',
               renewable: false
             },
-            prices: options.input.prices.map(price => ({
+            prices: input.prices.map(price => ({
               id: price.id ?? 0,
               number: price.number,
               // ---- MVP default
@@ -132,7 +133,10 @@ export const appRouter = router({
               currency: 'EUR'
             }))
           }).run()
-        })
+        }),
+      delete: protectedprocedure
+        .input(z.number())
+        .mutation(({ input, ctx }) => deleteAService(input, ctx.session.user.id).run())
     })
   })
 })
