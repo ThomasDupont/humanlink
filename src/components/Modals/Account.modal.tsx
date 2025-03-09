@@ -4,6 +4,7 @@ import { useTranslation } from 'next-i18next'
 import { Email } from '@mui/icons-material'
 import Link from 'next/link'
 import { User } from '@prisma/client'
+import { useRouter } from 'next/router'
 
 const StyledButton = styled(ButtonBase)(({ theme }) => ({
   border: 'solid 1px',
@@ -15,8 +16,16 @@ const StyledButton = styled(ButtonBase)(({ theme }) => ({
   }
 }))
 
-export default function AccountModal({ user }: { user: User }) {
+export default function AccountModal({
+  user,
+  handleClose
+}: {
+  user: User
+  handleClose: () => void
+}) {
   const { t } = useTranslation('common')
+  const router = useRouter()
+
   return (
     <Box
       sx={{
@@ -62,7 +71,14 @@ export default function AccountModal({ user }: { user: User }) {
           </Link>
         </ListItem>
         <ListItem>
-          <StyledButton>{t('myDashboard')}</StyledButton>
+          <StyledButton
+            onClick={() => {
+              handleClose()
+              router.push(`${router.locale}/dashboard`)
+            }}
+          >
+            {t('myDashboard')}
+          </StyledButton>
         </ListItem>
         <ListItem>
           <StyledButton onClick={() => signOut()}>{t('signOut')}</StyledButton>

@@ -1,22 +1,23 @@
+import { removeHtmlTags } from '@/utils/cleanHtmlTag'
 import { Price, Service } from '@prisma/client'
 import { AxiosError, AxiosInstance } from 'axios'
-
-// const ACTION_TYPE: 'manual' | 'auto' = 'manual'
-
-// const RETRY = 2
+import DOMPurify from 'dompurify'
+import { JSDOM } from 'jsdom'
 
 export const syncElastic = (elastic: AxiosInstance) => {
   const sync = async ({ id, ...service }: Service & { prices: Price[] }) => {
     const request = {
       doc: {
         ...service,
-        fulltext: `${service.title} ${service.descriptionShort} ${service.description}`
+        fulltext: removeHtmlTags(DOMPurify(new JSDOM('<!DOCTYPE html>').window))(
+          `${service.title} ${service.descriptionShort} ${service.description}`
+        )
       },
       doc_as_upsert: true
     }
 
     await elastic.post(`/services/_update/${id}`, request).catch((e: AxiosError) => {
-      console.log(e.response?.data)
+      console.error(e.response?.data)
 
       throw e
     })

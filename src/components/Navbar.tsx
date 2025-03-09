@@ -86,7 +86,7 @@ const Icons = ({ mobile }: { mobile: boolean }) => {
                 src={user.image ?? undefined}
               />
               <BaseModal open={openAccountModal} handleClose={() => setOpenAccountModal(false)}>
-                <AccountModal user={user} />
+                <AccountModal user={user} handleClose={() => setOpenAccountModal(false)} />
               </BaseModal>
             </>
           ) : (

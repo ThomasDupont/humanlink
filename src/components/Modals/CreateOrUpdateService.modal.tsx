@@ -62,7 +62,7 @@ export default function CreateOrUpdateServiceModal({
     description: service ? service.description : '',
     category: service ? service.category : undefined,
     langs: service ? service.langs : [],
-    price: service && service.prices ? service.prices[0]?.number : undefined
+    price: service && service.prices ? (service.prices[0]?.number ?? 1) / 100 : undefined
   })
   const [showSpinner, setShowSpinner] = useState(false)
   const [openSnackBar, setOpenSnackBar] = useState(false)
