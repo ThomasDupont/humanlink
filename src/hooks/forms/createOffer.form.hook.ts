@@ -57,7 +57,7 @@ export const useCreateOfferFormValidation = () => {
 
     validateNumberEffect(
       price,
-      { max: config.userInteraction.fixedPriceMax },
+      { max: config.userInteraction.fixedPriceMax, min: 1 },
       ErrorsTag.Price
     )(input.price).pipe(
       Effect.runSyncExit,

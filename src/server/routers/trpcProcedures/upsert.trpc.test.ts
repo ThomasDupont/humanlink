@@ -1,9 +1,9 @@
-import { it, describe, afterEach, vi, expect, beforeEach } from 'vitest'
+import { it, describe, afterEach, vi, expect } from 'vitest'
 import { Effect as T } from 'effect'
 import { upsertServiceEffect } from './upsert.trpc'
 import config from '@/config'
 import { Logger } from '@/server/logger'
-import { ServiceOperation, serviceOperations } from '../databaseOperations/prisma.provider'
+import { ServiceOperations, serviceOperations } from '../databaseOperations/prisma.provider'
 import { Sync } from '../databaseOperations/sync/sync'
 import { Price, Service } from '@prisma/client'
 import { ServiceWithPrice } from '@/types/Services.type'
@@ -20,16 +20,12 @@ describe('upsert trpc test', () => {
       sync: vi.fn(),
       deleteRecord: vi.fn()
     }
-    beforeEach(() => {
-      //vi.useFakeTimers()
-    })
     afterEach(() => {
       loggerErrorMock.mockReset()
       serviceOperationsMock.createService.mockReset()
       serviceOperationsMock.updateService.mockReset()
       syncMock.sync.mockReset()
       syncMock.deleteRecord.mockReset()
-      //vi.useRealTimers()
     })
     it('Should return a ServiceWithPrice (creation)', () => {
       const service: Omit<Service, 'id' | 'createdAt' | 'userId'> = {
@@ -81,7 +77,7 @@ describe('upsert trpc test', () => {
         .pipe(
           T.provideService(Logger, { error: loggerErrorMock }),
           T.provideService(
-            ServiceOperation,
+            ServiceOperations,
             serviceOperationsMock as unknown as typeof serviceOperations
           ),
           T.provideService(Sync, syncMock),
@@ -141,7 +137,7 @@ describe('upsert trpc test', () => {
         .pipe(
           T.provideService(Logger, { error: loggerErrorMock }),
           T.provideService(
-            ServiceOperation,
+            ServiceOperations,
             serviceOperationsMock as unknown as typeof serviceOperations
           ),
           T.provideService(Sync, syncMock),
@@ -202,7 +198,7 @@ describe('upsert trpc test', () => {
       await upsertService.pipe(
         T.provideService(Logger, { error: loggerErrorMock }),
         T.provideService(
-          ServiceOperation,
+          ServiceOperations,
           serviceOperationsMock as unknown as typeof serviceOperations
         ),
         T.provideService(Sync, syncMock),

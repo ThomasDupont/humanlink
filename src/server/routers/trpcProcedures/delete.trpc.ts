@@ -1,5 +1,5 @@
 import { Schedule, Effect as T } from 'effect'
-import { effectServiceOperations, ServiceOperation } from '../databaseOperations/prisma.provider'
+import { effectServiceOperations, ServiceOperations } from '../databaseOperations/prisma.provider'
 import { effectLogger, Logger } from '@/server/logger'
 import { effectSync, Sync } from '../databaseOperations/sync/sync'
 import { TRPCError } from '@trpc/server'
@@ -11,7 +11,7 @@ const RETRY_DELAY = 100
 export const deleteAServiceEffect = (id: number, userId: number) =>
   T.gen(function* () {
     const logger = yield* Logger
-    const serviceOperations = yield* ServiceOperation
+    const serviceOperations = yield* ServiceOperations
     const sync = yield* Sync
 
     const retryPolicy = Schedule.addDelay(Schedule.recurs(RETRY), () => `${RETRY_DELAY} millis`)

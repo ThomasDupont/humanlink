@@ -13,7 +13,7 @@ import { protectedprocedure } from './middlewares'
 import { userMe } from './trpcProcedures/get.trpc'
 import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
 import { Category, Lang } from '@prisma/client'
-import { upsertService } from './trpcProcedures/upsert.trpc'
+import { createOffer, upsertService } from './trpcProcedures/upsert.trpc'
 import { deleteAService } from './trpcProcedures/delete.trpc'
 
 export const appRouter = router({
@@ -101,7 +101,7 @@ export const appRouter = router({
             langs: z.array(z.nativeEnum(Lang)),
             prices: z.array(
               z.object({
-                number: z.number().min(0).max(config.userInteraction.fixedPriceMax),
+                number: z.number().min(100).max(config.userInteraction.fixedPriceMax),
                 id: z.number().optional()
               })
             )
@@ -135,6 +135,48 @@ export const appRouter = router({
       delete: protectedprocedure
         .input(z.number())
         .mutation(({ input, ctx }) => deleteAService(input, ctx.session.user.id).run())
+    }),
+    offer: router({
+      create: protectedprocedure
+        .input(
+          z.object({
+            serviceId: z.number(),
+            description: z.string().min(1).max(config.userInteraction.serviceDescriptionMaxLen),
+            price: z.number().min(100).max(config.userInteraction.fixedPriceMax),
+            deadline: z.coerce
+              .date()
+              .refine(data => data > new Date(), { message: 'The deadline must be in the future' })
+          })
+        )
+        .mutation(({ input, ctx }) => {
+          return createOffer({
+            description: input.description,
+            deadline: input.deadline,
+            serviceId: input.serviceId,
+            userId: ctx.session.user.id,
+            isAccepted: false,
+            isPaid: false,
+            isTerminated: false,
+            terminatedAt: null,
+            paidDate: null,
+            // default: 1
+            milestones: [
+              {
+                description: input.description,
+                deadline: input.deadline,
+                terminatedAt: null,
+                validatedAt: null,
+                PriceMilestone: {
+                  number: input.price,
+                  type: 'fix',
+                  currency: 'EUR',
+                  itemCount: 1,
+                  baseForPercent: null
+                }
+              }
+            ]
+          }).run()
+        })
     })
   })
 })

@@ -17,13 +17,14 @@ import { z } from 'zod'
 import { useAuthSession } from '@/hooks/nextAuth.hook'
 import { trpc } from '../../utils/trpc'
 import { Send } from '@mui/icons-material'
-import { FormEvent, useState, KeyboardEvent } from 'react'
-import { parseMessage, useConversation } from '@/hooks/chat/conversation.hook'
+import { FormEvent, useState, KeyboardEvent, useEffect } from 'react'
+import { useConversation } from '@/hooks/chat/conversation.hook'
 import { Spinner } from '@/components/Spinner'
 import config from '@/config'
 import BaseModal from '@/components/BaseModal'
 import CreateOfferModal from '@/components/Modals/CreateOffer.modal'
 import { useTranslation } from 'react-i18next'
+import { OfferWithMileStonesAndMilestonePrice } from '@/types/Offers.type'
 
 export const getStaticProps: GetStaticProps = async ({ locale }) => {
   return {
@@ -49,9 +50,24 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
   const { data: user, isFetching } = trpc.get.userById.useQuery(userId)
   const [message, setMessage] = useState<string>()
   const [openCreateOfferModal, setOpenCreateOfferModal] = useState(false)
+  const [newOffer, setNewOffer] = useState<OfferWithMileStonesAndMilestonePrice>()
+
+  useEffect(() => {
+    if (newOffer) {
+      mutateAsync({
+        receiverId: userId,
+        message: ''
+        // offerId: newOffer.id
+      }).then(() => {
+        refetch()
+        setMessage('')
+      })
+    }
+  }, [newOffer])
+
   const { mutateAsync } = trpc.protectedMutation.sendMessage.useMutation()
 
-  const { queue, addSentMessageToQueue } = useConversation(userId)
+  const { queue, refetch } = useConversation(userId)
 
   const handleSubmitMessage = (e: FormEvent<HTMLFormElement> | KeyboardEvent<HTMLDivElement>) => {
     e.preventDefault()
@@ -63,8 +79,8 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
     mutateAsync({
       receiverId: userId,
       message
-    }).then(msg => {
-      addSentMessageToQueue(parseMessage(msg))
+    }).then(() => {
+      refetch()
       setMessage('')
     })
   }
@@ -207,7 +223,12 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
           </Box>
         </Box>
         <BaseModal open={openCreateOfferModal} handleClose={() => setOpenCreateOfferModal(false)}>
-          <CreateOfferModal />
+          <CreateOfferModal
+            setNewOffer={offer => {
+              setNewOffer(offer)
+              setOpenCreateOfferModal(false)
+            }}
+          />
         </BaseModal>
       </Box>
     )

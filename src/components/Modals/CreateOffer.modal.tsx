@@ -25,8 +25,15 @@ import {
 } from '@/hooks/forms/createOffer.form.hook'
 import { NumericFormat } from 'react-number-format'
 import config from '@/config'
+import { trpc } from '@/utils/trpc'
+import { OfferWithMileStonesAndMilestonePrice } from '@/types/Offers.type'
+import { offerFromApiToLocal } from '@/utils/retreatDateFromAPI'
 
-export default function CreateOfferModal() {
+export default function CreateOfferModal({
+  setNewOffer
+}: {
+  setNewOffer: (offer: OfferWithMileStonesAndMilestonePrice) => void
+}) {
   const { t: commonT } = useTranslation('common')
   const { t } = useTranslation('service')
   const [formValues, setFormValues] = useState<CreateOffer>({
@@ -35,7 +42,9 @@ export default function CreateOfferModal() {
     price: 0,
     deadline: undefined
   })
-  const [showSpinner, _] = useState(false)
+  const [showSpinner, setShowSpinner] = useState(false)
+
+  const { mutateAsync: createOffer } = trpc.protectedMutation.offer.create.useMutation()
 
   const [openSnackBar, setOpenSnackBar] = useState(false)
   const [formErrors, setFormErrors] = useState<FormError[]>([])
@@ -63,6 +72,19 @@ export default function CreateOfferModal() {
       setOpenSnackBar(true)
       return
     }
+
+    setShowSpinner(true)
+
+    createOffer({
+      deadline: formValues.deadline!,
+      description: formValues.description,
+      price: formValues.price * 100,
+      serviceId: formValues.serviceId!
+    }).then(offer => {
+      setNewOffer(offerFromApiToLocal(offer))
+      setOpenSnackBar(true)
+      setShowSpinner(false)
+    })
   }
 
   const getErrorByTag = (tag: ErrorsTag): FormError | null => {
