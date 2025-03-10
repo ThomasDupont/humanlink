@@ -7,7 +7,6 @@ import {
   Container,
   Grid2 as Grid,
   Snackbar,
-  Switch,
   TextField,
   Typography
 } from '@mui/material'
@@ -52,7 +51,6 @@ export default function Profile({ locale }: { locale: SuportedLocale }) {
 
   const [jobTitle, setJobTitle] = useState(user?.jobTitle ?? '')
   const [description, setDescription] = useState(user?.description ?? '')
-  const [isFreelance, setIsFreelance] = useState(user?.isFreelance ?? false)
 
   const { t } = useTranslation('common')
   const [openSnackBar, setOpenSnackBar] = useState(false)
@@ -63,7 +61,6 @@ export default function Profile({ locale }: { locale: SuportedLocale }) {
     if (user) {
       setJobTitle(user.jobTitle)
       setDescription(user.description)
-      setIsFreelance(user.isFreelance)
     }
   }, [user?.email])
 
@@ -112,8 +109,7 @@ export default function Profile({ locale }: { locale: SuportedLocale }) {
 
     mutateAsync({
       description: description ?? '',
-      jobTitle: jobTitle ?? '',
-      isFreelance
+      jobTitle: jobTitle ?? ''
     }).then(() => {
       setOpenSnackBar(true)
       refetch()
@@ -213,7 +209,9 @@ export default function Profile({ locale }: { locale: SuportedLocale }) {
                   </Typography>
                 </Grid>
                 <Grid size={6}>
-                  <Typography variant="body1">{user.isFreelance ? t('yes') : t('no')}</Typography>
+                  <Typography variant="body1">
+                    {user.services.length ? t('yes') : t('no')}
+                  </Typography>
                 </Grid>
 
                 <Grid size={6} display={'flex'} flexDirection={'column'} justifyContent={'center'}>
@@ -281,9 +279,6 @@ export default function Profile({ locale }: { locale: SuportedLocale }) {
                   <Typography variant="h4" component={'p'}>
                     {t('freelanceMode')}
                   </Typography>
-                </Grid>
-                <Grid size={6}>
-                  <Switch checked={isFreelance} onChange={e => setIsFreelance(e.target.checked)} />
                 </Grid>
               </Grid>
               <Box

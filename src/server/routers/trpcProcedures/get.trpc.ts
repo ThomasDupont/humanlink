@@ -2,6 +2,7 @@ import { Effect as T } from 'effect'
 import { Logger, effectLogger } from '@/server/logger'
 import { TRPCError } from '@trpc/server'
 import { UserOperations, effectUserOperations } from '../databaseOperations/prisma.provider'
+import { UserWithServicesWithPrices } from '@/types/User.type'
 
 export const userMeEffect = (email: string) =>
   T.gen(function* () {
@@ -9,7 +10,8 @@ export const userMeEffect = (email: string) =>
     const userOperations = yield* UserOperations
 
     return T.tryPromise({
-      try: () => userOperations.getUserByEmailWithoutService(email),
+      try: () =>
+        userOperations.getUserByEmail<UserWithServicesWithPrices>(email, { withServices: true }),
       catch: error => {
         logger.error({
           cause: 'database_error',

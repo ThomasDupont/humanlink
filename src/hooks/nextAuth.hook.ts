@@ -1,6 +1,5 @@
-import { NextAuthJsUserError } from '@/types/User.type'
+import { NextAuthJsUserError, UserWithServicesWithPrices } from '@/types/User.type'
 import { trpc } from '@/utils/trpc'
-import { User } from '@prisma/client'
 
 type Base = {
   refetch: () => void
@@ -16,7 +15,7 @@ type UserAuthSessionReturn =
       error: NextAuthJsUserError
     }
   | {
-      user: User
+      user: UserWithServicesWithPrices
       error: null
     }
 export const useAuthSession = (): UserAuthSessionReturn & Base => {
@@ -49,7 +48,11 @@ export const useAuthSession = (): UserAuthSessionReturn & Base => {
     user: {
       ...query.data,
       createdAt: new Date(query.data.createdAt),
-      certifiedDate: query.data.certifiedDate ? new Date(query.data.certifiedDate) : null
+      certifiedDate: query.data.certifiedDate ? new Date(query.data.certifiedDate) : null,
+      services: query.data.services.map(service => ({
+        ...service,
+        createdAt: new Date(service.createdAt)
+      }))
     },
     error: null,
     refetch

@@ -24,33 +24,14 @@ const Base = ({ children }: { children: ReactElement }) => {
   )
 }
 
-enum Item {
-  SERVICES = 'services',
-  ORDERS = 'orders',
-  WALLET = 'wallet'
-}
-
-const dashboardViews = [
-  {
-    item: Item.ORDERS,
-    freelanceOnly: false
-  },
-  {
-    item: Item.SERVICES,
-    freelanceOnly: true
-  },
-  {
-    item: Item.WALLET,
-    freelanceOnly: true
-  }
-]
+type Item = 'services' | 'orders' | 'wallet'
 
 const itemMatcher: PatternMatching<{
   [K in Item]: () => ReactElement
 }> = {
-  [Item.ORDERS]: () => <OrdersItem />,
-  [Item.SERVICES]: () => <ServicesItem />,
-  [Item.WALLET]: () => <WalletItem />
+  orders: () => <OrdersItem />,
+  services: () => <ServicesItem />,
+  wallet: () => <WalletItem />
 }
 
 const MenuItem = ({ title, selected }: { title: string; selected: boolean }) => {
@@ -90,7 +71,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (auth.user) {
-      setSelectedItem(auth.user.isFreelance ? Item.SERVICES : Item.ORDERS)
+      setSelectedItem('orders')
     }
   }, [auth.user?.email])
 
@@ -142,21 +123,11 @@ export default function Dashboard() {
               borderRight: `solid 1px ${t.palette.secondary[100]}`
             })}
           >
-            {dashboardViews.map(item => {
-              if (item.freelanceOnly && auth.user.isFreelance) {
-                return (
-                  <Box onClick={() => setSelectedItem(item.item)} key={item.item}>
-                    <MenuItem selected={selectedItem === item.item} title={item.item} />
-                  </Box>
-                )
-              } else if (!item.freelanceOnly) {
-                return (
-                  <Box onClick={() => setSelectedItem(item.item)} key={item.item}>
-                    <MenuItem selected={selectedItem === item.item} title={item.item} />
-                  </Box>
-                )
-              }
-            })}
+            {Object.keys(itemMatcher).map(item => (
+              <Box onClick={() => setSelectedItem(item as Item)} key={item}>
+                <MenuItem selected={selectedItem === item} title={item} />
+              </Box>
+            ))}
           </Box>
           <Box width={'100%'} id="main">
             {selectedItem && itemMatcher[selectedItem]()}

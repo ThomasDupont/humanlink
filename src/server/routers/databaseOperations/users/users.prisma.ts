@@ -36,10 +36,22 @@ export const userCrud = (prisma: PrismaClient) => {
     })
   }
 
-  const getUserByEmailWithoutService = (email: string): Promise<User | null> => {
+  const getUserByEmail = <U extends User>(
+    email: string,
+    { withServices }: { withServices: boolean }
+  ) => {
     return prisma.user.findUnique({
-      where: { email }
-    })
+      where: { email },
+      ...(withServices && {
+        include: {
+          services: {
+            include: {
+              prices: true
+            }
+          }
+        }
+      })
+    }) as Promise<U | null>
   }
 
   const getUserByIds = (ids: number[]): Promise<UserWithServicesWithPrices[]> => {
@@ -65,6 +77,6 @@ export const userCrud = (prisma: PrismaClient) => {
     deleteUser,
     getUserById,
     getUserByIds,
-    getUserByEmailWithoutService
+    getUserByEmail
   }
 }

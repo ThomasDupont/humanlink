@@ -42,7 +42,6 @@ export const authOptions: NextAuthOptions = {
         email: user.email,
         oauthProvider: account.provider,
         isCertified: false,
-        isFreelance: false,
         description: '',
         jobTitle: '',
         certifiedDate: null,
@@ -51,7 +50,9 @@ export const authOptions: NextAuthOptions = {
       }
 
       try {
-        const userExists = await userOperations.getUserByEmailWithoutService(dbUser.email)
+        const userExists = await userOperations.getUserByEmail(dbUser.email, {
+          withServices: false
+        })
 
         if (!userExists) {
           const createdUser = await userOperations.createUser(dbUser)

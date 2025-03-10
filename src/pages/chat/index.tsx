@@ -149,7 +149,7 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
         <Box
           id="footer"
           sx={{
-            height: user.isFreelance ? 208 : 100
+            height: 208
           }}
         >
           <Divider />
@@ -197,7 +197,7 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
                 }}
               />
             </form>
-            {user.isFreelance && (
+            {user.services.length > 0 && (
               <Box display={'flex'} flexDirection={'row'} justifyContent={'flex-end'}>
                 <Button onClick={() => setOpenCreateOfferModal(true)} variant="outlined">
                   Proposer une offre

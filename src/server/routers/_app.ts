@@ -75,16 +75,14 @@ export const appRouter = router({
               .min(0)
               .max(config.userInteraction.descriptionMaxLen)
               .transform(cleanHtmlTag(DOMPurify(new JSDOM('<!DOCTYPE html>').window))),
-            jobTitle: z.string().min(0).max(config.userInteraction.jobTitleMaxLen),
-            isFreelance: z.boolean()
+            jobTitle: z.string().min(0).max(config.userInteraction.jobTitleMaxLen)
           })
         )
         .mutation(({ input, ctx }) =>
           userOperations.updateUser({
             id: ctx.session.user.id,
             description: input.description,
-            jobTitle: input.jobTitle,
-            isFreelance: input.isFreelance
+            jobTitle: input.jobTitle
           })
         )
     }),

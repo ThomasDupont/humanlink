@@ -36,7 +36,6 @@ model User {
   lastname      String
   oauthProvider OauthProvider
   createdAt     DateTime      @default(now())
-  isFreelance   Boolean
   description   String
   jobTitle      String
   isCertified   Boolean
@@ -47,6 +46,7 @@ model User {
   services      Service[]
   messages1     Message[]     @relation("sender")
   messages2     Message[]     @relation("receiver")
+  offers        Offer[]
 }
 
 // SERVICE
@@ -108,6 +108,7 @@ model Service {
   category         Category
   images           String[]
   prices           Price[]
+  offers           Offer[]
 }
 
 // PRICE
@@ -141,5 +142,50 @@ model Message {
   receiverId Int?
   message    String
   readAt     DateTime?
-  // offerId Int?
+  user       Offer?    @relation(fields: [offerId], references: [id], onDelete: SetNull)
+  offerId    Int?      @unique
+}
+
+// OFFER
+
+model Offer {
+  id           Int         @id @default(autoincrement())
+  createdAt    DateTime    @default(now())
+  user         User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId       Int?
+  service      Service?    @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  serviceId    Int?
+  description  String
+  deadline     DateTime
+  isAccepted   Boolean
+  isPaid       Boolean
+  paidDate     DateTime?
+  isTerminated Boolean
+  terminatedAt DateTime?
+  Message      Message?
+  Milestone    Milestone[]
+}
+
+model Milestone {
+  id             Int             @id @default(autoincrement())
+  createdAt      DateTime        @default(now())
+  offer          Offer           @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  offerId        Int
+  description    String
+  deadline       DateTime
+  terminatedAt   DateTime?
+  validatedAt    DateTime?
+  PriceMilestone PriceMilestone?
+}
+
+model PriceMilestone {
+  id             Int       @id @default(autoincrement())
+  createdAt      DateTime  @default(now())
+  type           PriceType
+  number         Int
+  currency       Currency
+  milestone      Milestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+  milestoneId    Int       @unique
+  baseForPercent Int?
+  itemCount      Int
 }

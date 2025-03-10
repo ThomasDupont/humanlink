@@ -22,7 +22,6 @@ export const useUser = (): HookInterface => {
     oauthProvider: 'google',
     id: 0,
     createdAt: new Date(),
-    isFreelance: false,
     description: '',
     jobTitle: '',
     isCertified: true,
