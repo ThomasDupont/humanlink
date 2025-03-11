@@ -4,8 +4,8 @@ export type OfferWithMileStonesAndMilestonePriceWithoutIdsAndCreatedAt = Omit<
   Offer,
   'id' | 'createdAt'
 > & {
-  milestones: (Omit<Milestone, 'id' | 'createdAt' | 'offerId'> & {
-    PriceMilestone: Omit<PriceMilestone, 'id' | 'createdAt' | 'milestoneId'>
+  milestones: (Omit<Milestone, 'id' | 'createdAt' | 'offerId' | 'priceMilestoneId'> & {
+    priceMilestone: Omit<PriceMilestone, 'id' | 'createdAt'>
   })[]
 }
 

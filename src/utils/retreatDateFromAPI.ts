@@ -10,15 +10,15 @@ export const offerFromApiToLocal = (
     deadline: new Date(offer.deadline),
     paidDate: null,
     terminatedAt: null,
-    milestones: offer.Milestone.map(milestone => ({
+    milestones: offer.milestone.map(milestone => ({
       ...milestone,
       createdAt: new Date(milestone.createdAt),
       deadline: new Date(milestone.deadline),
       terminatedAt: null,
       validatedAt: null,
       priceMilestone: {
-        ...milestone.PriceMilestone!,
-        createdAt: new Date(milestone.PriceMilestone!.createdAt)
+        ...milestone.priceMilestone,
+        createdAt: new Date(milestone.priceMilestone.createdAt)
       }
     }))
   }

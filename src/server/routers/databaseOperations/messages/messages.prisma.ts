@@ -41,6 +41,9 @@ export const messageCrud = (prisma: PrismaClient) => {
       },
       orderBy: {
         id: 'desc'
+      },
+      include: {
+        offer: true
       }
     })
   }

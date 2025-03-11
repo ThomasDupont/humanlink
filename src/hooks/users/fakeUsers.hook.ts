@@ -21,6 +21,7 @@ export const useUser = (): HookInterface => {
     email: profile.email,
     oauthProvider: 'google',
     id: 0,
+    userBalanceId: 0,
     createdAt: new Date(),
     description: '',
     jobTitle: '',

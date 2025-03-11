@@ -35,7 +35,7 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }: any) {
-      const dbUser: Omit<User, 'id' | 'createdAt'> = {
+      const dbUser: Omit<User, 'id' | 'createdAt' | 'userBalanceId'> = {
         firstname: profile.given_name,
         lastname: profile.family_name,
         image: user.image,

@@ -2,9 +2,17 @@ import { UserWithServicesWithPrices } from '@/types/User.type'
 import { PrismaClient, User } from '@prisma/client'
 
 export const userCrud = (prisma: PrismaClient) => {
-  const createUser = (user: Omit<User, 'id' | 'createdAt'>): Promise<User> => {
+  const createUser = (user: Omit<User, 'id' | 'createdAt' | 'userBalanceId'>): Promise<User> => {
     return prisma.user.create({
-      data: user
+      data: {
+        ...user,
+        userBalance: {
+          create: {}
+        }
+      },
+      include: {
+        userBalance: true
+      }
     })
   }
 
@@ -31,7 +39,8 @@ export const userCrud = (prisma: PrismaClient) => {
           include: {
             prices: true
           }
-        }
+        },
+        userBalance: true
       }
     })
   }
@@ -48,7 +57,8 @@ export const userCrud = (prisma: PrismaClient) => {
             include: {
               prices: true
             }
-          }
+          },
+          userBalance: true
         }
       })
     }) as Promise<U | null>
@@ -66,7 +76,8 @@ export const userCrud = (prisma: PrismaClient) => {
           include: {
             prices: true
           }
-        }
+        },
+        userBalance: true
       }
     })
   }

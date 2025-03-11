@@ -7,19 +7,19 @@ export const offersCrud = (prisma: PrismaClient) => {
     return prisma.offer.create({
       data: {
         ...offer,
-        Milestone: {
+        milestone: {
           create: milestones.map(milestone => ({
             ...milestone,
-            PriceMilestone: {
-              create: milestone.PriceMilestone
+            priceMilestone: {
+              create: milestone.priceMilestone
             }
           }))
         }
       },
       include: {
-        Milestone: {
+        milestone: {
           include: {
-            PriceMilestone: true
+            priceMilestone: true
           }
         }
       }

@@ -56,7 +56,8 @@ export const appRouter = router({
       .input(
         z.object({
           receiverId: z.number(),
-          message: z.string().min(1).max(config.userInteraction.messageMaxLen)
+          message: z.string().min(1).max(config.userInteraction.messageMaxLen),
+          offerId: z.number().optional()
         })
       )
       .mutation(({ input, ctx }) =>
@@ -166,7 +167,7 @@ export const appRouter = router({
                 deadline: input.deadline,
                 terminatedAt: null,
                 validatedAt: null,
-                PriceMilestone: {
+                priceMilestone: {
                   number: input.price,
                   type: 'fix',
                   currency: 'EUR',

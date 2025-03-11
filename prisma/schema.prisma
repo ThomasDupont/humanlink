@@ -30,23 +30,26 @@ enum Role {
 }
 
 model User {
-  id            Int           @id @default(autoincrement())
-  email         String        @unique
-  firstname     String
-  lastname      String
-  oauthProvider OauthProvider
-  createdAt     DateTime      @default(now())
-  description   String
-  jobTitle      String
-  isCertified   Boolean
-  certifiedDate DateTime?
-  image         String?
-  country       Country
-  roles         Role[]
-  services      Service[]
-  messages1     Message[]     @relation("sender")
-  messages2     Message[]     @relation("receiver")
-  offers        Offer[]
+  id                   Int                    @id @default(autoincrement())
+  email                String                 @unique
+  firstname            String
+  lastname             String
+  oauthProvider        OauthProvider
+  createdAt            DateTime               @default(now())
+  description          String
+  jobTitle             String
+  isCertified          Boolean
+  certifiedDate        DateTime?
+  image                String?
+  country              Country
+  roles                Role[]
+  services             Service[]
+  messages1            Message[]              @relation("sender")
+  messages2            Message[]              @relation("receiver")
+  offers               Offer[]
+  userBalance          UserBalance            @relation(fields: [userBalanceId], references: [id])
+  userBalanceId        Int                    @unique
+  UserBalanceEventsLog UserBalanceEventsLog[]
 }
 
 // SERVICE
@@ -142,7 +145,7 @@ model Message {
   receiverId Int?
   message    String
   readAt     DateTime?
-  user       Offer?    @relation(fields: [offerId], references: [id], onDelete: SetNull)
+  offer      Offer?    @relation(fields: [offerId], references: [id], onDelete: SetNull)
   offerId    Int?      @unique
 }
 
@@ -162,30 +165,43 @@ model Offer {
   paidDate     DateTime?
   isTerminated Boolean
   terminatedAt DateTime?
-  Message      Message?
-  Milestone    Milestone[]
+  message      Message?
+  milestone    Milestone[]
 }
 
 model Milestone {
-  id             Int             @id @default(autoincrement())
-  createdAt      DateTime        @default(now())
-  offer          Offer           @relation(fields: [offerId], references: [id], onDelete: Cascade)
-  offerId        Int
-  description    String
-  deadline       DateTime
-  terminatedAt   DateTime?
-  validatedAt    DateTime?
-  PriceMilestone PriceMilestone?
+  id               Int            @id @default(autoincrement())
+  createdAt        DateTime       @default(now())
+  offer            Offer          @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  offerId          Int
+  description      String
+  deadline         DateTime
+  terminatedAt     DateTime?
+  validatedAt      DateTime?
+  priceMilestone   PriceMilestone @relation(fields: [priceMilestoneId], references: [id])
+  priceMilestoneId Int            @unique
 }
 
 model PriceMilestone {
-  id             Int       @id @default(autoincrement())
-  createdAt      DateTime  @default(now())
+  id             Int        @id @default(autoincrement())
+  createdAt      DateTime   @default(now())
   type           PriceType
   number         Int
   currency       Currency
-  milestone      Milestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
-  milestoneId    Int       @unique
+  milestone      Milestone?
   baseForPercent Int?
   itemCount      Int
+}
+
+model UserBalance {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  user      User?
+}
+
+model UserBalanceEventsLog {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
 }

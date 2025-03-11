@@ -64,13 +64,19 @@ async function main() {
     }
 
     const insertedUser = await prisma.user.create({
-      data: enrichedUser,
+      data: {
+        ...enrichedUser,
+        userBalance: {
+          create: enrichedUser.userBalance
+        }
+      },
       include: {
         services: {
           include: {
             prices: true
           }
-        }
+        },
+        userBalance: true
       }
     })
 
