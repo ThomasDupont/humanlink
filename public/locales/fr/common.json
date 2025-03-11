@@ -1,5 +1,7 @@
 {
   "401errors": "Vous n'avez pas accès à cette page, merci de vous connecter.",
+  "descriptionTooLong": "La description est trop longue",
+  "jobTitleTooLong": "Le nom de votre profession est trop long",
 
   "navbarHeadline": "Les meilleurs des freelances à votre service",
   "company": "Société",
@@ -31,5 +33,19 @@
   "creationDate": "Date d'inscription",
   "isFreelance": "Profil de freelance",
   "yes": "oui",
-  "no": "non"
+  "no": "non",
+  "freelanceMode": "Mode freelance",
+  "activateFreelance": "Configurer votre profil freelance",
+  "descriptionHelpText": "Ajouter une description à votre profil active le mode freelance.",
+  "jobTitle": "Votre fonction",
+  "save": "sauvegarder",
+  "saved": "sauvegardé",
+  "delete": "Supprimer",
+  "edit": "Éditer",
+  "preview": "Prévisualiser",
+
+  "title": "titre",
+  "shortDescription": "courte description",
+  "description": "description",
+  "category": "Catégorie"
 }

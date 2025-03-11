@@ -11,5 +11,5 @@ export class Logger extends Context.Tag('logger')<
 >() {}
 
 export const effectLogger = Effect.provideService(Logger, {
-  error: logger.error
+  error: logger.error.bind(logger)
 })

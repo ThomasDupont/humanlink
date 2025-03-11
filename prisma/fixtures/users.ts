@@ -1,13 +1,17 @@
-import { User } from '@prisma/client'
+import { User, UserBalance } from '@prisma/client'
 
-const users: Omit<User, 'id'>[] = [
+const users: (Omit<User, 'id' | 'userBalanceId'> & {
+  userBalance: Omit<UserBalance, 'id' | 'userId'>
+})[] = [
   {
     email: 'louane.morel@example.com',
     firstname: 'Louane',
     lastname: 'Morel',
     oauthProvider: 'google',
     createdAt: new Date('2012-06-21T17:08:59.929Z'),
-    isFreelance: false,
+    userBalance: {
+      createdAt: new Date()
+    },
     description: 'Lorem ipsum dolor sit amet.',
     jobTitle: 'Software Engineer',
     isCertified: true,
@@ -22,7 +26,9 @@ const users: Omit<User, 'id'>[] = [
     lastname: 'Garcia',
     oauthProvider: 'linkedin',
     createdAt: new Date('2003-09-29T07:09:56.482Z'),
-    isFreelance: true,
+    userBalance: {
+      createdAt: new Date()
+    },
     description: 'Développeur expérimenté en React.js.',
     jobTitle: 'Fullstack Developer',
     isCertified: false,
@@ -37,7 +43,9 @@ const users: Omit<User, 'id'>[] = [
     lastname: 'Colin',
     oauthProvider: 'google',
     createdAt: new Date('2004-11-16T03:46:56.329Z'),
-    isFreelance: true,
+    userBalance: {
+      createdAt: new Date()
+    },
     description: "Passionnée par l'UX/UI et le design web.",
     jobTitle: 'UX/UI Designer',
     isCertified: true,
@@ -52,7 +60,9 @@ const users: Omit<User, 'id'>[] = [
     lastname: 'Hubert',
     oauthProvider: 'linkedin',
     createdAt: new Date('2003-02-24T10:04:44.124Z'),
-    isFreelance: true,
+    userBalance: {
+      createdAt: new Date()
+    },
     description: 'Développeur backend passionné par les API et les bases de données.',
     jobTitle: 'Backend Engineer',
     isCertified: true,
@@ -67,7 +77,9 @@ const users: Omit<User, 'id'>[] = [
     lastname: 'Leroy',
     oauthProvider: 'google',
     createdAt: new Date('2020-05-28T00:42:25.335Z'),
-    isFreelance: false,
+    userBalance: {
+      createdAt: new Date()
+    },
     description: "Expert DevOps, il automatise tout ce qu'il touche.",
     jobTitle: 'DevOps Engineer',
     isCertified: false,
@@ -82,7 +94,9 @@ const users: Omit<User, 'id'>[] = [
     lastname: 'Fernandez',
     oauthProvider: 'linkedin',
     createdAt: new Date('2006-02-25T17:57:39.452Z'),
-    isFreelance: true,
+    userBalance: {
+      createdAt: new Date()
+    },
     description: "Freelance en cybersécurité, spécialiste en audits et tests d'intrusion.",
     jobTitle: 'Cybersecurity Consultant',
     isCertified: true,
@@ -97,7 +111,9 @@ const users: Omit<User, 'id'>[] = [
     lastname: 'Duval',
     oauthProvider: 'google',
     createdAt: new Date('2016-05-01T01:04:27.722Z'),
-    isFreelance: true,
+    userBalance: {
+      createdAt: new Date()
+    },
     description: 'Monteur vidéo indépendant, passionné par le storytelling visuel.',
     jobTitle: 'Video Editor',
     isCertified: true,
@@ -112,7 +128,9 @@ const users: Omit<User, 'id'>[] = [
     lastname: 'Marchand',
     oauthProvider: 'linkedin',
     createdAt: new Date('2006-01-27T14:02:59.094Z'),
-    isFreelance: false,
+    userBalance: {
+      createdAt: new Date()
+    },
     description: 'Chef cuisinier étoilé, créatif et toujours en quête de nouvelles saveurs.',
     jobTitle: 'Chef Cuisinier',
     isCertified: true,
@@ -127,7 +145,9 @@ const users: Omit<User, 'id'>[] = [
     lastname: 'François',
     oauthProvider: 'google',
     createdAt: new Date('2010-08-09T09:10:04.797Z'),
-    isFreelance: true,
+    userBalance: {
+      createdAt: new Date()
+    },
     description:
       'Consultante RH spécialisée dans la gestion des talents et le bien-être au travail.',
     jobTitle: 'Consultante RH',
@@ -143,7 +163,9 @@ const users: Omit<User, 'id'>[] = [
     lastname: 'Berger',
     oauthProvider: 'linkedin',
     createdAt: new Date('2004-09-29T15:36:26.293Z'),
-    isFreelance: false,
+    userBalance: {
+      createdAt: new Date()
+    },
     description:
       'Fleuriste passionnée, elle crée des compositions florales uniques pour toutes occasions.',
     jobTitle: 'Fleuriste',
@@ -159,7 +181,9 @@ const users: Omit<User, 'id'>[] = [
     lastname: 'Schmitt',
     oauthProvider: 'google',
     createdAt: new Date('2012-03-31T01:19:01.146Z'),
-    isFreelance: false,
+    userBalance: {
+      createdAt: new Date()
+    },
     description: 'Jardinière paysagiste, spécialiste des jardins écologiques et durables.',
     jobTitle: 'Paysagiste',
     isCertified: true,
@@ -174,7 +198,9 @@ const users: Omit<User, 'id'>[] = [
     lastname: 'Fontai',
     oauthProvider: 'linkedin',
     createdAt: new Date('2002-04-15T19:52:02.121Z'),
-    isFreelance: true,
+    userBalance: {
+      createdAt: new Date()
+    },
     description: 'Coach sportif spécialisée en fitness et nutrition.',
     jobTitle: 'Coach Sportif',
     isCertified: false,
@@ -189,7 +215,9 @@ const users: Omit<User, 'id'>[] = [
     lastname: 'Laurent',
     oauthProvider: 'google',
     createdAt: new Date('2008-07-13T11:24:39.049Z'),
-    isFreelance: true,
+    userBalance: {
+      createdAt: new Date()
+    },
     description: 'Photographe spécialisé dans les mariages et événements.',
     jobTitle: 'Photographe',
     isCertified: true,
@@ -204,7 +232,9 @@ const users: Omit<User, 'id'>[] = [
     lastname: 'Vincent',
     oauthProvider: 'linkedin',
     createdAt: new Date('2002-12-12T11:39:09.718Z'),
-    isFreelance: false,
+    userBalance: {
+      createdAt: new Date()
+    },
     description: 'Professeure de yoga, adepte du bien-être et de la méditation.',
     jobTitle: 'Professeure de Yoga',
     isCertified: false,
@@ -219,7 +249,9 @@ const users: Omit<User, 'id'>[] = [
     lastname: 'Dumas',
     oauthProvider: 'google',
     createdAt: new Date('2005-09-09T03:09:47.378Z'),
-    isFreelance: false,
+    userBalance: {
+      createdAt: new Date()
+    },
     description: "Éducatrice spécialisée, engagée pour l'accompagnement des jeunes en difficulté.",
     jobTitle: 'Éducatrice Spécialisée',
     isCertified: true,
@@ -234,7 +266,9 @@ const users: Omit<User, 'id'>[] = [
     lastname: 'Boyer',
     oauthProvider: 'linkedin',
     createdAt: new Date('2017-09-15T12:52:53.792Z'),
-    isFreelance: true,
+    userBalance: {
+      createdAt: new Date()
+    },
     description: 'Musicien indépendant, compositeur et interprète.',
     jobTitle: 'Musicien',
     isCertified: false,
@@ -249,7 +283,9 @@ const users: Omit<User, 'id'>[] = [
     lastname: 'Chevalier',
     oauthProvider: 'google',
     createdAt: new Date('2004-06-29T04:37:59.753Z'),
-    isFreelance: true,
+    userBalance: {
+      createdAt: new Date()
+    },
     description: 'Boulanger artisan, maître dans la fabrication de pains et viennoiseries.',
     jobTitle: 'Boulanger',
     isCertified: true,
@@ -264,7 +300,9 @@ const users: Omit<User, 'id'>[] = [
     lastname: 'Bertrand',
     oauthProvider: 'linkedin',
     createdAt: new Date('2019-07-30T05:39:27.631Z'),
-    isFreelance: false,
+    userBalance: {
+      createdAt: new Date()
+    },
     description: 'Guide touristique passionné, spécialiste des visites culturelles.',
     jobTitle: 'Guide Touristique',
     isCertified: true,
@@ -279,7 +317,9 @@ const users: Omit<User, 'id'>[] = [
     lastname: 'Da Silva',
     oauthProvider: 'google',
     createdAt: new Date('2003-03-06T02:29:59.166Z'),
-    isFreelance: false,
+    userBalance: {
+      createdAt: new Date()
+    },
     description: "Maîtresse d'école passionnée par l'éducation et l'éveil des enfants.",
     jobTitle: 'Professeure des écoles',
     isCertified: true,
@@ -294,7 +334,9 @@ const users: Omit<User, 'id'>[] = [
     lastname: 'Leroux',
     oauthProvider: 'linkedin',
     createdAt: new Date('2015-07-19T15:47:11.467Z'),
-    isFreelance: true,
+    userBalance: {
+      createdAt: new Date()
+    },
     description: 'Mécanicien auto spécialisé en voitures anciennes et de collection.',
     jobTitle: 'Mécanicien',
     isCertified: false,

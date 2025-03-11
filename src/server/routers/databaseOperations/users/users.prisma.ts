@@ -2,13 +2,21 @@ import { UserWithServicesWithPrices } from '@/types/User.type'
 import { PrismaClient, User } from '@prisma/client'
 
 export const userCrud = (prisma: PrismaClient) => {
-  const createUser = (user: Omit<User, 'id' | 'createdAt'>): Promise<User> => {
+  const createUser = (user: Omit<User, 'id' | 'createdAt' | 'userBalanceId'>): Promise<User> => {
     return prisma.user.create({
-      data: user
+      data: {
+        ...user,
+        userBalance: {
+          create: {}
+        }
+      },
+      include: {
+        userBalance: true
+      }
     })
   }
 
-  const updateUser = (user: User) => {
+  const updateUser = (user: Partial<User> & Pick<User, 'id'>) => {
     return prisma.user.update({
       where: {
         id: user.id
@@ -31,15 +39,29 @@ export const userCrud = (prisma: PrismaClient) => {
           include: {
             prices: true
           }
-        }
+        },
+        userBalance: true
       }
     })
   }
 
-  const getUserByEmailWithoutService = (email: string): Promise<User | null> => {
+  const getUserByEmail = <U extends User>(
+    email: string,
+    { withServices }: { withServices: boolean }
+  ) => {
     return prisma.user.findUnique({
-      where: { email }
-    })
+      where: { email },
+      ...(withServices && {
+        include: {
+          services: {
+            include: {
+              prices: true
+            }
+          },
+          userBalance: true
+        }
+      })
+    }) as Promise<U | null>
   }
 
   const getUserByIds = (ids: number[]): Promise<UserWithServicesWithPrices[]> => {
@@ -54,7 +76,8 @@ export const userCrud = (prisma: PrismaClient) => {
           include: {
             prices: true
           }
-        }
+        },
+        userBalance: true
       }
     })
   }
@@ -65,6 +88,6 @@ export const userCrud = (prisma: PrismaClient) => {
     deleteUser,
     getUserById,
     getUserByIds,
-    getUserByEmailWithoutService
+    getUserByEmail
   }
 }

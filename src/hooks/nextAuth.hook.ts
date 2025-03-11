@@ -1,6 +1,9 @@
-import { NextAuthJsUserError } from '@/types/User.type'
+import { NextAuthJsUserError, UserWithServicesWithPrices } from '@/types/User.type'
 import { trpc } from '@/utils/trpc'
-import { User } from '@prisma/client'
+
+type Base = {
+  refetch: () => void
+}
 
 type UserAuthSessionReturn =
   | {
@@ -12,17 +15,14 @@ type UserAuthSessionReturn =
       error: NextAuthJsUserError
     }
   | {
-      user: User
+      user: UserWithServicesWithPrices
       error: null
     }
-export const useAuthSession = (): UserAuthSessionReturn => {
+export const useAuthSession = (): UserAuthSessionReturn & Base => {
   const query = trpc.protectedGet.me.useQuery()
 
-  if (query.isFetching || !query.data) {
-    return {
-      user: null,
-      error: null
-    }
+  const refetch = () => {
+    query.refetch()
   }
 
   if (query.isError) {
@@ -31,7 +31,16 @@ export const useAuthSession = (): UserAuthSessionReturn => {
       error: {
         cause: query.error.message,
         message: query.error.message
-      }
+      },
+      refetch
+    }
+  }
+
+  if (query.isFetching || !query.data) {
+    return {
+      user: null,
+      error: null,
+      refetch
     }
   }
 
@@ -39,8 +48,13 @@ export const useAuthSession = (): UserAuthSessionReturn => {
     user: {
       ...query.data,
       createdAt: new Date(query.data.createdAt),
-      certifiedDate: query.data.certifiedDate ? new Date(query.data.certifiedDate) : null
+      certifiedDate: query.data.certifiedDate ? new Date(query.data.certifiedDate) : null,
+      services: query.data.services.map(service => ({
+        ...service,
+        createdAt: new Date(service.createdAt)
+      }))
     },
-    error: null
+    error: null,
+    refetch
   }
 }

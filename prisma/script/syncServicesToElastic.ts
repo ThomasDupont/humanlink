@@ -1,5 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { elastic } from '@/server/routers/searchService/elasticClient'
+import DOMPurify from 'dompurify'
+import { JSDOM } from 'jsdom'
+import { removeHtmlTags } from '@/utils/cleanHtmlTag'
 import { PrismaClient } from '@prisma/client'
 import { withAccelerate } from '@prisma/extension-accelerate'
 import { AxiosError } from 'axios'
@@ -30,7 +33,9 @@ async function main() {
       bulkString +=
         JSON.stringify({
           ...service,
-          fulltext: `${service.title} ${service.descriptionShort} ${service.description}`
+          fulltext: removeHtmlTags(DOMPurify(new JSDOM('<!DOCTYPE html>').window))(
+            `${service.title} ${service.descriptionShort} ${service.description}`
+          )
         }) + '\n'
     })
 

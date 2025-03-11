@@ -35,14 +35,13 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }: any) {
-      const dbUser: Omit<User, 'id' | 'createdAt'> = {
+      const dbUser: Omit<User, 'id' | 'createdAt' | 'userBalanceId'> = {
         firstname: profile.given_name,
         lastname: profile.family_name,
         image: user.image,
         email: user.email,
         oauthProvider: account.provider,
         isCertified: false,
-        isFreelance: false,
         description: '',
         jobTitle: '',
         certifiedDate: null,
@@ -51,7 +50,9 @@ export const authOptions: NextAuthOptions = {
       }
 
       try {
-        const userExists = await userOperations.getUserByEmailWithoutService(dbUser.email)
+        const userExists = await userOperations.getUserByEmail(dbUser.email, {
+          withServices: false
+        })
 
         if (!userExists) {
           const createdUser = await userOperations.createUser(dbUser)

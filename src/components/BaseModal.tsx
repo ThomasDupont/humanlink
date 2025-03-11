@@ -11,8 +11,9 @@ export default function BaseModal({ children, open, handleClose }: BaseModalProp
     <Modal
       open={open}
       onClose={handleClose}
-      aria-labelledby="modal-modal-title"
-      aria-describedby="modal-modal-description"
+      sx={{
+        overflow: 'scroll'
+      }}
     >
       <Fade in={open}>
         <Box
