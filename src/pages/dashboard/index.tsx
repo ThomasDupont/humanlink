@@ -5,9 +5,9 @@ import { GetStaticProps } from 'next'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import React, { ReactElement, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import OrdersItem from './Orders.item'
-import ServicesItem from './Services.item'
-import WalletItem from './Wallet.item'
+import OrdersItem from '../../elements/Orders.item'
+import ServicesItem from '../../elements/Services.item'
+import WalletItem from '../../elements/Wallet.item'
 import { useAuthSession } from '@/hooks/nextAuth.hook'
 
 const Base = ({ children }: { children: ReactElement }) => {

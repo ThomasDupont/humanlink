@@ -19,6 +19,28 @@ export const messageCrud = (prisma: PrismaClient) => {
     })
   }
 
+  const sendMessageWithOffer = ({
+    senderId,
+    receiverId,
+    offerId
+  }: {
+    senderId: number
+    receiverId: number
+    offerId: number
+  }) => {
+    return prisma.message.create({
+      data: {
+        senderId,
+        receiverId,
+        message: '',
+        offerId
+      },
+      include: {
+        offer: true
+      }
+    })
+  }
+
   const getConversation = ({
     senderId,
     receiverId,
@@ -43,7 +65,15 @@ export const messageCrud = (prisma: PrismaClient) => {
         id: 'desc'
       },
       include: {
-        offer: true
+        offer: {
+          include: {
+            milestone: {
+              include: {
+                priceMilestone: true
+              }
+            }
+          }
+        }
       }
     })
   }
@@ -60,6 +90,7 @@ export const messageCrud = (prisma: PrismaClient) => {
   return {
     sendMessage,
     getConversation,
-    setMessageIsRead
+    setMessageIsRead,
+    sendMessageWithOffer
   }
 }

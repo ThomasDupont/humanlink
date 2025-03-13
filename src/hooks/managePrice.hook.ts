@@ -1,4 +1,4 @@
-import { Currency, Price } from "@prisma/client"
+import { Currency, PriceType } from "@prisma/client"
 import { useTranslation } from "next-i18next"
 
 export const useManagePrice = () => {
@@ -13,7 +13,7 @@ export const useManagePrice = () => {
     return cur[currency]
   }
 
-  const managePrice = (price: Price) => {
+  const managePrice = (price: { number: number, currency: Currency, type: PriceType}) => {
     const stringPrice = (price.number / 100).toString()
 
     switch (price.type) {
@@ -26,5 +26,5 @@ export const useManagePrice = () => {
     }
   }
 
-  return { managePrice }
+  return { managePrice, priceCurrencyToDisplayCurrency }
 }

@@ -2,3 +2,5 @@
 export type PatternMatching<Kind extends Record<string, (...args: any[]) => any>> = {
   [K in keyof Kind]: (...arg: Parameters<Kind[K]>) => ReturnType<Kind[K]>
 }
+
+export type ArrayElement<A> = A extends readonly (infer T)[] ? T : never

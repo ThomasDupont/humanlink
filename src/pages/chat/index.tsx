@@ -20,16 +20,18 @@ import { Send } from '@mui/icons-material'
 import { FormEvent, useState, KeyboardEvent, useEffect } from 'react'
 import { useConversation } from '@/hooks/chat/conversation.hook'
 import { Spinner } from '@/components/Spinner'
-import config from '@/config'
+import config, { SuportedLocale } from '@/config'
 import BaseModal from '@/components/BaseModal'
 import CreateOfferModal from '@/components/Modals/CreateOffer.modal'
 import { useTranslation } from 'react-i18next'
 import { OfferWithMileStonesAndMilestonePrice } from '@/types/Offers.type'
+import ShowOffer from '@/elements/ShowOffer.element'
 
 export const getStaticProps: GetStaticProps = async ({ locale }) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale ?? 'en', ['common', 'chat', 'service']))
+      ...(await serverSideTranslations(locale ?? 'en', ['common', 'chat', 'service'])),
+      locale
     }
   }
 }
@@ -45,9 +47,9 @@ const qsValidator = z.object({
     .optional()
 })
 
-const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
+const Conversation = ({ conversationWithUserId, locale }: { conversationWithUserId: number; locale: SuportedLocale, serviceId?: number }) => {
   const { t } = useTranslation('chat')
-  const { data: user, isFetching } = trpc.get.userById.useQuery(userId)
+  const { data: user, isFetching } = trpc.get.userById.useQuery(conversationWithUserId)
   const [message, setMessage] = useState<string>()
   const [openCreateOfferModal, setOpenCreateOfferModal] = useState(false)
   const [newOffer, setNewOffer] = useState<OfferWithMileStonesAndMilestonePrice>()
@@ -55,9 +57,9 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
   useEffect(() => {
     if (newOffer) {
       mutateAsync({
-        receiverId: userId,
-        message: ''
-        // offerId: newOffer.id
+        receiverId: conversationWithUserId,
+        message: '',
+        offerId: newOffer.id
       }).then(() => {
         refetch()
         setMessage('')
@@ -67,7 +69,7 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
 
   const { mutateAsync } = trpc.protectedMutation.sendMessage.useMutation()
 
-  const { queue, refetch } = useConversation(userId)
+  const { queue, refetch } = useConversation(conversationWithUserId)
 
   const handleSubmitMessage = (e: FormEvent<HTMLFormElement> | KeyboardEvent<HTMLDivElement>) => {
     e.preventDefault()
@@ -77,7 +79,7 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
     }
 
     mutateAsync({
-      receiverId: userId,
+      receiverId: conversationWithUserId,
       message
     }).then(() => {
       refetch()
@@ -139,25 +141,26 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
                 key={message.id}
                 display={'flex'}
                 flexDirection={'row'}
-                justifyContent={message.receiverId === userId ? 'flex-end' : 'flex-start'}
+                justifyContent={message.receiverId === conversationWithUserId ? 'flex-end' : 'flex-start'}
                 sx={{
                   mt: 1,
                   mb: 1
                 }}
               >
-                <Typography
+                {message.offer ? <ShowOffer offer={message.offer} user={user} locale={locale} userIdFromAuth={message.receiverId} /> : <Typography
                   variant="body1"
                   sx={t => ({
                     borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
                     boxShadow: t.shadows[1],
                     textAlign: 'center',
                     backgroundColor:
-                      message.receiverId === userId ? t.palette.primary[100] : 'white',
+                      message.receiverId === conversationWithUserId ? t.palette.primary[100] : 'white',
                     padding: 1
                   })}
                 >
                   {message.message}{' '}
-                </Typography>
+                </Typography>}
+                
               </Box>
             )
           })}
@@ -239,7 +242,7 @@ const Contacts = () => {
   return <></>
 }
 
-export default function Chat() {
+export default function Chat({ locale }: { locale: SuportedLocale }) {
   const router = useRouter()
   const { user } = useAuthSession()
 
@@ -265,7 +268,7 @@ export default function Chat() {
       >
         <Contacts />
         {conversationWithUserId && (
-          <Conversation userId={conversationWithUserId} serviceId={parsedQuery.data.serviceId} />
+          <Conversation locale={locale} conversationWithUserId={conversationWithUserId} serviceId={parsedQuery.data.serviceId} />
         )}
       </Box>
     </Container>
