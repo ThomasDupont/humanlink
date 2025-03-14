@@ -26,13 +26,13 @@ import {
 import { NumericFormat } from 'react-number-format'
 import config from '@/config'
 import { trpc } from '@/utils/trpc'
-import { OfferWithMileStonesAndMilestonePrice } from '@/types/Offers.type'
-import { offerFromApiToLocal } from '@/utils/retreatDateFromAPI'
 
 export default function CreateOfferModal({
-  setNewOffer
+  handleClose,
+  receiverId
 }: {
-  setNewOffer: (offer: OfferWithMileStonesAndMilestonePrice) => void
+  handleClose: () => void
+  receiverId: number
 }) {
   const { t: commonT } = useTranslation('common')
   const { t } = useTranslation('service')
@@ -45,6 +45,7 @@ export default function CreateOfferModal({
   const [showSpinner, setShowSpinner] = useState(false)
 
   const { mutateAsync: createOffer } = trpc.protectedMutation.offer.create.useMutation()
+  const { mutateAsync: sendMessage } = trpc.protectedMutation.sendMessage.useMutation()
 
   const [openSnackBar, setOpenSnackBar] = useState(false)
   const [formErrors, setFormErrors] = useState<FormError[]>([])
@@ -60,9 +61,10 @@ export default function CreateOfferModal({
     if (!formValues.serviceId) {
       errors.push(FormError.of(ErrorsTag.ServiceId)(new Error('serviceId must be setted')))
     }
+
     if (
       formValues.serviceId &&
-      userServices.map(service => service.id).includes(formValues.serviceId)
+      !userServices.map(service => service.id).includes(formValues.serviceId)
     ) {
       errors.push(FormError.of(ErrorsTag.ServiceId)(new Error('serviceId must be in your list')))
     }
@@ -79,12 +81,26 @@ export default function CreateOfferModal({
       deadline: formValues.deadline!,
       description: formValues.description,
       price: formValues.price * 100,
-      serviceId: formValues.serviceId!
-    }).then(offer => {
-      setNewOffer(offerFromApiToLocal(offer))
-      setOpenSnackBar(true)
-      setShowSpinner(false)
+      serviceId: formValues.serviceId!,
+      receiverId
     })
+      .then(offer => {
+        return sendMessage({
+          offerId: offer.id,
+          receiverId: receiverId,
+          message: 'send offer'
+        })
+      })
+      .then(() => {
+        setOpenSnackBar(true)
+        setTimeout(() => handleClose(), 1000)
+      })
+      .catch(err => {
+        setFormErrors([err])
+        console.error(err)
+        setOpenSnackBar(true)
+      })
+      .finally(() => setShowSpinner(false))
   }
 
   const getErrorByTag = (tag: ErrorsTag): FormError | null => {
@@ -131,7 +147,7 @@ export default function CreateOfferModal({
               <Select
                 variant="standard"
                 labelId="service"
-                value={formValues.serviceId}
+                value={formValues.serviceId ?? 0}
                 error={getErrorByTag(ErrorsTag.ServiceId) !== null}
                 onChange={e =>
                   setFormValues(state => ({
@@ -171,18 +187,25 @@ export default function CreateOfferModal({
                 error={getErrorByTag(ErrorsTag.Price) !== null}
               />
             </FormControl>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DatePicker
-                disablePast
-                label="deadline"
-                onChange={date =>
-                  setFormValues(state => ({
-                    ...state,
-                    deadline: date ?? undefined
-                  }))
-                }
-              />
-            </LocalizationProvider>
+            <FormControl>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  disablePast
+                  label="deadline"
+                  onChange={date =>
+                    setFormValues(state => ({
+                      ...state,
+                      deadline: date ?? undefined
+                    }))
+                  }
+                />
+              </LocalizationProvider>
+              {getErrorByTag(ErrorsTag.Deadline) !== null && (
+                <Typography variant="body2" color="error">
+                  Error
+                </Typography>
+              )}
+            </FormControl>
           </Box>
           <TextField
             type="textarea"
@@ -196,7 +219,7 @@ export default function CreateOfferModal({
             onChange={e =>
               setFormValues(state => ({
                 ...state,
-                shortDescription: e.target.value
+                description: e.target.value
               }))
             }
             value={formValues.description}
