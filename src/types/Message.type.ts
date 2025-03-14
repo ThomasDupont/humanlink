@@ -1,4 +1,4 @@
-import { Message } from "@prisma/client";
-import { OfferWithMileStonesAndMilestonePrice } from "./Offers.type";
+import { Message } from '@prisma/client'
+import { OfferWithMileStonesAndMilestonePrice } from './Offers.type'
 
-export type MessageWithMaybeOffer = Message & { offer?: OfferWithMileStonesAndMilestonePrice}
+export type MessageWithMaybeOffer = Message & { offer?: OfferWithMileStonesAndMilestonePrice }

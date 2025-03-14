@@ -27,7 +27,10 @@ export const offerFromApiToLocal = (
   return treatedOffer
 }
 
-export const messageFromApiToLocal = ({  offer, ...message }: GetConversationReturnType): MessageWithMaybeOffer => {
+export const messageFromApiToLocal = ({
+  offer,
+  ...message
+}: GetConversationReturnType): MessageWithMaybeOffer => {
   const treatedMessage: MessageWithMaybeOffer = {
     ...message,
     createdAt: new Date(message.createdAt),
@@ -44,7 +47,7 @@ export const messageFromApiToLocal = ({  offer, ...message }: GetConversationRet
           createdAt: new Date(milestone.createdAt),
           deadline: new Date(milestone.deadline),
           validatedAt: milestone.validatedAt ? new Date(milestone.validatedAt) : null,
-          terminatedAt: milestone.terminatedAt ? new Date(milestone.terminatedAt): null,
+          terminatedAt: milestone.terminatedAt ? new Date(milestone.terminatedAt) : null,
           priceMilestone: {
             ...milestone.priceMilestone,
             createdAt: new Date(milestone.priceMilestone.createdAt)

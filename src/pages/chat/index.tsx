@@ -47,7 +47,14 @@ const qsValidator = z.object({
     .optional()
 })
 
-const Conversation = ({ conversationWithUserId, locale }: { conversationWithUserId: number; locale: SuportedLocale, serviceId?: number }) => {
+const Conversation = ({
+  conversationWithUserId,
+  locale
+}: {
+  conversationWithUserId: number
+  locale: SuportedLocale
+  serviceId?: number
+}) => {
   const { t } = useTranslation('chat')
   const { data: user, isFetching } = trpc.get.userById.useQuery(conversationWithUserId)
   const [message, setMessage] = useState<string>()
@@ -141,26 +148,38 @@ const Conversation = ({ conversationWithUserId, locale }: { conversationWithUser
                 key={message.id}
                 display={'flex'}
                 flexDirection={'row'}
-                justifyContent={message.receiverId === conversationWithUserId ? 'flex-end' : 'flex-start'}
+                justifyContent={
+                  message.receiverId === conversationWithUserId ? 'flex-end' : 'flex-start'
+                }
                 sx={{
                   mt: 1,
                   mb: 1
                 }}
               >
-                {message.offer ? <ShowOffer offer={message.offer} user={user} locale={locale} userIdFromAuth={message.receiverId} /> : <Typography
-                  variant="body1"
-                  sx={t => ({
-                    borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
-                    boxShadow: t.shadows[1],
-                    textAlign: 'center',
-                    backgroundColor:
-                      message.receiverId === conversationWithUserId ? t.palette.primary[100] : 'white',
-                    padding: 1
-                  })}
-                >
-                  {message.message}{' '}
-                </Typography>}
-                
+                {message.offer ? (
+                  <ShowOffer
+                    offer={message.offer}
+                    user={user}
+                    locale={locale}
+                    userIdFromAuth={message.receiverId}
+                  />
+                ) : (
+                  <Typography
+                    variant="body1"
+                    sx={t => ({
+                      borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
+                      boxShadow: t.shadows[1],
+                      textAlign: 'center',
+                      backgroundColor:
+                        message.receiverId === conversationWithUserId
+                          ? t.palette.primary[100]
+                          : 'white',
+                      padding: 1
+                    })}
+                  >
+                    {message.message}{' '}
+                  </Typography>
+                )}
               </Box>
             )
           })}
@@ -268,7 +287,11 @@ export default function Chat({ locale }: { locale: SuportedLocale }) {
       >
         <Contacts />
         {conversationWithUserId && (
-          <Conversation locale={locale} conversationWithUserId={conversationWithUserId} serviceId={parsedQuery.data.serviceId} />
+          <Conversation
+            locale={locale}
+            conversationWithUserId={conversationWithUserId}
+            serviceId={parsedQuery.data.serviceId}
+          />
         )}
       </Box>
     </Container>
