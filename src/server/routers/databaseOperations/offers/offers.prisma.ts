@@ -3,27 +3,45 @@ import { PrismaClient } from '@prisma/client'
 
 export const offersCrud = (prisma: PrismaClient) => {
   const createAnOffer = (input: OfferWithMileStonesAndMilestonePriceWithoutIdsAndCreatedAt) => {
-    const { milestones, ...offer } = input
-    return prisma.offer.create({
-      data: {
-        ...offer,
-        milestone: {
-          create: milestones.map(milestone => ({
-            ...milestone,
-            priceMilestone: {
-              create: milestone.priceMilestone
+    const { milestones, serviceId, userId, userIdReceiver, ...offer } = input
+    return prisma.offer
+      .create({
+        data: {
+          ...offer,
+          milestone: {
+            create: milestones.map(milestone => ({
+              ...milestone,
+              priceMilestone: {
+                create: milestone.priceMilestone
+              }
+            }))
+          }
+        },
+        include: {
+          milestone: {
+            include: {
+              priceMilestone: true
             }
-          }))
-        }
-      },
-      include: {
-        milestone: {
-          include: {
-            priceMilestone: true
           }
         }
-      }
-    })
+      })
+      .then(offer => {
+        return prisma.offer.update({
+          where: { id: offer.id },
+          data: {
+            serviceId,
+            userId,
+            userIdReceiver
+          },
+          include: {
+            milestone: {
+              include: {
+                priceMilestone: true
+              }
+            }
+          }
+        })
+      })
   }
 
   const getAnOfferById = (id: number) => {

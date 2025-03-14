@@ -61,11 +61,17 @@ export const appRouter = router({
         })
       )
       .mutation(({ input, ctx }) =>
-        messageOperations.sendMessage({
-          senderId: ctx.session.user.id,
-          receiverId: input.receiverId,
-          message: input.message
-        })
+        input.offerId
+          ? messageOperations.sendMessageWithOffer({
+              senderId: ctx.session.user.id,
+              receiverId: input.receiverId,
+              offerId: input.offerId
+            })
+          : messageOperations.sendMessage({
+              senderId: ctx.session.user.id,
+              receiverId: input.receiverId,
+              message: input.message
+            })
       ),
     user: router({
       profile: protectedprocedure
@@ -144,6 +150,7 @@ export const appRouter = router({
             serviceId: z.number(),
             description: z.string().min(1).max(config.userInteraction.serviceDescriptionMaxLen),
             price: z.number().min(100).max(config.userInteraction.fixedPriceMax),
+            receiverId: z.number(),
             deadline: z.coerce
               .date()
               .refine(data => data > new Date(), { message: 'The deadline must be in the future' })
@@ -160,6 +167,7 @@ export const appRouter = router({
             isTerminated: false,
             terminatedAt: null,
             paidDate: null,
+            userIdReceiver: input.receiverId,
             // default: 1
             milestones: [
               {

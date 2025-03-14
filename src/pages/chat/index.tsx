@@ -17,14 +17,13 @@ import { z } from 'zod'
 import { useAuthSession } from '@/hooks/nextAuth.hook'
 import { trpc } from '../../utils/trpc'
 import { Send } from '@mui/icons-material'
-import { FormEvent, useState, KeyboardEvent, useEffect } from 'react'
+import { FormEvent, useState, KeyboardEvent } from 'react'
 import { useConversation } from '@/hooks/chat/conversation.hook'
 import { Spinner } from '@/components/Spinner'
 import config, { SuportedLocale } from '@/config'
 import BaseModal from '@/components/BaseModal'
 import CreateOfferModal from '@/components/Modals/CreateOffer.modal'
 import { useTranslation } from 'react-i18next'
-import { OfferWithMileStonesAndMilestonePrice } from '@/types/Offers.type'
 import ShowOffer from '@/elements/ShowOffer.element'
 
 export const getStaticProps: GetStaticProps = async ({ locale }) => {
@@ -49,30 +48,18 @@ const qsValidator = z.object({
 
 const Conversation = ({
   conversationWithUserId,
-  locale
+  locale,
+  iAmAFreelance
 }: {
   conversationWithUserId: number
   locale: SuportedLocale
+  iAmAFreelance: boolean
   serviceId?: number
 }) => {
   const { t } = useTranslation('chat')
   const { data: user, isFetching } = trpc.get.userById.useQuery(conversationWithUserId)
   const [message, setMessage] = useState<string>()
   const [openCreateOfferModal, setOpenCreateOfferModal] = useState(false)
-  const [newOffer, setNewOffer] = useState<OfferWithMileStonesAndMilestonePrice>()
-
-  useEffect(() => {
-    if (newOffer) {
-      mutateAsync({
-        receiverId: conversationWithUserId,
-        message: '',
-        offerId: newOffer.id
-      }).then(() => {
-        refetch()
-        setMessage('')
-      })
-    }
-  }, [newOffer])
 
   const { mutateAsync } = trpc.protectedMutation.sendMessage.useMutation()
 
@@ -153,7 +140,8 @@ const Conversation = ({
                 }
                 sx={{
                   mt: 1,
-                  mb: 1
+                  mb: 1,
+                  overflowY: 'scroll'
                 }}
               >
                 {message.offer ? (
@@ -235,7 +223,7 @@ const Conversation = ({
                 }}
               />
             </form>
-            {user.services.length > 0 && (
+            {iAmAFreelance && (
               <Box display={'flex'} flexDirection={'row'} justifyContent={'flex-end'}>
                 <Button onClick={() => setOpenCreateOfferModal(true)} variant="outlined">
                   Proposer une offre
@@ -246,10 +234,11 @@ const Conversation = ({
         </Box>
         <BaseModal open={openCreateOfferModal} handleClose={() => setOpenCreateOfferModal(false)}>
           <CreateOfferModal
-            setNewOffer={offer => {
-              setNewOffer(offer)
+            handleClose={() => {
+              refetch()
               setOpenCreateOfferModal(false)
             }}
+            receiverId={conversationWithUserId}
           />
         </BaseModal>
       </Box>
@@ -290,6 +279,7 @@ export default function Chat({ locale }: { locale: SuportedLocale }) {
           <Conversation
             locale={locale}
             conversationWithUserId={conversationWithUserId}
+            iAmAFreelance={user.services.length > 0}
             serviceId={parsedQuery.data.serviceId}
           />
         )}

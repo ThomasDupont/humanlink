@@ -36,24 +36,7 @@ export const messageFromApiToLocal = ({
     createdAt: new Date(message.createdAt),
     readAt: message.readAt ? new Date(message.readAt) : null,
     ...(offer && {
-      offer: {
-        ...offer,
-        createdAt: new Date(offer.createdAt),
-        deadline: new Date(offer.deadline),
-        paidDate: offer.paidDate ? new Date(offer.paidDate) : null,
-        terminatedAt: offer.terminatedAt ? new Date(offer.terminatedAt) : null,
-        milestones: offer.milestone.map(milestone => ({
-          ...milestone,
-          createdAt: new Date(milestone.createdAt),
-          deadline: new Date(milestone.deadline),
-          validatedAt: milestone.validatedAt ? new Date(milestone.validatedAt) : null,
-          terminatedAt: milestone.terminatedAt ? new Date(milestone.terminatedAt) : null,
-          priceMilestone: {
-            ...milestone.priceMilestone,
-            createdAt: new Date(milestone.priceMilestone.createdAt)
-          }
-        }))
-      }
+      offer: offerFromApiToLocal(offer)
     })
   }
 

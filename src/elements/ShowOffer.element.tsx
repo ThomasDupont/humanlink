@@ -32,8 +32,8 @@ export default function ShowOffer({
       justifyContent={'space-evenly'}
       sx={t => ({
         backgroundColor: t.palette.secondary[50],
-        width: 200,
-        height: 300
+        width: 400,
+        height: 500
       })}
     >
       <Typography variant="h4" component={'p'}>
