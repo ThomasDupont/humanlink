@@ -26,5 +26,18 @@ export const offersCrud = (prisma: PrismaClient) => {
     })
   }
 
-  return { createAnOffer }
+  const getAnOfferById = (id: number) => {
+    return prisma.offer.findUnique({
+      where: { id },
+      include: {
+        milestone: {
+          include: {
+            priceMilestone: true
+          }
+        }
+      }
+    })
+  }
+
+  return { createAnOffer, getAnOfferById }
 }
