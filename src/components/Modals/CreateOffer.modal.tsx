@@ -45,7 +45,6 @@ export default function CreateOfferModal({
   const [showSpinner, setShowSpinner] = useState(false)
 
   const { mutateAsync: createOffer } = trpc.protectedMutation.offer.create.useMutation()
-  const { mutateAsync: sendMessage } = trpc.protectedMutation.sendMessage.useMutation()
 
   const [openSnackBar, setOpenSnackBar] = useState(false)
   const [formErrors, setFormErrors] = useState<FormError[]>([])
@@ -84,13 +83,6 @@ export default function CreateOfferModal({
       serviceId: formValues.serviceId!,
       receiverId
     })
-      .then(offer => {
-        return sendMessage({
-          offerId: offer.id,
-          receiverId: receiverId,
-          message: 'send offer'
-        })
-      })
       .then(() => {
         setOpenSnackBar(true)
         setTimeout(() => handleClose(), 1000)

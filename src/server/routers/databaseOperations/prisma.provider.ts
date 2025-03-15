@@ -49,7 +49,7 @@ const extendedPrisma = prisma.$extends(withAccelerate())
 export const userOperations = userCrud(extendedPrisma as unknown as PrismaClient)
 export const serviceOperations = servicesCrud(extendedPrisma as unknown as PrismaClient)
 export const messageOperations = messageCrud(extendedPrisma as unknown as PrismaClient)
-const offerOperations = offersCrud(extendedPrisma as unknown as PrismaClient)
+export const offerOperations = offersCrud(extendedPrisma as unknown as PrismaClient)
 
 export class UserOperations extends Context.Tag('userOperations')<
   UserOperations,

@@ -4,6 +4,7 @@ import { JSDOM } from 'jsdom'
 import { z } from 'zod'
 import {
   messageOperations,
+  offerOperations,
   serviceOperations,
   userOperations
 } from './databaseOperations/prisma.provider'
@@ -13,7 +14,7 @@ import { protectedprocedure } from './middlewares'
 import { userMe } from './trpcProcedures/get.trpc'
 import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
 import { Category, Lang } from '@prisma/client'
-import { createOffer, upsertService } from './trpcProcedures/upsert.trpc'
+import { createOfferWithMessage, upsertService } from './trpcProcedures/upsert.trpc'
 import { deleteAService } from './trpcProcedures/delete.trpc'
 
 export const appRouter = router({
@@ -157,7 +158,7 @@ export const appRouter = router({
           })
         )
         .mutation(({ input, ctx }) => {
-          return createOffer({
+          return createOfferWithMessage({
             description: input.description,
             deadline: input.deadline,
             serviceId: input.serviceId,
@@ -166,6 +167,7 @@ export const appRouter = router({
             isPaid: false,
             isTerminated: false,
             terminatedAt: null,
+            acceptedAt: null,
             paidDate: null,
             userIdReceiver: input.receiverId,
             // default: 1
@@ -185,7 +187,11 @@ export const appRouter = router({
               }
             ]
           }).run()
-        })
+        }),
+
+      accept: protectedprocedure
+        .input(z.number())
+        .mutation(({ input, ctx }) => offerOperations.acceptOffer(input, ctx.session.user.id))
     })
   })
 })

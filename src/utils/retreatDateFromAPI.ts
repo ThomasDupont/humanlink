@@ -11,6 +11,7 @@ export const offerFromApiToLocal = (
     deadline: new Date(offer.deadline),
     paidDate: offer.paidDate ? new Date(offer.paidDate) : null,
     terminatedAt: offer.terminatedAt ? new Date(offer.terminatedAt) : null,
+    acceptedAt: offer.acceptedAt ? new Date(offer.acceptedAt) : null,
     milestones: offer.milestone.map(milestone => ({
       ...milestone,
       createdAt: new Date(milestone.createdAt),

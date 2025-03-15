@@ -164,6 +164,7 @@ model Offer {
   description    String
   deadline       DateTime
   isAccepted     Boolean
+  acceptedAt     DateTime?
   isPaid         Boolean
   paidDate       DateTime?
   isTerminated   Boolean

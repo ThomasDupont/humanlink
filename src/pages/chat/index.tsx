@@ -24,7 +24,7 @@ import config, { SuportedLocale } from '@/config'
 import BaseModal from '@/components/BaseModal'
 import CreateOfferModal from '@/components/Modals/CreateOffer.modal'
 import { useTranslation } from 'react-i18next'
-import ShowOffer from '@/elements/ShowOffer.element'
+import ShowOffer from '@/elements/chat/ShowOffer.element'
 
 export const getStaticProps: GetStaticProps = async ({ locale }) => {
   return {
@@ -121,56 +121,55 @@ const Conversation = ({
         </Box>
         <Box
           id="main"
-          display={'flex'}
-          flexDirection={'column'}
-          justifyContent={'flex-end'}
           sx={{
             height: '100%',
-            m: 2
+            m: 2,
+            overflow: 'scroll'
           }}
         >
-          {[...queue].reverse().map(message => {
-            return (
-              <Box
-                key={message.id}
-                display={'flex'}
-                flexDirection={'row'}
-                justifyContent={
-                  message.receiverId === conversationWithUserId ? 'flex-end' : 'flex-start'
-                }
-                sx={{
-                  mt: 1,
-                  mb: 1,
-                  overflowY: 'scroll'
-                }}
-              >
-                {message.offer ? (
-                  <ShowOffer
-                    offer={message.offer}
-                    user={user}
-                    locale={locale}
-                    userIdFromAuth={message.receiverId}
-                  />
-                ) : (
-                  <Typography
-                    variant="body1"
-                    sx={t => ({
-                      borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
-                      boxShadow: t.shadows[1],
-                      textAlign: 'center',
-                      backgroundColor:
-                        message.receiverId === conversationWithUserId
-                          ? t.palette.primary[100]
-                          : 'white',
-                      padding: 1
-                    })}
-                  >
-                    {message.message}{' '}
-                  </Typography>
-                )}
-              </Box>
-            )
-          })}
+          <Box>
+            {[...queue].reverse().map(message => {
+              return (
+                <Box
+                  key={message.id}
+                  display={'flex'}
+                  flexDirection={'row'}
+                  justifyContent={
+                    message.receiverId === conversationWithUserId ? 'flex-end' : 'flex-start'
+                  }
+                  sx={{
+                    mt: 1,
+                    mb: 1
+                  }}
+                >
+                  {message.offer ? (
+                    <ShowOffer
+                      offer={message.offer}
+                      user={user}
+                      locale={locale}
+                      userIdFromAuth={message.receiverId}
+                    />
+                  ) : (
+                    <Typography
+                      variant="body1"
+                      sx={t => ({
+                        borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
+                        boxShadow: t.shadows[1],
+                        textAlign: 'center',
+                        backgroundColor:
+                          message.receiverId === conversationWithUserId
+                            ? t.palette.primary[100]
+                            : 'white',
+                        padding: 1
+                      })}
+                    >
+                      {message.message}{' '}
+                    </Typography>
+                  )}
+                </Box>
+              )
+            })}
+          </Box>
         </Box>
         <Box
           id="footer"

@@ -13,6 +13,17 @@ export const useManagePrice = () => {
     return cur[currency]
   }
 
+  const formatPriceCurrency = (price: { number: number; currency: Currency; type: PriceType }) => {
+    const stringPrice = (price.number / 100).toString()
+    switch (price.type) {
+      case 'fix':
+      case 'fixedPerItem':
+        return priceCurrencyToDisplayCurrency(price.currency).replace('{price}', stringPrice)
+      case 'percent':
+        return `${t('feesOf')} ${stringPrice}%`
+    }
+  }
+
   const managePrice = (price: { number: number; currency: Currency; type: PriceType }) => {
     const stringPrice = (price.number / 100).toString()
 
@@ -26,5 +37,5 @@ export const useManagePrice = () => {
     }
   }
 
-  return { managePrice, priceCurrencyToDisplayCurrency }
+  return { managePrice, formatPriceCurrency }
 }
