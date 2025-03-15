@@ -6,6 +6,10 @@ import {
   Divider,
   IconButton,
   InputAdornment,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
   TextField,
   Typography
 } from '@mui/material'
@@ -25,6 +29,7 @@ import BaseModal from '@/components/BaseModal'
 import CreateOfferModal from '@/components/Modals/CreateOffer.modal'
 import { useTranslation } from 'react-i18next'
 import ShowOffer from '@/elements/chat/ShowOffer.element'
+import { UserWithServicesWithPrices } from '@/types/User.type'
 
 export const getStaticProps: GetStaticProps = async ({ locale }) => {
   return {
@@ -93,7 +98,7 @@ const Conversation = ({
           boxShadow: t.shadows[1],
           backgroundColor: 'white',
           height: 620,
-          width: '100%',
+          width: '85%',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between'
@@ -245,8 +250,111 @@ const Conversation = ({
   )
 }
 
-const Contacts = () => {
-  return <></>
+const Contacts = ({
+  onContactClick,
+  userId
+}: {
+  onContactClick: (id: number) => void
+  userId?: number
+}) => {
+  const { data: contacts } = trpc.protectedGet.getContacts.useQuery()
+  const [selected, setSelected] = useState(userId)
+
+  console.log(contacts)
+  return (
+    <Box
+      sx={t => ({
+        width: '15%',
+        height: 620,
+        borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
+        boxShadow: t.shadows[1],
+        backgroundColor: 'white',
+        pt: 1,
+        overflow: 'scroll'
+      })}
+    >
+      {contacts ? (
+        <>
+          <Typography textAlign={'center'} variant="h4" component={'p'}>
+            Contacts
+          </Typography>
+          <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
+            {contacts.map(contact => (
+              <ListItem
+                onClick={() => {
+                  setSelected(contact.id)
+                  onContactClick(contact.id)
+                }}
+                alignItems="flex-start"
+                key={contact.id}
+                sx={t => ({
+                  backgroundColor: selected === contact.id ? t.palette.secondary[50] : 'white'
+                })}
+              >
+                <ListItemAvatar>
+                  <Avatar
+                    alt={`${contact.firstname} ${contact.lastname}`}
+                    src={contact.image ?? undefined}
+                  />
+                </ListItemAvatar>
+                <ListItemText
+                  primary={`${contact.firstname} ${contact.lastname}`}
+                  secondary={
+                    <Typography
+                      component="span"
+                      variant="body2"
+                      sx={{ color: 'text.primary', display: 'inline' }}
+                    >
+                      {contact.isUnread ? 'unread message' : ''}
+                    </Typography>
+                  }
+                />
+              </ListItem>
+            ))}
+          </List>
+        </>
+      ) : (
+        <Spinner />
+      )}
+    </Box>
+  )
+}
+
+const ChatContainer = ({
+  userId,
+  serviceId,
+  locale,
+  user
+}: {
+  userId?: number
+  serviceId?: number
+  locale: SuportedLocale
+  user: UserWithServicesWithPrices
+}) => {
+  const [conversationWithUserId, setConversationWithUserId] = useState(userId)
+  return (
+    <Container maxWidth="xl">
+      <Box
+        display={'flex'}
+        flexDirection={'row'}
+        gap={2}
+        sx={{
+          pt: 20,
+          pb: 10
+        }}
+      >
+        <Contacts userId={conversationWithUserId} onContactClick={setConversationWithUserId} />
+        {conversationWithUserId && (
+          <Conversation
+            locale={locale}
+            conversationWithUserId={conversationWithUserId}
+            iAmAFreelance={user.services.length > 0}
+            serviceId={serviceId}
+          />
+        )}
+      </Box>
+    </Container>
+  )
 }
 
 export default function Chat({ locale }: { locale: SuportedLocale }) {
@@ -266,23 +374,11 @@ export default function Chat({ locale }: { locale: SuportedLocale }) {
   const conversationWithUserId = parsedQuery.data.userId
 
   return (
-    <Container maxWidth="lg">
-      <Box
-        sx={{
-          pt: 20,
-          pb: 10
-        }}
-      >
-        <Contacts />
-        {conversationWithUserId && (
-          <Conversation
-            locale={locale}
-            conversationWithUserId={conversationWithUserId}
-            iAmAFreelance={user.services.length > 0}
-            serviceId={parsedQuery.data.serviceId}
-          />
-        )}
-      </Box>
-    </Container>
+    <ChatContainer
+      userId={conversationWithUserId}
+      serviceId={parsedQuery.data.serviceId}
+      locale={locale}
+      user={user}
+    />
   )
 }

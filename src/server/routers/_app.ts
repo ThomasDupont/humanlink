@@ -11,7 +11,7 @@ import {
 import config from '@/config'
 import searchFactory from './searchService/search.factory'
 import { protectedprocedure } from './middlewares'
-import { userMe } from './trpcProcedures/get.trpc'
+import { getContactList, userMe } from './trpcProcedures/get.trpc'
 import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
 import { Category, Lang } from '@prisma/client'
 import { createOfferWithMessage, upsertService } from './trpcProcedures/upsert.trpc'
@@ -48,6 +48,7 @@ export const appRouter = router({
           senderId: options.ctx.session.user.id
         })
       ),
+    getContacts: protectedprocedure.query(({ ctx }) => getContactList(ctx.session.user.id).run()),
     userServices: protectedprocedure.query(({ ctx }) =>
       serviceOperations.getuserServices(ctx.session.user.id)
     )
@@ -74,6 +75,7 @@ export const appRouter = router({
               message: input.message
             })
       ),
+
     user: router({
       profile: protectedprocedure
         .input(

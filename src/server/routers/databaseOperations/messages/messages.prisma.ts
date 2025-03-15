@@ -87,10 +87,26 @@ export const messageCrud = (prisma: PrismaClient) => {
     })
   }
 
+  const getContactList = (userId: number) => {
+    return prisma.message.groupBy({
+      by: ['senderId', 'receiverId', 'readAt'],
+      where: { OR: [{ receiverId: userId }, { senderId: userId }] },
+      _max: {
+        createdAt: true
+      },
+      orderBy: {
+        _max: {
+          createdAt: 'desc'
+        }
+      }
+    })
+  }
+
   return {
     sendMessage,
     getConversation,
     setMessageIsRead,
-    sendMessageWithOffer
+    sendMessageWithOffer,
+    getContactList
   }
 }
