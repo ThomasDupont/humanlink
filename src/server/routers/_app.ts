@@ -4,16 +4,17 @@ import { JSDOM } from 'jsdom'
 import { z } from 'zod'
 import {
   messageOperations,
+  offerOperations,
   serviceOperations,
   userOperations
 } from './databaseOperations/prisma.provider'
 import config from '@/config'
 import searchFactory from './searchService/search.factory'
 import { protectedprocedure } from './middlewares'
-import { userMe } from './trpcProcedures/get.trpc'
+import { getContactList, userMe } from './trpcProcedures/get.trpc'
 import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
 import { Category, Lang } from '@prisma/client'
-import { createOffer, upsertService } from './trpcProcedures/upsert.trpc'
+import { createOfferWithMessage, upsertService } from './trpcProcedures/upsert.trpc'
 import { deleteAService } from './trpcProcedures/delete.trpc'
 
 export const appRouter = router({
@@ -47,6 +48,7 @@ export const appRouter = router({
           senderId: options.ctx.session.user.id
         })
       ),
+    getContacts: protectedprocedure.query(({ ctx }) => getContactList(ctx.session.user.id).run()),
     userServices: protectedprocedure.query(({ ctx }) =>
       serviceOperations.getuserServices(ctx.session.user.id)
     )
@@ -61,12 +63,19 @@ export const appRouter = router({
         })
       )
       .mutation(({ input, ctx }) =>
-        messageOperations.sendMessage({
-          senderId: ctx.session.user.id,
-          receiverId: input.receiverId,
-          message: input.message
-        })
+        input.offerId
+          ? messageOperations.sendMessageWithOffer({
+              senderId: ctx.session.user.id,
+              receiverId: input.receiverId,
+              offerId: input.offerId
+            })
+          : messageOperations.sendMessage({
+              senderId: ctx.session.user.id,
+              receiverId: input.receiverId,
+              message: input.message
+            })
       ),
+
     user: router({
       profile: protectedprocedure
         .input(
@@ -144,13 +153,14 @@ export const appRouter = router({
             serviceId: z.number(),
             description: z.string().min(1).max(config.userInteraction.serviceDescriptionMaxLen),
             price: z.number().min(100).max(config.userInteraction.fixedPriceMax),
+            receiverId: z.number(),
             deadline: z.coerce
               .date()
               .refine(data => data > new Date(), { message: 'The deadline must be in the future' })
           })
         )
         .mutation(({ input, ctx }) => {
-          return createOffer({
+          return createOfferWithMessage({
             description: input.description,
             deadline: input.deadline,
             serviceId: input.serviceId,
@@ -159,7 +169,9 @@ export const appRouter = router({
             isPaid: false,
             isTerminated: false,
             terminatedAt: null,
+            acceptedAt: null,
             paidDate: null,
+            userIdReceiver: input.receiverId,
             // default: 1
             milestones: [
               {
@@ -177,7 +189,11 @@ export const appRouter = router({
               }
             ]
           }).run()
-        })
+        }),
+
+      accept: protectedprocedure
+        .input(z.number())
+        .mutation(({ input, ctx }) => offerOperations.acceptOffer(input, ctx.session.user.id))
     })
   })
 })

@@ -1,7 +1,9 @@
 import { Schedule, Effect as T } from 'effect'
 import {
+  effectMessageOperations,
   effectOfferOperations,
   effectServiceOperations,
+  MessageOperations,
   OfferOperations,
   ServiceOperations
 } from '../databaseOperations/prisma.provider'
@@ -102,12 +104,15 @@ export const upsertService = (args: UpsertServiceArgs) => ({
     upsertServiceEffect(args).pipe(effectLogger, effectServiceOperations, effectSync, T.runPromise)
 })
 
-export const createOfferEffect = (
-  offer: OfferWithMileStonesAndMilestonePriceWithoutIdsAndCreatedAt
-) =>
+type CreateOffer = OfferWithMileStonesAndMilestonePriceWithoutIdsAndCreatedAt & {
+  userId: number
+  userIdReceiver: number
+}
+export const createOfferWithMessageEffect = (offer: CreateOffer) =>
   T.gen(function* () {
     const logger = yield* Logger
     const offerOperations = yield* OfferOperations
+    const messageOperations = yield* MessageOperations
 
     return T.tryPromise({
       try: () => offerOperations.createAnOffer(offer),
@@ -127,9 +132,44 @@ export const createOfferEffect = (
           code: 'INTERNAL_SERVER_ERROR'
         })
       }
-    })
+    }).pipe(
+      T.flatMap(createdOffer =>
+        T.tryPromise({
+          try: () =>
+            messageOperations
+              .sendMessageWithOffer({
+                senderId: offer.userId,
+                receiverId: offer.userIdReceiver,
+                offerId: createdOffer.id
+              })
+              .then(() => createdOffer),
+          catch: error => {
+            logger.error({
+              cause: 'database_error',
+              message: `message with offer ${createdOffer.id} db create error`,
+              detailedError: error
+            })
+
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+              return new TRPCError({
+                code: 'NOT_FOUND'
+              })
+            }
+            return new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR'
+            })
+          }
+        })
+      )
+    )
   }).pipe(T.flatten)
 
-export const createOffer = (offer: OfferWithMileStonesAndMilestonePriceWithoutIdsAndCreatedAt) => ({
-  run: () => createOfferEffect(offer).pipe(effectLogger, effectOfferOperations, T.runPromise)
+export const createOfferWithMessage = (offer: CreateOffer) => ({
+  run: () =>
+    createOfferWithMessageEffect(offer).pipe(
+      effectLogger,
+      effectOfferOperations,
+      effectMessageOperations,
+      T.runPromise
+    )
 })

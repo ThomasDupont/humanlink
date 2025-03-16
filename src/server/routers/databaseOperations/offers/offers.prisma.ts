@@ -39,5 +39,15 @@ export const offersCrud = (prisma: PrismaClient) => {
     })
   }
 
-  return { createAnOffer, getAnOfferById }
+  const acceptOffer = (id: number, userIdReceiver: number) => {
+    return prisma.offer.update({
+      where: { id, userIdReceiver },
+      data: {
+        isAccepted: true,
+        acceptedAt: new Date()
+      }
+    })
+  }
+
+  return { createAnOffer, getAnOfferById, acceptOffer }
 }

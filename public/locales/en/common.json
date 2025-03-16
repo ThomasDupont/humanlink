@@ -11,6 +11,7 @@
   "privacy": "Privacy policy",
   "job": "Career",
   "contact": "Contact",
+  "offer": "Offer",
   "freelanceDashboard": "Freelance dashboard",
   "customerDashboard": "Client dashboard",
   "chat": "Messaging",
@@ -41,8 +42,10 @@
   "save": "save",
   "saved": "saved",
   "delete": "Delete",
+  "accept": "Accept",
   "edit": "Edit",
   "preview": "Preview",
+  "offerAccepted": "Offer accepted",
 
   "title": "title",
   "shortDescription": "short description",
