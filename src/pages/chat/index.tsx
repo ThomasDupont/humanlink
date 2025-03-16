@@ -27,7 +27,7 @@ import { Spinner } from '@/components/Spinner'
 import config, { SuportedLocale } from '@/config'
 import BaseModal from '@/components/BaseModal'
 import CreateOfferModal from '@/components/Modals/CreateOffer.modal'
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from 'next-i18next'
 import ShowOffer from '@/elements/chat/ShowOffer.element'
 import { UserWithServicesWithPrices } from '@/types/User.type'
 

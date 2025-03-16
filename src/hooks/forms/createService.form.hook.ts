@@ -1,6 +1,6 @@
 import config from '@/config'
 import { Category, Lang } from '@prisma/client'
-import { Effect, Exit } from 'effect'
+import { Effect } from 'effect'
 import { FormError } from '../../utils/effects/Errors'
 import { Schema } from 'effect'
 import { validateStringEffect, validateNumberEffect } from '@/utils/effects/validate.effect'
@@ -37,7 +37,7 @@ export const createServiceFormSchema = Schema.Struct({
 
 export type CreateServiceFormSchema = typeof createServiceFormSchema.Type
 
-export enum ErrorsTag {
+export enum Tag {
   Title = 'title',
   ShortDescription = 'shortDescription',
   Description = 'description',
@@ -47,65 +47,59 @@ export enum ErrorsTag {
 }
 
 const validateCategoryEffect = (input: unknown) =>
-  Schema.decodeUnknown(category)(input).pipe(Effect.mapError(FormError.of(ErrorsTag.Category)))
+  Schema.decodeUnknown(category)(input).pipe(
+    Effect.map(value => ({
+      tag: Tag.Category,
+      value
+    })),
+    Effect.mapError(FormError.of(Tag.Category))
+  )
 
 const validateLangsEffect = (input: unknown) =>
   Schema.decodeUnknown(langs)(input).pipe(
     Effect.flatMap(value =>
       Effect.if(value.length > 0, {
-        onFalse: () => Effect.fail(FormError.of('lang')(new Error(`langs must be setted`))),
-        onTrue: () => Effect.succeed(value)
+        onFalse: () => Effect.fail(FormError.of(Tag.Langs)(new Error(`langs must be setted`))),
+        onTrue: () => Effect.succeed({ tag: Tag.Langs, value })
       })
     ),
-    Effect.mapError(FormError.of(ErrorsTag.Langs))
+    Effect.mapError(FormError.of(Tag.Langs))
   )
 
 export const useCreateServiceFormValidation = () => {
   const validate = (input: Partial<CreateServiceFormSchema>) => {
-    const errors: FormError[] = []
-    ;[
-      validateStringEffect(
-        title,
-        { max: config.userInteraction.serviceTitleMaxLen },
-        ErrorsTag.Title
-      )(input.title),
-      validateStringEffect(
-        description,
-        { max: config.userInteraction.serviceDescriptionMaxLen },
-        ErrorsTag.Description
-      )(input.description),
-      validateStringEffect(
-        shortDescription,
-        { max: config.userInteraction.serviceShortDescriptionMaxLen },
-        ErrorsTag.ShortDescription
-      )(input.shortDescription)
-    ].map(eff =>
-      eff.pipe(
-        Effect.runSyncExit,
-        Exit.mapError(e => errors.push(e))
-      )
+    return Effect.all(
+      [
+        validateStringEffect(
+          title,
+          { max: config.userInteraction.serviceTitleMaxLen },
+          Tag.Title
+        )(input.title),
+        validateStringEffect(
+          description,
+          { max: config.userInteraction.serviceDescriptionMaxLen },
+          Tag.Description
+        )(input.description),
+        validateStringEffect(
+          shortDescription,
+          { max: config.userInteraction.serviceShortDescriptionMaxLen },
+          Tag.ShortDescription
+        )(input.shortDescription),
+        validateCategoryEffect(input.category),
+        validateLangsEffect(input.langs),
+        validateNumberEffect(
+          price,
+          { max: config.userInteraction.fixedPriceMax, min: 1 },
+          Tag.Price
+        )(input.price)
+      ],
+      { mode: 'either' }
     )
-
-    validateCategoryEffect(input.category).pipe(
-      Effect.runSyncExit,
-      Exit.mapError(e => errors.push(e))
-    )
-
-    validateLangsEffect(input.langs).pipe(
-      Effect.runSyncExit,
-      Exit.mapError(e => errors.push(e))
-    )
-
-    validateNumberEffect(
-      price,
-      { max: config.userInteraction.fixedPriceMax, min: 1 },
-      ErrorsTag.Price
-    )(input.price).pipe(
-      Effect.runSyncExit,
-      Exit.mapError(e => errors.push(e))
-    )
-
-    return errors
+      .pipe(Effect.runSync)
+      .filter(r => r._tag === 'Left')
+      .map(r => ({
+        ...r.left
+      }))
   }
 
   return { validate }

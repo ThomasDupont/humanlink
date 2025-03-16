@@ -1,7 +1,7 @@
 import config from '@/config'
 import {
   CreateServiceFormSchema,
-  ErrorsTag,
+  Tag,
   useCreateServiceFormValidation
 } from '@/hooks/forms/createService.form.hook'
 import { FormError } from '@/utils/effects/Errors'
@@ -24,7 +24,7 @@ import {
 import { NumericFormat } from 'react-number-format'
 import { Category, Lang } from '@prisma/client'
 import { FormEvent, useMemo, useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from 'next-i18next'
 import DOMPurify from 'dompurify'
 import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
 import 'react-quill/dist/quill.snow.css'
@@ -117,7 +117,7 @@ export default function CreateOrUpdateServiceModal({
       .finally(() => setShowSpinner(false))
   }
 
-  const getErrorByTag = (tag: ErrorsTag): FormError | null => {
+  const getErrorByTag = (tag: Tag): FormError | null => {
     return formErrors.find(error => error.tag === tag) ?? null
   }
 
@@ -162,7 +162,7 @@ export default function CreateOrUpdateServiceModal({
                 variant="standard"
                 labelId="category"
                 value={formValues.category ?? ''}
-                error={getErrorByTag(ErrorsTag.Category) !== null}
+                error={getErrorByTag(Tag.Category) !== null}
                 onChange={e =>
                   setFormValues(state => ({
                     ...state,
@@ -188,7 +188,7 @@ export default function CreateOrUpdateServiceModal({
                 multiple
                 value={formValues.langs}
                 renderValue={selected => selected.join(', ')}
-                error={getErrorByTag(ErrorsTag.Langs) !== null}
+                error={getErrorByTag(Tag.Langs) !== null}
                 MenuProps={MenuProps}
                 input={<OutlinedInput label="Tag" />}
                 onChange={e => {
@@ -228,7 +228,7 @@ export default function CreateOrUpdateServiceModal({
                 id="price"
                 variant="standard"
                 label="Price €"
-                error={getErrorByTag(ErrorsTag.Price) !== null}
+                error={getErrorByTag(Tag.Price) !== null}
               />
             </FormControl>
           </Box>
@@ -238,7 +238,7 @@ export default function CreateOrUpdateServiceModal({
             variant="standard"
             color="primary"
             label={`${commonT('title')}`}
-            error={getErrorByTag(ErrorsTag.Title) !== null}
+            error={getErrorByTag(Tag.Title) !== null}
             onChange={e =>
               setFormValues(state => ({
                 ...state,
@@ -260,7 +260,7 @@ export default function CreateOrUpdateServiceModal({
             variant="standard"
             color="primary"
             label={`${commonT('shortDescription')}`}
-            error={getErrorByTag(ErrorsTag.ShortDescription) !== null}
+            error={getErrorByTag(Tag.ShortDescription) !== null}
             multiline
             onChange={e =>
               setFormValues(state => ({
@@ -302,14 +302,14 @@ export default function CreateOrUpdateServiceModal({
               <Typography variant="body2">
                 {`${formValues.description.length} / ${config.userInteraction.serviceDescriptionMaxLen}`}
               </Typography>
-              {getErrorByTag(ErrorsTag.Description) && (
+              {getErrorByTag(Tag.Description) && (
                 <Typography color="error" variant="body1">
-                  {getErrorByTag(ErrorsTag.Description)?.message}
+                  {getErrorByTag(Tag.Description)?.message}
                 </Typography>
               )}
             </Box>
           </Box>
-          <Button size="medium" type="submit" variant="contained">
+          <Button disabled={openSnackBar} size="medium" type="submit" variant="contained">
             {commonT('save')}
           </Button>
         </Box>

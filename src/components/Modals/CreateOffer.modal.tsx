@@ -18,11 +18,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { Spinner } from '../Spinner'
 import { FormError } from '@/utils/effects/Errors'
 import { useTranslation } from 'next-i18next'
-import {
-  CreateOffer,
-  ErrorsTag,
-  useCreateOfferFormValidation
-} from '@/hooks/forms/createOffer.form.hook'
+import { CreateOffer, Tag, useCreateOfferFormValidation } from '@/hooks/forms/createOffer.form.hook'
 import { NumericFormat } from 'react-number-format'
 import config from '@/config'
 import { trpc } from '@/utils/trpc'
@@ -55,21 +51,21 @@ export default function CreateOfferModal({
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
 
-    const errors = validate(formValues)
+    const formErrors = validate(formValues)
 
     if (!formValues.serviceId) {
-      errors.push(FormError.of(ErrorsTag.ServiceId)(new Error('serviceId must be setted')))
+      formErrors.push(FormError.of(Tag.ServiceId)(new Error('serviceId must be setted')))
     }
 
     if (
       formValues.serviceId &&
       !userServices.map(service => service.id).includes(formValues.serviceId)
     ) {
-      errors.push(FormError.of(ErrorsTag.ServiceId)(new Error('serviceId must be in your list')))
+      formErrors.push(FormError.of(Tag.ServiceId)(new Error('serviceId must be in your list')))
     }
 
-    setFormErrors(errors)
-    if (errors.length) {
+    setFormErrors(formErrors)
+    if (formErrors.length) {
       setOpenSnackBar(true)
       return
     }
@@ -95,7 +91,7 @@ export default function CreateOfferModal({
       .finally(() => setShowSpinner(false))
   }
 
-  const getErrorByTag = (tag: ErrorsTag): FormError | null => {
+  const getErrorByTag = (tag: Tag): FormError | null => {
     return formErrors.find(error => error.tag === tag) ?? null
   }
 
@@ -140,7 +136,7 @@ export default function CreateOfferModal({
                 variant="standard"
                 labelId="service"
                 value={formValues.serviceId ?? 0}
-                error={getErrorByTag(ErrorsTag.ServiceId) !== null}
+                error={getErrorByTag(Tag.ServiceId) !== null}
                 onChange={e =>
                   setFormValues(state => ({
                     ...state,
@@ -176,7 +172,7 @@ export default function CreateOfferModal({
                 id="price"
                 variant="standard"
                 label="Price €"
-                error={getErrorByTag(ErrorsTag.Price) !== null}
+                error={getErrorByTag(Tag.Price) !== null}
               />
             </FormControl>
             <FormControl>
@@ -192,7 +188,7 @@ export default function CreateOfferModal({
                   }
                 />
               </LocalizationProvider>
-              {getErrorByTag(ErrorsTag.Deadline) !== null && (
+              {getErrorByTag(Tag.Deadline) !== null && (
                 <Typography variant="body2" color="error">
                   Error
                 </Typography>
@@ -205,7 +201,7 @@ export default function CreateOfferModal({
             variant="standard"
             color="primary"
             label={`${commonT('description')}`}
-            error={getErrorByTag(ErrorsTag.Description) !== null}
+            error={getErrorByTag(Tag.Description) !== null}
             multiline
             minRows={3}
             onChange={e =>
@@ -223,7 +219,7 @@ export default function CreateOfferModal({
               htmlInput: { maxLength: config.userInteraction.serviceDescriptionMaxLen }
             }}
           />
-          <Button size="medium" type="submit" variant="contained">
+          <Button disabled={openSnackBar} size="medium" type="submit" variant="contained">
             {commonT('save')}
           </Button>
         </Box>
