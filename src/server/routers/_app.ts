@@ -159,12 +159,15 @@ export const appRouter = router({
                 type: z.literal('offer'),
                 offerId: z.number(),
                 voucherCode: z.string().optional()
+              }),
+              z.object({
+                type: z.literal('milestone'),
+                milestoneId: z.number(),
+                voucherCode: z.string().optional()
               })
             ])
           )
-          .mutation(({ input, ctx }) =>
-            createStripePaymentIntent(input.offerId, ctx.session.user.id).run()
-          )
+          .mutation(({ input, ctx }) => createStripePaymentIntent(input).run(ctx.session.user.id))
       })
     }),
     offer: router({

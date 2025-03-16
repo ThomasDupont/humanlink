@@ -176,7 +176,7 @@ export const createOfferWithMessage = (offer: CreateOffer) => ({
     )
 })
 
-export const createStripePaymentIntentEffect = (offerId: number, receiverId: number) => {
+export const createStripePaymentIntentForOfferEffect = (offerId: number, receiverId: number) => {
   return T.gen(function* () {
     const logger = yield* Logger
     const stripeOperations = yield* StripeOperations
@@ -252,12 +252,34 @@ export const createStripePaymentIntentEffect = (offerId: number, receiverId: num
   }).pipe(T.flatten)
 }
 
-export const createStripePaymentIntent = (offerId: number, receiverId: number) => ({
-  run: () =>
-    createStripePaymentIntentEffect(offerId, receiverId).pipe(
-      effectLogger,
-      effectOfferOperations,
-      effectStripeOperations,
-      T.runPromise
-    )
-})
+type Input =
+  | {
+      type: 'offer'
+      offerId: number
+      voucherCode?: string | undefined
+    }
+  | {
+      type: 'milestone'
+      milestoneId: number
+      voucherCode?: string | undefined
+    }
+export const createStripePaymentIntent = (input: Input) => {
+  switch (input.type) {
+    case 'offer':
+      return {
+        run: (userId: number) =>
+          createStripePaymentIntentForOfferEffect(input.offerId, userId).pipe(
+            effectLogger,
+            effectOfferOperations,
+            effectStripeOperations,
+            T.runPromise
+          )
+      }
+    case 'milestone':
+      return {
+        run: () => {
+          throw new Error('Not implemented')
+        }
+      }
+  }
+}
