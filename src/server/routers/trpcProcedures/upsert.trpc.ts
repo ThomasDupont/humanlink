@@ -12,6 +12,8 @@ import { Price, Prisma, Service } from '@prisma/client'
 import { TRPCError } from '@trpc/server'
 import { effectSync, Sync } from '../databaseOperations/sync/sync'
 import { OfferWithMileStonesAndMilestonePriceWithoutIdsAndCreatedAt } from '@/types/Offers.type'
+import { effectStripeOperations, StripeOperations } from '../paymentOperations/payment.provider'
+import config from '@/config'
 
 const RETRY = 1
 const RETRY_DELAY = 100
@@ -170,6 +172,92 @@ export const createOfferWithMessage = (offer: CreateOffer) => ({
       effectLogger,
       effectOfferOperations,
       effectMessageOperations,
+      T.runPromise
+    )
+})
+
+export const createStripePaymentIntentEffect = (offerId: number, receiverId: number) => {
+  return T.gen(function* () {
+    const logger = yield* Logger
+    const stripeOperations = yield* StripeOperations
+    const offerOperations = yield* OfferOperations
+
+    return T.tryPromise({
+      try: () => offerOperations.getAnOfferByIdAndReceiverId(offerId, receiverId),
+      catch: error => {
+        logger.error({
+          cause: 'database_error',
+          message: `offer ${offerId} db get error`,
+          detailedError: error
+        })
+
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+          return new TRPCError({
+            code: 'NOT_FOUND'
+          })
+        }
+        return new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR'
+        })
+      }
+    }).pipe(
+      T.filterOrFail(
+        offer => offer !== null,
+        () => {
+          logger.error({
+            cause: 'offer_not_found',
+            message: `offer ${offerId} not found on db`,
+            detailedError: {}
+          })
+          return new TRPCError({
+            code: 'NOT_FOUND'
+          })
+        }
+      ),
+      T.flatMap(offer => {
+        const computedAmount = offer.milestone.reduce(
+          (acc, milestone) => acc + milestone.priceMilestone.number,
+          0
+        )
+        const currency = offer.milestone[0]?.priceMilestone.currency ?? config.defaultCurrency
+
+        const idempotencyKey = `${offerId}-${receiverId}-${computedAmount}`
+
+        return T.tryPromise({
+          try: () =>
+            stripeOperations.createPaymentIntent({
+              amount: computedAmount,
+              currency,
+              idempotencyKey
+            }),
+          catch: error => {
+            logger.error({
+              cause: 'database_error',
+              message: `stripe payment intent for offer ${offerId} db create error`,
+              detailedError: error
+            })
+
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+              return new TRPCError({
+                code: 'NOT_FOUND'
+              })
+            }
+            return new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR'
+            })
+          }
+        })
+      })
+    )
+  }).pipe(T.flatten)
+}
+
+export const createStripePaymentIntent = (offerId: number, receiverId: number) => ({
+  run: () =>
+    createStripePaymentIntentEffect(offerId, receiverId).pipe(
+      effectLogger,
+      effectOfferOperations,
+      effectStripeOperations,
       T.runPromise
     )
 })

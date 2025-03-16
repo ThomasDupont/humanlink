@@ -14,7 +14,11 @@ import { protectedprocedure } from './middlewares'
 import { getContactList, userMe } from './trpcProcedures/get.trpc'
 import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
 import { Category, Lang } from '@prisma/client'
-import { createOfferWithMessage, upsertService } from './trpcProcedures/upsert.trpc'
+import {
+  createOfferWithMessage,
+  createStripePaymentIntent,
+  upsertService
+} from './trpcProcedures/upsert.trpc'
 import { deleteAService } from './trpcProcedures/delete.trpc'
 
 export const appRouter = router({
@@ -145,6 +149,23 @@ export const appRouter = router({
       delete: protectedprocedure
         .input(z.number())
         .mutation(({ input, ctx }) => deleteAService(input, ctx.session.user.id).run())
+    }),
+    payment: router({
+      stripe: router({
+        createPaymentIntent: protectedprocedure
+          .input(
+            z.discriminatedUnion('type', [
+              z.object({
+                type: z.literal('offer'),
+                offerId: z.number(),
+                voucherCode: z.string().optional()
+              })
+            ])
+          )
+          .mutation(({ input, ctx }) =>
+            createStripePaymentIntent(input.offerId, ctx.session.user.id).run()
+          )
+      })
     }),
     offer: router({
       create: protectedprocedure

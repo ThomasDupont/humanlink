@@ -26,9 +26,9 @@ export const offersCrud = (prisma: PrismaClient) => {
     })
   }
 
-  const getAnOfferById = (id: number) => {
+  const getAnOfferByIdAndReceiverId = (id: number, userIdReceiver: number) => {
     return prisma.offer.findUnique({
-      where: { id },
+      where: { id, userIdReceiver },
       include: {
         milestone: {
           include: {
@@ -49,5 +49,5 @@ export const offersCrud = (prisma: PrismaClient) => {
     })
   }
 
-  return { createAnOffer, getAnOfferById, acceptOffer }
+  return { createAnOffer, getAnOfferByIdAndReceiverId, acceptOffer }
 }

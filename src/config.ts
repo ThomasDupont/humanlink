@@ -1,15 +1,18 @@
-import { Category, ServiceType } from '@prisma/client'
+import { Category, Currency, ServiceType } from '@prisma/client'
 
 export type UserHookProvider = 'real' | 'fake'
 export type SearchHookProvider = 'elastic' | 'transformer'
 export type BackendSearchProvider = 'algolia' | 'elastic'
 export type SuportedLocale = 'fr' | 'en'
+export type paymentProvider = 'stripe'
 
 type Config = {
   userHookProvider: UserHookProvider
   searchHookProvider: SearchHookProvider
   backendSearchProvider: BackendSearchProvider
   authorizeHTMLTagForDescription: string[]
+  paymentProvider: 'stripe'
+  defaultCurrency: Currency
   userInteraction: {
     descriptionMaxLen: number
     jobTitleMaxLen: number
@@ -27,6 +30,8 @@ const config: Config = {
   searchHookProvider: 'elastic',
   backendSearchProvider: 'elastic',
   authorizeHTMLTagForDescription: ['p', 'strong', 'br', 'ul', 'li', 'em', 'u'],
+  paymentProvider: 'stripe',
+  defaultCurrency: 'EUR',
   userInteraction: {
     descriptionMaxLen: 2000,
     jobTitleMaxLen: 100,

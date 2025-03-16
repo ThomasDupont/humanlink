@@ -1,5 +1,6 @@
 import BaseModal from '@/components/BaseModal'
 import AcceptOfferModal from '@/components/Modals/AcceptOffer.modal'
+import PayOfferModal from '@/components/Modals/PayOffer.modal'
 import { SuportedLocale } from '@/config'
 import { useManagePrice } from '@/hooks/managePrice.hook'
 import { OfferWithMileStonesAndMilestonePrice } from '@/types/Offers.type'
@@ -27,6 +28,7 @@ export default function ShowOffer({
   const { t: chatT } = useTranslation('chat')
   const { t: commonT } = useTranslation('common')
   const [openAcceptModal, setOpenAcceptModal] = useState(false)
+  const [openPayModal, setOpenPayModal] = useState(false)
 
   const { formatPriceCurrency } = useManagePrice()
 
@@ -81,7 +83,18 @@ export default function ShowOffer({
         {offer.isAccepted && <Typography color="primary">{commonT('offerAccepted')}</Typography>}
       </Box>
       <BaseModal open={openAcceptModal} handleClose={() => setOpenAcceptModal(false)}>
-        <AcceptOfferModal offer={offer} handleClose={() => setOpenAcceptModal(false)} />
+        <AcceptOfferModal
+          handleClose={(type: 'yes' | 'no') => {
+            setOpenAcceptModal(false)
+
+            if (type === 'yes') {
+              setOpenPayModal(true)
+            }
+          }}
+        />
+      </BaseModal>
+      <BaseModal open={openPayModal} handleClose={() => setOpenPayModal(false)}>
+        <PayOfferModal offer={offer} handleClose={() => setOpenPayModal(false)} />
       </BaseModal>
     </Box>
   )

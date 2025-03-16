@@ -260,7 +260,6 @@ const Contacts = ({
   const { data: contacts } = trpc.protectedGet.getContacts.useQuery()
   const [selected, setSelected] = useState(userId)
 
-  console.log(contacts)
   return (
     <Box
       sx={t => ({

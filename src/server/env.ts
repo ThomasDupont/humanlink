@@ -11,7 +11,8 @@ const envSchema = z.object({
   LINKEDIN_SECRET: z.string(),
   GOOGLE_CLIENT_ID: z.string(),
   GOOGLE_CLIENT_SECRET: z.string(),
-  AUTH_SECRET: z.string()
+  AUTH_SECRET: z.string(),
+  STRIPE_API_KEY: z.string()
 })
 
 const _env = envSchema.safeParse(process.env)
