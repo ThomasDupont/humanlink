@@ -221,7 +221,7 @@ export const createStripePaymentIntentForOfferEffect = (offerId: number, receive
         )
         const currency = offer.milestone[0]?.priceMilestone.currency ?? config.defaultCurrency
 
-        const idempotencyKey = `${offerId}-${receiverId}-${computedAmount}`
+        const idempotencyKey = `${offerId}-${receiverId}-${computedAmount}-${currency}`
 
         return T.tryPromise({
           try: () =>
