@@ -9,8 +9,8 @@ import {
 import { effectLogger, Logger } from '@/server/logger'
 import config from '@/config'
 
-export const createStripePaymentIntentForOfferEffect = (offerId: number, receiverId: number) => {
-  return T.gen(function* () {
+export const createStripePaymentIntentForOfferEffect = (offerId: number, receiverId: number) =>
+  T.gen(function* () {
     const logger = yield* Logger
     const paymentProviderFactory = yield* PaymentProviderFactory
     const offerOperations = yield* OfferOperations
@@ -85,7 +85,6 @@ export const createStripePaymentIntentForOfferEffect = (offerId: number, receive
       })
     )
   }).pipe(T.flatten)
-}
 
 type Input =
   | {
