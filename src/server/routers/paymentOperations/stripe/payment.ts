@@ -1,8 +1,9 @@
 import { Currency } from '@prisma/client'
 import Stripe from 'stripe'
+import { GenericPaymentProvider } from '../payment.interface'
 
-export const stripeProvider = (stripe: Stripe) => {
-  const createPaymentIntent = async ({
+export const stripeProvider = (stripe: Stripe): GenericPaymentProvider => {
+  const createPayment = async ({
     amount,
     currency,
     idempotencyKey
@@ -11,18 +12,33 @@ export const stripeProvider = (stripe: Stripe) => {
     currency: Currency
     idempotencyKey: string
   }) =>
-    stripe.paymentIntents.create(
-      {
-        amount,
-        currency,
-        automatic_payment_methods: {
-          enabled: true
+    stripe.paymentIntents
+      .create(
+        {
+          amount,
+          currency: currency.toLowerCase(),
+          automatic_payment_methods: {
+            enabled: true
+          }
+        },
+        {
+          idempotencyKey
         }
-      },
-      {
-        idempotencyKey
-      }
-    )
+      )
+      .then(paymentIntent => ({
+        id: paymentIntent.id,
+        secret: paymentIntent.client_secret ?? '',
+        amount,
+        currency
+      }))
 
-  return { createPaymentIntent }
+  const getPaymentById = (id: string) =>
+    stripe.paymentIntents.retrieve(id).then(paymentIntent => ({
+      id: paymentIntent.id,
+      secret: paymentIntent.client_secret ?? '',
+      amount: paymentIntent.amount,
+      currency: paymentIntent.currency.toUpperCase() as Currency
+    }))
+
+  return { createPayment, getPaymentById }
 }

@@ -201,11 +201,35 @@ model UserBalance {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   user      User?
+  balance   Int      @default(0)
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+enum PaymentEventType {
+  payout
+  pre_payment
+  payment
+  invoicing
+}
+
+enum PaymentProvider {
+  stripe
+}
+
+enum PaymentFrom {
+  offer
+  milestone
 }
 
 model UserBalanceEventsLog {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    Int
+  id                Int              @id @default(autoincrement())
+  createdAt         DateTime         @default(now())
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            Int
+  amount            Int
+  eventType         PaymentEventType
+  provider          PaymentProvider
+  providerPaymentId String
+  from              PaymentFrom
+  fromId            Int
 }

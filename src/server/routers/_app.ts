@@ -4,7 +4,6 @@ import { JSDOM } from 'jsdom'
 import { z } from 'zod'
 import {
   messageOperations,
-  offerOperations,
   serviceOperations,
   userOperations
 } from './databaseOperations/prisma.provider'
@@ -13,13 +12,11 @@ import searchFactory from './searchService/search.factory'
 import { protectedprocedure } from './middlewares'
 import { getContactList, userMe } from './trpcProcedures/get.trpc'
 import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
-import { Category, Lang } from '@prisma/client'
-import {
-  createOfferWithMessage,
-  createStripePaymentIntent,
-  upsertService
-} from './trpcProcedures/upsert.trpc'
+import { Category, Lang, PaymentProvider } from '@prisma/client'
+import { createOfferWithMessage, upsertService } from './trpcProcedures/upsert.trpc'
 import { deleteAService } from './trpcProcedures/delete.trpc'
+import { createStripePaymentIntent } from './trpcProcedures/upsert/createStripePaymentIntentForOffer'
+import { acceptOffer } from './trpcProcedures/upsert/acceptOffer'
 
 export const appRouter = router({
   get: router({
@@ -216,8 +213,21 @@ export const appRouter = router({
         }),
 
       accept: protectedprocedure
-        .input(z.number())
-        .mutation(({ input, ctx }) => offerOperations.acceptOffer(input, ctx.session.user.id))
+        .input(
+          z.object({
+            offerId: z.number(),
+            paymentId: z.string(),
+            paymentProvider: z.nativeEnum(PaymentProvider)
+          })
+        )
+        .mutation(({ input, ctx }) =>
+          acceptOffer({
+            offerId: input.offerId,
+            paymentId: input.paymentId,
+            paymentProvider: input.paymentProvider,
+            userId: ctx.session.user.id
+          }).run()
+        )
     })
   })
 })

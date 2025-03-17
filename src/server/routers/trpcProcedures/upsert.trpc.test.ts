@@ -8,7 +8,7 @@ import { Sync } from '../databaseOperations/sync/sync'
 import { Price, Service } from '@prisma/client'
 import { ServiceWithPrice } from '@/types/Services.type'
 
-describe('upsert trpc test', () => {
+describe('upsert trpc test (Service)', () => {
   describe('upsertService', () => {
     const loggerErrorMock = vi.fn()
     const serviceOperationsMock = {
