@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { elastic } from '@/server/routers/searchService/elasticClient'
+import { elastic as elasticFun } from '@/server/routers/searchService/elasticClient'
 import DOMPurify from 'dompurify'
 import { JSDOM } from 'jsdom'
 import { removeHtmlTags } from '@/utils/cleanHtmlTag'
@@ -9,6 +9,7 @@ import { AxiosError } from 'axios'
 
 const prisma = new PrismaClient().$extends(withAccelerate())
 
+const elastic = elasticFun()
 async function main() {
   const take = 100
   let skip = 0

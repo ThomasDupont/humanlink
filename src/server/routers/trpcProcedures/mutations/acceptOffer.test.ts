@@ -7,7 +7,7 @@ import { paymentProviderFactory, PaymentProviderFactory } from '../../paymentOpe
 
 
 describe('upsert service test', () => {
-    const loggerErrorMock = console.error
+    const loggerErrorMock = vi.fn()
     const offerOperationsMock = {
         acceptOffer: vi.fn(),
     }
@@ -64,5 +64,34 @@ describe('upsert service test', () => {
                 provider: 'stripe',
             })
         })
+    })
+
+    it('Should return FORBIDDEN for unpaid payment', async () => {
+        const payload: AcceptOfferEffectArgs = {
+            offerId: 1,
+            paymentProvider: 'stripe',
+            userId: 2,
+            paymentId: 'test_p'
+        }
+
+        paymentMock.getPaymentById.mockResolvedValueOnce({id: 'test', amount: 1000, paid: false})
+
+        const acceptOffer = acceptOfferEffect(payload)
+
+        await acceptOffer.pipe(
+            T.provideService(Logger, { error: loggerErrorMock }), 
+            T.provideService(OfferOperations, offerOperationsMock as unknown as typeof offerOperations),
+            T.provideService(BalanceOperations, balanceOperationsMock as unknown as typeof balanceOperations),
+            T.provideService(PaymentProviderFactory, paymentProviderFactoryMock as unknown as typeof paymentProviderFactory),
+            T.mapError(error => {
+                expect(error.message).toBe('FORBIDDEN')
+                expect(loggerErrorMock).toBeCalledWith({
+                    cause: 'payment_not_paid',
+                    message: `payment for user 2 of id test_p not paid`,
+                    detailedError: {}
+                  })
+            }),
+            T.runPromiseExit
+        )
     })
 })

@@ -7,11 +7,11 @@ import {
 } from '../databaseOperations/prisma.provider'
 import { effectLogger } from '@/server/logger'
 import { effectSync } from '../databaseOperations/sync/sync'
-import { createStripePaymentIntentForOfferEffect } from './upsert/createStripePaymentIntentForOffer'
+import { createStripePaymentIntentForOfferEffect } from './mutations/createStripePaymentIntentForOffer'
 import { effectPaymentProviderFactory } from '../paymentOperations/payment.provider'
-import { acceptOfferEffect, AcceptOfferEffectArgs } from './upsert/acceptOffer'
-import { CreateOffer, createOfferWithMessageEffect } from './upsert/createOfferWithMessage'
-import { UpsertServiceArgs, upsertServiceEffect } from './upsert/upsertService'
+import { acceptOfferEffect, AcceptOfferEffectArgs } from './mutations/acceptOffer'
+import { CreateOffer, createOfferWithMessageEffect } from './mutations/createOfferWithMessage'
+import { UpsertServiceArgs, upsertServiceEffect } from './mutations/upsertService'
 
 export const upsertService = (args: UpsertServiceArgs) => ({
   run: () =>
