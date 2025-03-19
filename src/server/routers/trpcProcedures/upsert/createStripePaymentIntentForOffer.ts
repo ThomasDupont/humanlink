@@ -1,12 +1,11 @@
 import { Prisma } from '@prisma/client'
 import { Effect as T } from 'effect'
 import { TRPCError } from '@trpc/server'
-import { OfferOperations, effectOfferOperations } from '../../databaseOperations/prisma.provider'
+import { OfferOperations } from '../../databaseOperations/prisma.provider'
 import {
-  effectPaymentProviderFactory,
   PaymentProviderFactory
 } from '../../paymentOperations/payment.provider'
-import { effectLogger, Logger } from '@/server/logger'
+import { Logger } from '@/server/logger'
 import config from '@/config'
 
 export const createStripePaymentIntentForOfferEffect = (offerId: number, receiverId: number) =>
@@ -85,35 +84,3 @@ export const createStripePaymentIntentForOfferEffect = (offerId: number, receive
       })
     )
   }).pipe(T.flatten)
-
-type Input =
-  | {
-      type: 'offer'
-      offerId: number
-      voucherCode?: string | undefined
-    }
-  | {
-      type: 'milestone'
-      milestoneId: number
-      voucherCode?: string | undefined
-    }
-export const createStripePaymentIntent = (input: Input) => {
-  switch (input.type) {
-    case 'offer':
-      return {
-        run: (userId: number) =>
-          createStripePaymentIntentForOfferEffect(input.offerId, userId).pipe(
-            effectLogger,
-            effectOfferOperations,
-            effectPaymentProviderFactory,
-            T.runPromise
-          )
-      }
-    case 'milestone':
-      return {
-        run: () => {
-          throw new Error('Not implemented')
-        }
-      }
-  }
-}

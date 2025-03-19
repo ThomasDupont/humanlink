@@ -13,10 +13,8 @@ import { protectedprocedure } from './middlewares'
 import { getContactList, userMe } from './trpcProcedures/get.trpc'
 import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
 import { Category, Lang, PaymentProvider } from '@prisma/client'
-import { createOfferWithMessage, upsertService } from './trpcProcedures/upsert.trpc'
+import { acceptOffer, createOfferWithMessage, createStripePaymentIntent, upsertService } from './trpcProcedures/upsert.trpc'
 import { deleteAService } from './trpcProcedures/delete.trpc'
-import { createStripePaymentIntent } from './trpcProcedures/upsert/createStripePaymentIntentForOffer'
-import { acceptOffer } from './trpcProcedures/upsert/acceptOffer'
 
 export const appRouter = router({
   get: router({

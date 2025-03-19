@@ -1,4 +1,3 @@
-import { Algoliasearch } from 'algoliasearch'
 import { AlgoliaProvider } from './search.interface'
 import { ServiceInElastic } from '@/types/Services.type'
 
@@ -11,9 +10,9 @@ type CorrectSearchResult = {
   })[][]
 }
 export const performSearchWithAlgolia: AlgoliaProvider =
-  (algolia: Algoliasearch) =>
+  (algolia) =>
   async ({ query }) => {
-    const result = await algolia.search<ServiceInElastic[]>({
+    const result = await algolia().search<ServiceInElastic[]>({
       requests: [
         {
           indexName,

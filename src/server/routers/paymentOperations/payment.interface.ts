@@ -5,6 +5,7 @@ type PaymentData = {
   secret: string
   amount: number
   currency: Currency
+  paid: boolean
 }
 
 export type GenericPaymentProvider = {

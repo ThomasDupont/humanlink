@@ -4,16 +4,13 @@ import { TRPCError } from '@trpc/server'
 import {
   OfferOperations,
   BalanceOperations,
-  effectOfferOperations,
-  effectBalanceOperations
 } from '../../databaseOperations/prisma.provider'
 import {
-  effectPaymentProviderFactory,
   PaymentProviderFactory
 } from '../../paymentOperations/payment.provider'
-import { effectLogger, Logger } from '@/server/logger'
+import { Logger } from '@/server/logger'
 
-type AcceptOfferEffectArgs = {
+export type AcceptOfferEffectArgs = {
   offerId: number
   paymentProvider: PaymentProvider
   userId: number
@@ -42,12 +39,24 @@ export const acceptOfferEffect = (args: AcceptOfferEffectArgs) =>
         })
       }
     }).pipe(
+      T.filterOrFail(
+        payment => payment.paid,
+        () => {
+          logger.error({
+            cause: 'payment_not_paid',
+            message: `payment for user ${args.userId} of id ${args.paymentId} not paid`,
+            detailedError: {}
+          })
+          return new TRPCError({
+            code: 'FORBIDDEN'
+          })
+        }
+      ),
       T.flatMap(payment => {
         const baseObj = {
           providerPaymentId: args.paymentId,
           userId: args.userId,
           fromId: args.offerId,
-          paymentId: payment.id,
           provider: args.paymentProvider,
           amount: payment.amount
         }
@@ -135,14 +144,3 @@ export const acceptOfferEffect = (args: AcceptOfferEffectArgs) =>
       )
     )
   }).pipe(T.flatten)
-
-export const acceptOffer = (args: AcceptOfferEffectArgs) => ({
-  run: () =>
-    acceptOfferEffect(args).pipe(
-      effectLogger,
-      effectPaymentProviderFactory,
-      effectOfferOperations,
-      effectBalanceOperations,
-      T.runPromise
-    )
-})

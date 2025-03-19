@@ -4,7 +4,7 @@ import stripe from './stripe/stripeClient'
 import { PatternMatching } from '@/types/utility.type'
 import { GenericPaymentProvider } from './payment.interface'
 
-const factory: PatternMatching<{
+export const paymentProviderFactory: PatternMatching<{
   [K in 'stripe']: () => GenericPaymentProvider
 }> = {
   stripe: () => stripeProvider(stripe)
@@ -12,6 +12,6 @@ const factory: PatternMatching<{
 
 export class PaymentProviderFactory extends Context.Tag('paymentProviderFactory')<
   PaymentProviderFactory,
-  typeof factory
+  typeof paymentProviderFactory
 >() {}
-export const effectPaymentProviderFactory = Effect.provideService(PaymentProviderFactory, factory)
+export const effectPaymentProviderFactory = Effect.provideService(PaymentProviderFactory, paymentProviderFactory)

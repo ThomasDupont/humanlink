@@ -2,7 +2,8 @@ import { Currency } from '@prisma/client'
 import Stripe from 'stripe'
 import { GenericPaymentProvider } from '../payment.interface'
 
-export const stripeProvider = (stripe: Stripe): GenericPaymentProvider => {
+export const stripeProvider = (stripeFun: () => Stripe): GenericPaymentProvider => {
+  const stripe = stripeFun()
   const createPayment = async ({
     amount,
     currency,
@@ -29,7 +30,8 @@ export const stripeProvider = (stripe: Stripe): GenericPaymentProvider => {
         id: paymentIntent.id,
         secret: paymentIntent.client_secret ?? '',
         amount,
-        currency
+        currency,
+        paid: paymentIntent.status === 'succeeded'
       }))
 
   const getPaymentById = (id: string) =>
@@ -37,7 +39,8 @@ export const stripeProvider = (stripe: Stripe): GenericPaymentProvider => {
       id: paymentIntent.id,
       secret: paymentIntent.client_secret ?? '',
       amount: paymentIntent.amount,
-      currency: paymentIntent.currency.toUpperCase() as Currency
+      currency: paymentIntent.currency.toUpperCase() as Currency,
+      paid: paymentIntent.status === 'succeeded'
     }))
 
   return { createPayment, getPaymentById }
