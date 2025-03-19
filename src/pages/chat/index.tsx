@@ -153,6 +153,9 @@ const Conversation = ({
                       user={user}
                       locale={locale}
                       userIdFromAuth={message.receiverId}
+                      onAcceptEvent={() => {
+                        refetch()
+                      }}
                     />
                   ) : (
                     <Typography

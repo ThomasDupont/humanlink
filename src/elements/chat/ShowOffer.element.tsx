@@ -15,12 +15,14 @@ export default function ShowOffer({
   offer,
   user,
   userIdFromAuth,
-  locale
+  locale,
+  onAcceptEvent
 }: {
   offer: OfferWithMileStonesAndMilestonePrice
   locale: SuportedLocale
   user: Pick<User, 'firstname' | 'id'>
   userIdFromAuth: number | null
+  onAcceptEvent: () => void
 }) {
   const parsedCreatedDate = format(offer.createdAt, 'PPP', {
     locale: localeToDateFnsLocale(locale)
@@ -94,7 +96,13 @@ export default function ShowOffer({
         />
       </BaseModal>
       <BaseModal open={openPayModal} handleClose={() => setOpenPayModal(false)}>
-        <PayOfferModal offer={offer} handleClose={() => setOpenPayModal(false)} />
+        <PayOfferModal
+          offer={offer}
+          handleClose={() => {
+            onAcceptEvent()
+            setOpenPayModal(false)
+          }}
+        />
       </BaseModal>
     </Box>
   )

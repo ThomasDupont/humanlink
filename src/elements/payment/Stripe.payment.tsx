@@ -1,12 +1,10 @@
 import { Box, Button, Container, Typography } from '@mui/material'
 import { Props } from './Payment.interface'
 import { trpc } from '@/utils/trpc'
-import { FormEvent, ReactElement, useState } from 'react'
-import { loadStripe, StripeError } from '@stripe/stripe-js'
-import { env } from '@/server/env'
+import { FormEvent, ReactElement, useEffect, useState } from 'react'
+import { loadStripe, Stripe as StripeType, StripeError } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
-
-const stripePromise = loadStripe(env.STRIPE_API_KEY_PUBLIC)
+import config from '@/config'
 
 const CheckoutForm = ({ offer, closeWithResult }: Props) => {
   const stripe = useStripe()
@@ -22,13 +20,12 @@ const CheckoutForm = ({ offer, closeWithResult }: Props) => {
       type: 'offer',
       offerId: offer.id
     })
-      .then(data => {
-        console.log('submit')
+      .then(async data => {
         if (!stripe || !elements) {
           return
         }
 
-        console.log('stripe')
+        await elements.submit()
 
         return stripe.confirmPayment({
           clientSecret: data.secret,
@@ -68,7 +65,7 @@ const CheckoutForm = ({ offer, closeWithResult }: Props) => {
           paymentMethodOrder: ['card', 'paypal', 'klarna']
         }}
       />
-      <Button type="submit" variant="outlined" color="primary" disabled={!stripe} sx={{ mt: 2 }}>
+      <Button type="submit" variant="contained" color="primary" disabled={!stripe} sx={{ mt: 2 }}>
         Pay
       </Button>
       {paymentError && (
@@ -91,7 +88,8 @@ const Base = ({ children }: { children: ReactElement }) => {
     <Container maxWidth="lg">
       <Box
         sx={{
-          pt: 20
+          pt: 2,
+          pb: 2
         }}
       >
         {children}
@@ -101,6 +99,17 @@ const Base = ({ children }: { children: ReactElement }) => {
 }
 
 export const Stripe = (props: Props) => {
+  const [stripePromise, setStripePromise] = useState<Promise<StripeType | null> | null>(null)
+
+  const computedAmount = props.offer.milestones.reduce(
+    (acc, milestone) => acc + milestone.priceMilestone.number,
+    0
+  )
+  const currency = props.offer.milestones[0]?.priceMilestone.currency ?? config.defaultCurrency
+
+  useEffect(() => {
+    setStripePromise(loadStripe(process.env.NEXT_PUBLIC_STRIPE_API_KEY_PUBLIC!))
+  }, [])
   return (
     <Base>
       <Elements
@@ -111,8 +120,8 @@ export const Stripe = (props: Props) => {
             variables: { colorPrimaryText: '#397ff8' }
           },
           mode: 'payment',
-          amount: 1099,
-          currency: 'usd'
+          amount: computedAmount,
+          currency
         }}
       >
         <CheckoutForm {...props} />

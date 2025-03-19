@@ -13,7 +13,7 @@ const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string(),
   AUTH_SECRET: z.string(),
   STRIPE_API_KEY: z.string(),
-  STRIPE_API_KEY_PUBLIC: z.string()
+  NEXT_PUBLIC_STRIPE_API_KEY_PUBLIC: z.string()
 })
 
 const _env = envSchema.safeParse(process.env)
