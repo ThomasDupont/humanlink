@@ -4,6 +4,7 @@ import {
   effectMessageOperations,
   effectOfferOperations,
   effectServiceOperations,
+  effectTransactionOperations,
 } from '../databaseOperations/prisma.provider'
 import { effectLogger } from '@/server/logger'
 import { effectSync } from '../databaseOperations/sync/sync'
@@ -33,7 +34,7 @@ export const acceptOffer = (args: AcceptOfferEffectArgs) => ({
     acceptOfferEffect(args).pipe(
       effectLogger,
       effectPaymentProviderFactory,
-      effectOfferOperations,
+      effectTransactionOperations,
       effectBalanceOperations,
       T.runPromise
     )

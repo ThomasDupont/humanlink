@@ -15,4 +15,5 @@ export type GenericPaymentProvider = {
     idempotencyKey: string
   }) => Promise<PaymentData>
   getPaymentById: (id: string) => Promise<PaymentData>
+  refundFullTransaction: (id: string) => Promise<boolean>
 }
