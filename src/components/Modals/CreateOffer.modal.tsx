@@ -18,21 +18,17 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { Spinner } from '../Spinner'
 import { FormError } from '@/utils/effects/Errors'
 import { useTranslation } from 'next-i18next'
-import {
-  CreateOffer,
-  ErrorsTag,
-  useCreateOfferFormValidation
-} from '@/hooks/forms/createOffer.form.hook'
+import { CreateOffer, Tag, useCreateOfferFormValidation } from '@/hooks/forms/createOffer.form.hook'
 import { NumericFormat } from 'react-number-format'
 import config from '@/config'
 import { trpc } from '@/utils/trpc'
-import { OfferWithMileStonesAndMilestonePrice } from '@/types/Offers.type'
-import { offerFromApiToLocal } from '@/utils/retreatDateFromAPI'
 
 export default function CreateOfferModal({
-  setNewOffer
+  handleClose,
+  receiverId
 }: {
-  setNewOffer: (offer: OfferWithMileStonesAndMilestonePrice) => void
+  handleClose: () => void
+  receiverId: number
 }) {
   const { t: commonT } = useTranslation('common')
   const { t } = useTranslation('service')
@@ -55,20 +51,21 @@ export default function CreateOfferModal({
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
 
-    const errors = validate(formValues)
+    const formErrors = validate(formValues)
 
     if (!formValues.serviceId) {
-      errors.push(FormError.of(ErrorsTag.ServiceId)(new Error('serviceId must be setted')))
-    }
-    if (
-      formValues.serviceId &&
-      userServices.map(service => service.id).includes(formValues.serviceId)
-    ) {
-      errors.push(FormError.of(ErrorsTag.ServiceId)(new Error('serviceId must be in your list')))
+      formErrors.push(FormError.of(Tag.ServiceId)(new Error('serviceId must be setted')))
     }
 
-    setFormErrors(errors)
-    if (errors.length) {
+    if (
+      formValues.serviceId &&
+      !userServices.map(service => service.id).includes(formValues.serviceId)
+    ) {
+      formErrors.push(FormError.of(Tag.ServiceId)(new Error('serviceId must be in your list')))
+    }
+
+    setFormErrors(formErrors)
+    if (formErrors.length) {
       setOpenSnackBar(true)
       return
     }
@@ -79,15 +76,22 @@ export default function CreateOfferModal({
       deadline: formValues.deadline!,
       description: formValues.description,
       price: formValues.price * 100,
-      serviceId: formValues.serviceId!
-    }).then(offer => {
-      setNewOffer(offerFromApiToLocal(offer))
-      setOpenSnackBar(true)
-      setShowSpinner(false)
+      serviceId: formValues.serviceId!,
+      receiverId
     })
+      .then(() => {
+        setOpenSnackBar(true)
+        setTimeout(() => handleClose(), 1000)
+      })
+      .catch(err => {
+        setFormErrors([err])
+        console.error(err)
+        setOpenSnackBar(true)
+      })
+      .finally(() => setShowSpinner(false))
   }
 
-  const getErrorByTag = (tag: ErrorsTag): FormError | null => {
+  const getErrorByTag = (tag: Tag): FormError | null => {
     return formErrors.find(error => error.tag === tag) ?? null
   }
 
@@ -131,8 +135,8 @@ export default function CreateOfferModal({
               <Select
                 variant="standard"
                 labelId="service"
-                value={formValues.serviceId}
-                error={getErrorByTag(ErrorsTag.ServiceId) !== null}
+                value={formValues.serviceId ?? 0}
+                error={getErrorByTag(Tag.ServiceId) !== null}
                 onChange={e =>
                   setFormValues(state => ({
                     ...state,
@@ -168,21 +172,28 @@ export default function CreateOfferModal({
                 id="price"
                 variant="standard"
                 label="Price €"
-                error={getErrorByTag(ErrorsTag.Price) !== null}
+                error={getErrorByTag(Tag.Price) !== null}
               />
             </FormControl>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DatePicker
-                disablePast
-                label="deadline"
-                onChange={date =>
-                  setFormValues(state => ({
-                    ...state,
-                    deadline: date ?? undefined
-                  }))
-                }
-              />
-            </LocalizationProvider>
+            <FormControl>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  disablePast
+                  label="deadline"
+                  onChange={date =>
+                    setFormValues(state => ({
+                      ...state,
+                      deadline: date ?? undefined
+                    }))
+                  }
+                />
+              </LocalizationProvider>
+              {getErrorByTag(Tag.Deadline) !== null && (
+                <Typography variant="body2" color="error">
+                  Error
+                </Typography>
+              )}
+            </FormControl>
           </Box>
           <TextField
             type="textarea"
@@ -190,13 +201,13 @@ export default function CreateOfferModal({
             variant="standard"
             color="primary"
             label={`${commonT('description')}`}
-            error={getErrorByTag(ErrorsTag.Description) !== null}
+            error={getErrorByTag(Tag.Description) !== null}
             multiline
             minRows={3}
             onChange={e =>
               setFormValues(state => ({
                 ...state,
-                shortDescription: e.target.value
+                description: e.target.value
               }))
             }
             value={formValues.description}
@@ -208,7 +219,7 @@ export default function CreateOfferModal({
               htmlInput: { maxLength: config.userInteraction.serviceDescriptionMaxLen }
             }}
           />
-          <Button size="medium" type="submit" variant="contained">
+          <Button disabled={openSnackBar} size="medium" type="submit" variant="contained">
             {commonT('save')}
           </Button>
         </Box>

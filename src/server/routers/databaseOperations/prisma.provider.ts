@@ -6,6 +6,8 @@ import { logger } from '@/server/logger'
 import { Context, Effect } from 'effect'
 import { messageCrud } from './messages/messages.prisma'
 import { offersCrud } from './offers/offers.prisma'
+import { userBalanceCrud } from './payment/payment.prisma'
+import { transaction } from './transactionBuilder'
 
 const prisma = new PrismaClient({
   log: [
@@ -49,7 +51,9 @@ const extendedPrisma = prisma.$extends(withAccelerate())
 export const userOperations = userCrud(extendedPrisma as unknown as PrismaClient)
 export const serviceOperations = servicesCrud(extendedPrisma as unknown as PrismaClient)
 export const messageOperations = messageCrud(extendedPrisma as unknown as PrismaClient)
-const offerOperations = offersCrud(extendedPrisma as unknown as PrismaClient)
+export const offerOperations = offersCrud(extendedPrisma as unknown as PrismaClient)
+export const balanceOperations = userBalanceCrud(extendedPrisma as unknown as PrismaClient)
+export const transactionOperations = transaction(extendedPrisma as unknown as PrismaClient)
 
 export class UserOperations extends Context.Tag('userOperations')<
   UserOperations,
@@ -74,3 +78,15 @@ export class OfferOperations extends Context.Tag('offerOperations')<
   typeof offerOperations
 >() {}
 export const effectOfferOperations = Effect.provideService(OfferOperations, offerOperations)
+
+export class BalanceOperations extends Context.Tag('balanceOperations')<
+  BalanceOperations,
+  typeof balanceOperations
+>() {}
+export const effectBalanceOperations = Effect.provideService(BalanceOperations, balanceOperations)
+
+export class TransactionOperations extends Context.Tag('transactionOperations')<
+TransactionOperations,
+  typeof transactionOperations
+>() {}
+export const effectTransactionOperations = Effect.provideService(TransactionOperations, transactionOperations)

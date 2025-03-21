@@ -1,15 +1,14 @@
 import { it, describe, afterEach, vi, expect } from 'vitest'
 import { Effect as T } from 'effect'
-import { upsertServiceEffect } from './upsert.trpc'
+import { upsertServiceEffect } from './upsertService'
 import config from '@/config'
 import { Logger } from '@/server/logger'
-import { ServiceOperations, serviceOperations } from '../databaseOperations/prisma.provider'
-import { Sync } from '../databaseOperations/sync/sync'
+import { ServiceOperations, serviceOperations } from '../../databaseOperations/prisma.provider'
+import { Sync } from '../../databaseOperations/sync/sync'
 import { Price, Service } from '@prisma/client'
 import { ServiceWithPrice } from '@/types/Services.type'
 
-describe('upsert trpc test', () => {
-  describe('upsertService', () => {
+describe('upsert service test', () => {
     const loggerErrorMock = vi.fn()
     const serviceOperationsMock = {
       createService: vi.fn(),
@@ -21,11 +20,7 @@ describe('upsert trpc test', () => {
       deleteRecord: vi.fn()
     }
     afterEach(() => {
-      loggerErrorMock.mockReset()
-      serviceOperationsMock.createService.mockReset()
-      serviceOperationsMock.updateService.mockReset()
-      syncMock.sync.mockReset()
-      syncMock.deleteRecord.mockReset()
+      vi.resetAllMocks()
     })
     it('Should return a ServiceWithPrice (creation)', () => {
       const service: Omit<Service, 'id' | 'createdAt' | 'userId'> = {
@@ -215,5 +210,4 @@ describe('upsert trpc test', () => {
         T.runPromiseExit
       )
     })
-  })
 })

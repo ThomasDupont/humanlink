@@ -1,13 +1,12 @@
 import config from '@/config'
-import { FormError } from '@/utils/effects/Errors'
 import {
   validateDateEffect,
   validateNumberEffect,
   validateStringEffect
 } from '@/utils/effects/validate.effect'
-import { Effect, Exit, Schema } from 'effect'
+import { Effect, Schema } from 'effect'
 
-export enum ErrorsTag {
+export enum Tag {
   ServiceId = 'serviceId',
   Description = 'description',
   Deadline = 'deadline',
@@ -37,45 +36,36 @@ export type CreateOffer = {
   deadline?: Date
 }
 export const useCreateOfferFormValidation = () => {
-  const validate = (input: CreateOffer): FormError[] => {
-    const errors: FormError[] = []
-
-    ;[
-      validateStringEffect(
-        description,
-        {
-          max: config.userInteraction.descriptionMaxLen
-        },
-        ErrorsTag.Description
-      )(input.description)
-    ].map(eff =>
-      eff.pipe(
-        Effect.runSyncExit,
-        Exit.mapError(e => errors.push(e))
-      )
+  const validate = (input: CreateOffer) => {
+    return Effect.all(
+      [
+        validateStringEffect(
+          description,
+          {
+            max: config.userInteraction.descriptionMaxLen
+          },
+          Tag.Description
+        )(input.description),
+        validateNumberEffect(
+          price,
+          { max: config.userInteraction.fixedPriceMax, min: 1 },
+          Tag.Price
+        )(input.price),
+        validateDateEffect(
+          deadline,
+          {
+            allowPast: false
+          },
+          Tag.Deadline
+        )(input.deadline?.toDateString())
+      ],
+      { mode: 'either' }
     )
-
-    validateNumberEffect(
-      price,
-      { max: config.userInteraction.fixedPriceMax, min: 1 },
-      ErrorsTag.Price
-    )(input.price).pipe(
-      Effect.runSyncExit,
-      Exit.mapError(e => errors.push(e))
-    )
-
-    validateDateEffect(
-      deadline,
-      {
-        allowPast: false
-      },
-      ErrorsTag.Deadline
-    )(input.deadline?.toDateString()).pipe(
-      Effect.runSyncExit,
-      Exit.mapError(e => errors.push(e))
-    )
-
-    return errors
+      .pipe(Effect.runSync)
+      .filter(r => r._tag === 'Left')
+      .map(r => ({
+        ...r.left
+      }))
   }
 
   return { validate }

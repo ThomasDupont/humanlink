@@ -1,7 +1,6 @@
 import { ServiceInElastic } from '@/types/Services.type'
 import { SearchResponseBody } from './elasticClient'
 import { ElasticProvider } from './search.interface'
-import { AxiosInstance } from 'axios'
 
 const parseSearch = <D>(body: SearchResponseBody<D>): D[] => {
   const hits = body.hits.hits
@@ -13,9 +12,9 @@ const parseSearch = <D>(body: SearchResponseBody<D>): D[] => {
 }
 
 export const performSearchWithElastic: ElasticProvider =
-  (elastic: AxiosInstance) =>
+  (elastic) =>
   async ({ query }) => {
-    const { data } = await elastic.get<SearchResponseBody<ServiceInElastic>>('/services/_search', {
+    const { data } = await elastic().get<SearchResponseBody<ServiceInElastic>>('/services/_search', {
       data: JSON.stringify({
         query: {
           match: {

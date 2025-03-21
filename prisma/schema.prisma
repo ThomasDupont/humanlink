@@ -46,7 +46,8 @@ model User {
   services             Service[]
   messages1            Message[]              @relation("sender")
   messages2            Message[]              @relation("receiver")
-  offers               Offer[]
+  offers1              Offer[]                @relation("sender")
+  offers2              Offer[]                @relation("receiver")
   userBalance          UserBalance            @relation(fields: [userBalanceId], references: [id])
   userBalanceId        Int                    @unique
   UserBalanceEventsLog UserBalanceEventsLog[]
@@ -152,21 +153,24 @@ model Message {
 // OFFER
 
 model Offer {
-  id           Int         @id @default(autoincrement())
-  createdAt    DateTime    @default(now())
-  user         User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
-  userId       Int?
-  service      Service?    @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  serviceId    Int?
-  description  String
-  deadline     DateTime
-  isAccepted   Boolean
-  isPaid       Boolean
-  paidDate     DateTime?
-  isTerminated Boolean
-  terminatedAt DateTime?
-  message      Message?
-  milestone    Milestone[]
+  id             Int         @id @default(autoincrement())
+  createdAt      DateTime    @default(now())
+  user           User?       @relation("sender", fields: [userId], references: [id], onDelete: SetNull)
+  userId         Int?
+  userReceiver   User?       @relation("receiver", fields: [userIdReceiver], references: [id], onDelete: SetNull)
+  userIdReceiver Int?
+  service        Service?    @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  serviceId      Int?
+  description    String
+  deadline       DateTime
+  isAccepted     Boolean
+  acceptedAt     DateTime?
+  isPaid         Boolean
+  paidDate       DateTime?
+  isTerminated   Boolean
+  terminatedAt   DateTime?
+  message        Message?
+  milestone      Milestone[]
 }
 
 model Milestone {
@@ -197,11 +201,35 @@ model UserBalance {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   user      User?
+  balance   Int      @default(0)
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+enum PaymentEventType {
+  payout
+  pre_payment
+  payment
+  invoicing
+}
+
+enum PaymentProvider {
+  stripe
+}
+
+enum PaymentFrom {
+  offer
+  milestone
 }
 
 model UserBalanceEventsLog {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    Int
+  id                Int              @id @default(autoincrement())
+  createdAt         DateTime         @default(now())
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            Int
+  amount            Int
+  eventType         PaymentEventType
+  provider          PaymentProvider
+  providerPaymentId String
+  from              PaymentFrom
+  fromId            Int
 }

@@ -4,7 +4,8 @@ import { AxiosError, AxiosInstance } from 'axios'
 import DOMPurify from 'dompurify'
 import { JSDOM } from 'jsdom'
 
-export const syncElastic = (elastic: AxiosInstance) => {
+export const syncElastic = (elasticFun: () => AxiosInstance) => {
+  const elastic = elasticFun()
   const sync = async ({ id, ...service }: Service & { prices: Price[] }) => {
     const request = {
       doc: {
