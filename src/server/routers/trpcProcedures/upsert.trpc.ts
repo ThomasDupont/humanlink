@@ -1,10 +1,9 @@
 import { Effect as T } from 'effect'
 import {
-  effectBalanceOperations,
   effectMessageOperations,
   effectOfferOperations,
   effectServiceOperations,
-  effectTransactionOperations,
+  effectTransactionOperations
 } from '../databaseOperations/prisma.provider'
 import { effectLogger } from '@/server/logger'
 import { effectSync } from '../databaseOperations/sync/sync'
@@ -35,21 +34,22 @@ export const acceptOffer = (args: AcceptOfferEffectArgs) => ({
       effectLogger,
       effectPaymentProviderFactory,
       effectTransactionOperations,
-      effectBalanceOperations,
+      effectOfferOperations,
       T.runPromise
     )
 })
-
 
 type Input =
   | {
       type: 'offer'
       offerId: number
+      idempotencyKey: string
       voucherCode?: string | undefined
     }
   | {
       type: 'milestone'
       milestoneId: number
+      idempotencyKey: string
       voucherCode?: string | undefined
     }
 export const createStripePaymentIntent = (input: Input) => {
@@ -57,7 +57,7 @@ export const createStripePaymentIntent = (input: Input) => {
     case 'offer':
       return {
         run: (userId: number) =>
-          createStripePaymentIntentForOfferEffect(input.offerId, userId).pipe(
+          createStripePaymentIntentForOfferEffect(input.offerId, userId, input.idempotencyKey).pipe(
             effectLogger,
             effectOfferOperations,
             effectPaymentProviderFactory,

@@ -2,13 +2,15 @@ import { Prisma } from '@prisma/client'
 import { Effect as T } from 'effect'
 import { TRPCError } from '@trpc/server'
 import { OfferOperations } from '../../databaseOperations/prisma.provider'
-import {
-  PaymentProviderFactory
-} from '../../paymentOperations/payment.provider'
+import { PaymentProviderFactory } from '../../paymentOperations/payment.provider'
 import { Logger } from '@/server/logger'
 import config from '@/config'
 
-export const createStripePaymentIntentForOfferEffect = (offerId: number, receiverId: number) =>
+export const createStripePaymentIntentForOfferEffect = (
+  offerId: number,
+  receiverId: number,
+  idempotencyKey: string
+) =>
   T.gen(function* () {
     const logger = yield* Logger
     const paymentProviderFactory = yield* PaymentProviderFactory
@@ -54,8 +56,6 @@ export const createStripePaymentIntentForOfferEffect = (offerId: number, receive
           0
         )
         const currency = offer.milestone[0]?.priceMilestone.currency ?? config.defaultCurrency
-
-        const idempotencyKey = `${offerId}-${receiverId}-${computedAmount}-${currency}`
 
         return T.tryPromise({
           try: () =>

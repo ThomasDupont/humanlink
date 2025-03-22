@@ -1,25 +1,7 @@
-<<<<<<< HEAD
 import { PaymentProvider, Prisma } from '@prisma/client'
 import { Exit, Scope, Effect as T } from 'effect'
-=======
-import {
-  PaymentEventType,
-  PaymentFrom,
-  PaymentProvider,
-  Prisma,
-  TransactionType
-} from '@prisma/client'
-import { Effect as T } from 'effect'
->>>>>>> ac5f134 (temp)
 import { TRPCError } from '@trpc/server'
-import {
-  BalanceOperations,
-<<<<<<< HEAD
-  TransactionOperations,
-=======
-  DbTransaction
->>>>>>> ac5f134 (temp)
-} from '../../databaseOperations/prisma.provider'
+import { OfferOperations, TransactionOperations } from '../../databaseOperations/prisma.provider'
 import { PaymentProviderFactory } from '../../paymentOperations/payment.provider'
 import { Logger } from '@/server/logger'
 
@@ -33,9 +15,8 @@ export const acceptOfferEffect = (args: AcceptOfferEffectArgs) =>
   T.gen(function* () {
     const logger = yield* Logger
     const transactionOperations = yield* TransactionOperations
-    const balanceOperations = yield* BalanceOperations
-    const dbTransaction = yield* DbTransaction
     const paymentProviderFactory = yield* PaymentProviderFactory
+    const offerOperations = yield* OfferOperations
     const rollbackOps = yield* Scope.make()
 
     const paymentProvider = paymentProviderFactory[args.paymentProvider]()
@@ -81,42 +62,30 @@ export const acceptOfferEffect = (args: AcceptOfferEffectArgs) =>
           })
         }
       ),
-      T.map(payment => ({
-        providerPaymentId: args.paymentId,
-        userId: args.userId,
-        fromId: args.offerId,
-        provider: args.paymentProvider,
-        amount: payment.amount
-      })),
+      T.map(payment => {
+        Scope.addFinalizer(rollbackOps, refundPayment)
+        return {
+          providerPaymentId: args.paymentId,
+          userId: args.userId,
+          fromId: args.offerId,
+          provider: args.paymentProvider,
+          amount: payment.amount
+        }
+      }),
       T.flatMap(obj =>
         T.tryPromise({
-          try: () =>
-            dbTransaction([
-              balanceOperations.createUserBalanceEventsLog({
-                ...obj,
-                eventType: PaymentEventType.payment,
-                from: PaymentFrom.offer
-              }),
-              balanceOperations.createTransaction({
-                buyerId: obj.userId,
-                sellerId: 0,
-                amount: obj.amount,
-                offerId: obj.fromId,
-                type: TransactionType.acceptOffer,
-                milestoneId: null,
-                comment: ''
-              })
-            ]),
+          try: () => offerOperations.getAnOfferByIdAndReceiverId(args.offerId, args.userId),
           catch: error => {
             logger.error({
               cause: 'database_error',
-              message: `payment transaction for user ${args.userId} db add error`,
+              message: `get offer ${args.offerId} db error`,
               detailedError: error
             })
 
             if (error instanceof Prisma.PrismaClientKnownRequestError) {
               return new TRPCError({
-                code: 'NOT_FOUND'
+                code: 'NOT_FOUND',
+                message: 'offer_not_found_for_user'
               })
             }
             return new TRPCError({
@@ -125,37 +94,38 @@ export const acceptOfferEffect = (args: AcceptOfferEffectArgs) =>
           }
         }).pipe(
           T.filterOrFail(
-            balance => balance !== null,
+            offer => offer !== null && offer.userId !== null,
             () => {
               logger.error({
-                cause: 'balance_not_found',
-                message: `balance for user ${args.userId} not found on db`,
+                cause: 'offer_not_found',
+                message: `offer ${args.offerId} not found on db`,
                 detailedError: {}
               })
               return new TRPCError({
                 code: 'NOT_FOUND',
-                message: 'balance_not_found_for_user'
+                message: 'offer_not_found_for_user'
               })
             }
           ),
-          T.flatMap(balance =>
+          T.flatMap(offer =>
             T.tryPromise({
-              try: () => transactionOperations.acceptOfferTransaction({
-                balanceId: balance.id,
-                providerPaymentId: args.paymentId,
-                userId: args.userId,
-                offerId: args.offerId,
-                provider: args.paymentProvider,
-                amount: payment.amount,
-                eventType: 'payment',
-              }),
+              try: () =>
+                transactionOperations.acceptOfferTransaction({
+                  providerPaymentId: args.paymentId,
+                  sellerId: offer!.userId!,
+                  userId: args.userId,
+                  offerId: offer!.id,
+                  provider: args.paymentProvider,
+                  amount: obj.amount,
+                  eventType: 'payment'
+                }),
               catch: error => {
                 logger.error({
                   cause: 'database_error',
                   message: `offer ${args.offerId} db accept error`,
                   detailedError: error
                 })
-    
+
                 if (error instanceof Prisma.PrismaClientKnownRequestError) {
                   return new TRPCError({
                     code: 'NOT_FOUND',

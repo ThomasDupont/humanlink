@@ -13,7 +13,12 @@ import { protectedprocedure } from './middlewares'
 import { getContactList, userMe } from './trpcProcedures/get.trpc'
 import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
 import { Category, Lang, PaymentProvider } from '@prisma/client'
-import { acceptOffer, createOfferWithMessage, createStripePaymentIntent, upsertService } from './trpcProcedures/upsert.trpc'
+import {
+  acceptOffer,
+  createOfferWithMessage,
+  createStripePaymentIntent,
+  upsertService
+} from './trpcProcedures/upsert.trpc'
 import { deleteAService } from './trpcProcedures/delete.trpc'
 
 export const appRouter = router({
@@ -153,11 +158,13 @@ export const appRouter = router({
               z.object({
                 type: z.literal('offer'),
                 offerId: z.number(),
+                idempotencyKey: z.string(),
                 voucherCode: z.string().optional()
               }),
               z.object({
                 type: z.literal('milestone'),
                 milestoneId: z.number(),
+                idempotencyKey: z.string(),
                 voucherCode: z.string().optional()
               })
             ])

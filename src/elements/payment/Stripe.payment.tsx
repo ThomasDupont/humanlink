@@ -6,7 +6,11 @@ import { loadStripe, Stripe as StripeType, StripeError } from '@stripe/stripe-js
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
 import config from '@/config'
 
-const CheckoutForm = ({ offer, closeWithResult }: Props) => {
+const CheckoutForm = ({
+  offer,
+  closeWithResult,
+  idempotencyKey
+}: Props & { idempotencyKey: string }) => {
   const stripe = useStripe()
   const elements = useElements()
   const { mutateAsync } = trpc.protectedMutation.payment.stripe.createPaymentIntent.useMutation()
@@ -18,7 +22,8 @@ const CheckoutForm = ({ offer, closeWithResult }: Props) => {
 
     mutateAsync({
       type: 'offer',
-      offerId: offer.id
+      offerId: offer.id,
+      idempotencyKey
     })
       .then(async data => {
         if (!stripe || !elements) {
@@ -100,6 +105,7 @@ const Base = ({ children }: { children: ReactElement }) => {
 
 export const Stripe = (props: Props) => {
   const [stripePromise, setStripePromise] = useState<Promise<StripeType | null> | null>(null)
+  const [idempotencyKey, setIdempotencyKey] = useState<string>('')
 
   const computedAmount = props.offer.milestones.reduce(
     (acc, milestone) => acc + milestone.priceMilestone.number,
@@ -109,6 +115,7 @@ export const Stripe = (props: Props) => {
 
   useEffect(() => {
     setStripePromise(loadStripe(process.env.NEXT_PUBLIC_STRIPE_API_KEY_PUBLIC!))
+    setIdempotencyKey(Math.random().toString(36).substring(7))
   }, [])
   return (
     <Base>
@@ -121,10 +128,10 @@ export const Stripe = (props: Props) => {
           },
           mode: 'payment',
           amount: computedAmount,
-          currency
+          currency: currency.toLowerCase()
         }}
       >
-        <CheckoutForm {...props} />
+        <CheckoutForm idempotencyKey={idempotencyKey} {...props} />
       </Elements>
     </Base>
   )
