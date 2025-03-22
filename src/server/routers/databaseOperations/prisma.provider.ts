@@ -86,7 +86,10 @@ export class BalanceOperations extends Context.Tag('balanceOperations')<
 export const effectBalanceOperations = Effect.provideService(BalanceOperations, balanceOperations)
 
 export class TransactionOperations extends Context.Tag('transactionOperations')<
-TransactionOperations,
+  TransactionOperations,
   typeof transactionOperations
 >() {}
-export const effectTransactionOperations = Effect.provideService(TransactionOperations, transactionOperations)
+export const effectTransactionOperations = Effect.provideService(
+  TransactionOperations,
+  transactionOperations
+)

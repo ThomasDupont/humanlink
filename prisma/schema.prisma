@@ -51,6 +51,8 @@ model User {
   userBalance          UserBalance            @relation(fields: [userBalanceId], references: [id])
   userBalanceId        Int                    @unique
   UserBalanceEventsLog UserBalanceEventsLog[]
+  Transaction1         Transaction[]          @relation("seller")
+  Transaction2         Transaction[]          @relation("buyer")
 }
 
 // SERVICE
@@ -232,4 +234,26 @@ model UserBalanceEventsLog {
   providerPaymentId String
   from              PaymentFrom
   fromId            Int
+}
+
+enum TransactionType {
+  acceptOffer
+  transfertToSellerBalance
+  transfertToBuyerBalance
+  fees
+  cancelOffer
+}
+
+model Transaction {
+  id          Int             @id @default(autoincrement())
+  createdAt   DateTime        @default(now())
+  user1       User?           @relation("seller", fields: [sellerId], references: [id], onDelete: SetNull)
+  sellerId    Int?
+  user2       User?           @relation("buyer", fields: [buyerId], references: [id], onDelete: SetNull)
+  buyerId     Int?
+  amount      Int
+  type        TransactionType
+  offerId     Int?
+  milestoneId Int?
+  comment     String
 }
