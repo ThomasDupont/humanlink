@@ -4,14 +4,14 @@ import { JSDOM } from 'jsdom'
 import { z } from 'zod'
 import {
   messageOperations,
-  offerOperations,
   serviceOperations,
   userOperations
 } from './databaseOperations/prisma.provider'
 import config from '@/config'
 import searchFactory from './searchService/search.factory'
 import { protectedprocedure } from './middlewares'
-import { getContactList, userMe } from './trpcProcedures/get.trpc'
+import { getContactList, getOfferDetail, listOffer } from './trpcProcedures/get.trpc'
+import { userMe } from './trpcProcedures/get.trpc'
 import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
 import { Category, Lang, PaymentProvider } from '@prisma/client'
 import {
@@ -62,19 +62,20 @@ export const appRouter = router({
           receiverId: z.number()
         })
       )
-      .query(options =>
+      .query(({ input, ctx }) =>
         messageOperations.getConversation({
-          receiverId: options.input.receiverId,
-          senderId: options.ctx.session.user.id
+          receiverId: input.receiverId,
+          senderId: ctx.session.user.id
         })
       ),
     getContacts: protectedprocedure.query(({ ctx }) => getContactList(ctx.session.user.id).run()),
     userServices: protectedprocedure.query(({ ctx }) =>
       serviceOperations.getuserServices(ctx.session.user.id)
     ),
-    listOffers: protectedprocedure.query(({ ctx }) =>
-      offerOperations.listConcernOffers(ctx.session.user.id)
-    )
+    listOffers: protectedprocedure.query(({ ctx }) => listOffer(ctx.session.user.id).run()),
+    offerDetail: protectedprocedure
+      .input(z.number())
+      .query(({ input, ctx }) => getOfferDetail(ctx.session.user.id, input).run())
   }),
   protectedMutation: router({
     sendMessage: protectedprocedure

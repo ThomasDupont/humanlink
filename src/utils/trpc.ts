@@ -8,6 +8,7 @@ type RouterOutput = inferRouterOutputs<AppRouter>
 
 export type CreateOfferReturnType = RouterOutput['protectedMutation']['offer']['create']
 export type GetConversationReturnType = ArrayElement<RouterOutput['protectedGet']['conversation']>
+export type ConcernedOffer = ArrayElement<RouterOutput['protectedGet']['listOffers']>
 
 function getBaseUrl() {
   if (typeof window !== 'undefined')

@@ -9,6 +9,7 @@ import OrdersItem from '../../elements/dashboard/Orders.item'
 import ServicesItem from '../../elements/dashboard/Services.item'
 import WalletItem from '../../elements/dashboard/Wallet.item'
 import { useAuthSession } from '@/hooks/nextAuth.hook'
+import { SupportedLocale } from '@/config'
 
 const Base = ({ children }: { children: ReactElement }) => {
   return (
@@ -27,9 +28,9 @@ const Base = ({ children }: { children: ReactElement }) => {
 type Item = 'services' | 'orders' | 'wallet'
 
 const itemMatcher: PatternMatching<{
-  [K in Item]: () => ReactElement
+  [K in Item]: (locale: SupportedLocale) => ReactElement
 }> = {
-  orders: () => <OrdersItem />,
+  orders: (locale: SupportedLocale) => <OrdersItem locale={locale} />,
   services: () => <ServicesItem />,
   wallet: () => <WalletItem />
 }
@@ -63,7 +64,7 @@ export const getStaticProps: GetStaticProps = async ({ locale }) => {
   }
 }
 
-export default function Dashboard() {
+export default function Dashboard({ locale }: { locale: SupportedLocale }) {
   const [selectedItem, setSelectedItem] = useState<Item>()
   const { t } = useTranslation('common')
 
@@ -130,7 +131,7 @@ export default function Dashboard() {
             ))}
           </Box>
           <Box width={'100%'} id="main">
-            {selectedItem && itemMatcher[selectedItem]()}
+            {selectedItem && itemMatcher[selectedItem](locale)}
           </Box>
         </Box>
       </>

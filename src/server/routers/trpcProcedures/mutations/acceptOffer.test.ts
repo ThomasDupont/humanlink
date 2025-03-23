@@ -96,27 +96,31 @@ describe('upsert service test', () => {
 
     const acceptOffer = acceptOfferEffect(payload)
 
-    await acceptOffer.pipe(
-      T.provideService(Logger, { error: loggerErrorMock }),
-      T.provideService(
-        TransactionOperations,
-        transactionOperationsMock as unknown as typeof transactionOperations
-      ),
-      T.provideService(OfferOperations, offerOperationsMock as unknown as typeof offerOperations),
-      T.provideService(
-        PaymentProviderFactory,
-        paymentProviderFactoryMock as unknown as typeof paymentProviderFactory
-      ),
-      T.mapError(error => {
-        expect(error.message).toBe('FORBIDDEN')
-        expect(paymentMock.refundFullTransaction).toBeCalledTimes(1)
-        expect(loggerErrorMock).toBeCalledWith({
-          cause: 'payment_not_paid',
-          message: `payment for user 2 of id test_p not paid`,
-          detailedError: {}
-        })
-      }),
-      T.runPromiseExit
-    )
+    await acceptOffer
+      .pipe(
+        T.provideService(Logger, { error: loggerErrorMock }),
+        T.provideService(
+          TransactionOperations,
+          transactionOperationsMock as unknown as typeof transactionOperations
+        ),
+        T.provideService(OfferOperations, offerOperationsMock as unknown as typeof offerOperations),
+        T.provideService(
+          PaymentProviderFactory,
+          paymentProviderFactoryMock as unknown as typeof paymentProviderFactory
+        ),
+        T.mapError(error => {
+          expect(error.message).toBe('FORBIDDEN')
+          expect(paymentMock.refundFullTransaction).toBeCalledTimes(1)
+          expect(loggerErrorMock).toBeCalledWith({
+            cause: 'payment_not_paid',
+            message: `payment for user 2 of id test_p not paid`,
+            detailedError: {}
+          })
+        }),
+        T.runPromiseExit
+      )
+      .then(exit => {
+        expect(exit._tag).toBe('Failure')
+      })
   })
 })

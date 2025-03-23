@@ -54,7 +54,8 @@ export const offersCrud = (prisma: PrismaClient) => {
             id: true,
             firstname: true,
             lastname: true,
-            image: true
+            image: true,
+            jobTitle: true
           }
         },
         userReceiver: {
@@ -62,7 +63,8 @@ export const offersCrud = (prisma: PrismaClient) => {
             id: true,
             firstname: true,
             lastname: true,
-            image: true
+            image: true,
+            jobTitle: true
           }
         },
         milestone: {
@@ -74,5 +76,38 @@ export const offersCrud = (prisma: PrismaClient) => {
     })
   }
 
-  return { createAnOffer, getAnOfferByIdAndReceiverId, listConcernOffers }
+  const getOfferDetailById = (offerId: number) => {
+    return prisma.offer.findUnique({
+      where: {
+        id: offerId
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstname: true,
+            lastname: true,
+            image: true,
+            jobTitle: true
+          }
+        },
+        userReceiver: {
+          select: {
+            id: true,
+            firstname: true,
+            lastname: true,
+            image: true,
+            jobTitle: true
+          }
+        },
+        milestone: {
+          include: {
+            priceMilestone: true
+          }
+        }
+      }
+    })
+  }
+
+  return { createAnOffer, getAnOfferByIdAndReceiverId, listConcernOffers, getOfferDetailById }
 }

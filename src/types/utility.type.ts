@@ -4,3 +4,5 @@ export type PatternMatching<Kind extends Record<string, (...args: any[]) => any>
 }
 
 export type ArrayElement<A> = A extends readonly (infer T)[] ? T : never
+
+export const isNotNull = <T>(value: T | null): value is T => value !== null
