@@ -4,6 +4,7 @@ import { JSDOM } from 'jsdom'
 import { z } from 'zod'
 import {
   messageOperations,
+  offerOperations,
   serviceOperations,
   userOperations
 } from './databaseOperations/prisma.provider'
@@ -20,6 +21,11 @@ import {
   upsertService
 } from './trpcProcedures/upsert.trpc'
 import { deleteAService } from './trpcProcedures/delete.trpc'
+import {
+  singleUserToDisplayUserForOther,
+  userWithServiceToDisplayUserForOther
+} from '../dto/user.dto'
+import { TRPCError } from '@trpc/server'
 
 export const appRouter = router({
   get: router({
@@ -28,18 +34,28 @@ export const appRouter = router({
       .query(options =>
         searchFactory[config.backendSearchProvider]({ query: options.input.query })
       ),
-    userById: publicProcedure
-      .input(z.number())
-      .query(options => userOperations.getUserById(options.input)),
+    userById: publicProcedure.input(z.number()).query(options =>
+      userOperations.getUserById(options.input).then(u => {
+        if (!u) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'user_not_found'
+          })
+        }
+        return userWithServiceToDisplayUserForOther(u)
+      })
+    ),
     userByIds: publicProcedure
       .input(z.array(z.number()))
-      .query(options => userOperations.getUserByIds(options.input)),
+      .query(options =>
+        userOperations.getUserByIds(options.input).then(u => u.map(singleUserToDisplayUserForOther))
+      ),
     serviceById: publicProcedure
       .input(z.number())
       .query(options => serviceOperations.getServiceById(options.input))
   }),
   protectedGet: router({
-    me: protectedprocedure.query(({ ctx }) => userMe(ctx.session.user.email).run()),
+    me: protectedprocedure.query(({ ctx }) => userMe(ctx.session.user.id).run()),
     conversation: protectedprocedure
       .input(
         z.object({
@@ -55,6 +71,9 @@ export const appRouter = router({
     getContacts: protectedprocedure.query(({ ctx }) => getContactList(ctx.session.user.id).run()),
     userServices: protectedprocedure.query(({ ctx }) =>
       serviceOperations.getuserServices(ctx.session.user.id)
+    ),
+    listOffers: protectedprocedure.query(({ ctx }) =>
+      offerOperations.listConcernOffers(ctx.session.user.id)
     )
   }),
   protectedMutation: router({

@@ -39,5 +39,40 @@ export const offersCrud = (prisma: PrismaClient) => {
     })
   }
 
-  return { createAnOffer, getAnOfferByIdAndReceiverId }
+  const listConcernOffers = (userId: number) => {
+    return prisma.offer.findMany({
+      where: {
+        OR: [{ userId }, { userIdReceiver: userId }],
+        isAccepted: true
+      },
+      orderBy: {
+        id: 'desc'
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstname: true,
+            lastname: true,
+            image: true
+          }
+        },
+        userReceiver: {
+          select: {
+            id: true,
+            firstname: true,
+            lastname: true,
+            image: true
+          }
+        },
+        milestone: {
+          include: {
+            priceMilestone: true
+          }
+        }
+      }
+    })
+  }
+
+  return { createAnOffer, getAnOfferByIdAndReceiverId, listConcernOffers }
 }

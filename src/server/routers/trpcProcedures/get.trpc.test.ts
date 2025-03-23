@@ -13,7 +13,7 @@ import { afterEach } from 'node:test'
 describe('test useMe test', () => {
   const loggerErrorMock = vi.fn()
   const userOperationsMock = {
-    getUserByEmail: vi.fn()
+    getUserById: vi.fn()
   }
   afterEach(() => {
     vi.resetAllMocks()
@@ -24,8 +24,8 @@ describe('test useMe test', () => {
       email: 'test@test.com'
     }
 
-    userOperationsMock.getUserByEmail.mockResolvedValueOnce(user)
-    userMeEffect('test@test.com')
+    userOperationsMock.getUserById.mockResolvedValueOnce(user)
+    userMeEffect(2)
       .pipe(
         T.provideService(Logger, { error: loggerErrorMock }),
         T.provideService(UserOperations, userOperationsMock as unknown as typeof userOperations),
@@ -37,9 +37,9 @@ describe('test useMe test', () => {
   })
 
   it('Should return a TRPC not found error', () => {
-    userOperationsMock.getUserByEmail.mockResolvedValueOnce(null)
+    userOperationsMock.getUserById.mockResolvedValueOnce(null)
 
-    userMeEffect('test@test.com')
+    userMeEffect(2)
       .pipe(
         T.provideService(Logger, { error: loggerErrorMock }),
         T.provideService(UserOperations, userOperationsMock as unknown as typeof userOperations),
@@ -53,9 +53,9 @@ describe('test useMe test', () => {
   })
 
   it('Shoud return a TRPC internal error', () => {
-    userOperationsMock.getUserByEmail.mockRejectedValueOnce(new Error('databaseError'))
+    userOperationsMock.getUserById.mockRejectedValueOnce(new Error('databaseError'))
 
-    userMeEffect('test@test.com')
+    userMeEffect(2)
       .pipe(
         T.provideService(Logger, { error: loggerErrorMock }),
         T.provideService(UserOperations, userOperationsMock as unknown as typeof userOperations),

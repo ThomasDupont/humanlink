@@ -7,20 +7,19 @@ import {
   effectMessageOperations,
   effectUserOperations
 } from '../databaseOperations/prisma.provider'
-import { UserWithServicesWithPrices } from '@/types/User.type'
+import { singleUserToDisplayUserForOther } from '@/server/dto/user.dto'
 
-export const userMeEffect = (email: string) =>
+export const userMeEffect = (id: number) =>
   T.gen(function* () {
     const logger = yield* Logger
     const userOperations = yield* UserOperations
 
     return T.tryPromise({
-      try: () =>
-        userOperations.getUserByEmail<UserWithServicesWithPrices>(email, { withServices: true }),
+      try: () => userOperations.getUserById(id),
       catch: error => {
         logger.error({
           cause: 'database_error',
-          message: `${email} db fetch error`,
+          message: `${id} db fetch error`,
           detailedError: error
         })
         return new TRPCError({
@@ -33,7 +32,7 @@ export const userMeEffect = (email: string) =>
         () => {
           logger.error({
             cause: 'incoherent_session_and_db_data',
-            message: `${email} not found on db`,
+            message: `user ${id} not found on db`,
             detailedError: {}
           })
           return new TRPCError({
@@ -44,8 +43,8 @@ export const userMeEffect = (email: string) =>
     )
   }).pipe(T.flatten)
 
-export const userMe = (email: string) => ({
-  run: () => userMeEffect(email).pipe(effectLogger, effectUserOperations, T.runPromise)
+export const userMe = (id: number) => ({
+  run: () => userMeEffect(id).pipe(effectLogger, effectUserOperations, T.runPromise)
 })
 
 export const getContactListEffect = (userId: number) =>
@@ -112,9 +111,7 @@ export const getContactListEffect = (userId: number) =>
               ),
               T.map(user => ({
                 ...contact,
-                firstname: user.firstname,
-                lastname: user.lastname,
-                image: user.image
+                ...singleUserToDisplayUserForOther(user)
               }))
             )
           }),

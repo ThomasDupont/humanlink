@@ -17,12 +17,12 @@ import ServiceCard from '@/components/ServiceCard'
 import { StyledGrid } from '@/materials/styledElement'
 import { SwitchText } from '@/components/SwitchText'
 import getUserHook from '@/hooks/users/hook.factory'
-import { User } from '@prisma/client'
 import { GetStaticProps } from 'next'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import { useTranslation } from 'next-i18next'
 import { Spinner } from '@/components/Spinner'
 import config from '@/config'
+import { UserDTO } from '@/server/dto/user.dto'
 
 const RESULT_NUMBER = 3
 const useMatcherHook = getSearchClientHook[config.searchHookProvider]
@@ -39,7 +39,7 @@ export const getStaticProps: GetStaticProps = async ({ locale }) => {
 export default function Home() {
   const { t } = useTranslation('home')
   const [message, setMessage] = useState<string>()
-  const [users, setUsers] = useState<User[]>([])
+  const [users, setUsers] = useState<UserDTO[]>([])
   const [showSpinner, setShowSpinner] = useState<boolean>(false)
 
   const [numberResult, setNumberResult] = useState<number>(RESULT_NUMBER)

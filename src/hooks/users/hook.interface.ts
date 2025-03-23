@@ -1,6 +1,5 @@
-import { User } from '@prisma/client'
+import { UserDTO } from '@/server/dto/user.dto'
 
 export type HookInterface = {
-  getUserById: (id: number) => Promise<User | null>
-  getUserByIds: (ids: number[]) => Promise<User[]>
+  getUserByIds: (ids: number[]) => Promise<UserDTO[]>
 }

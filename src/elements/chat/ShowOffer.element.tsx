@@ -1,7 +1,7 @@
 import BaseModal from '@/components/BaseModal'
 import AcceptOfferModal from '@/components/Modals/AcceptOffer.modal'
 import PayOfferModal from '@/components/Modals/PayOffer.modal'
-import { SuportedLocale } from '@/config'
+import { SupportedLocale } from '@/config'
 import { useManagePrice } from '@/hooks/managePrice.hook'
 import { OfferWithMileStonesAndMilestonePrice } from '@/types/Offers.type'
 import { localeToDateFnsLocale } from '@/utils/localeToDateFnsLocale'
@@ -19,7 +19,7 @@ export default function ShowOffer({
   onAcceptEvent
 }: {
   offer: OfferWithMileStonesAndMilestonePrice
-  locale: SuportedLocale
+  locale: SupportedLocale
   user: Pick<User, 'firstname' | 'id'>
   userIdFromAuth: number | null
   onAcceptEvent: () => void

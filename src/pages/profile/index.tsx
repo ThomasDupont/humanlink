@@ -18,7 +18,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import { FormEvent, ReactElement, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'next-i18next'
 import { format } from 'date-fns'
-import config, { SuportedLocale } from '@/config'
+import config, { SupportedLocale } from '@/config'
 import { localeToDateFnsLocale } from '@/utils/localeToDateFnsLocale'
 import { Spinner } from '@/components/Spinner'
 import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
@@ -46,7 +46,7 @@ export const getStaticProps: GetStaticProps = async ({ locale }) => {
   }
 }
 
-export default function Profile({ locale }: { locale: SuportedLocale }) {
+export default function Profile({ locale }: { locale: SupportedLocale }) {
   const { user, error, refetch } = useAuthSession()
 
   const [jobTitle, setJobTitle] = useState(user?.jobTitle ?? '')

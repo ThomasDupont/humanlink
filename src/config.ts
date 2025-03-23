@@ -3,7 +3,7 @@ import { Category, Currency, ServiceType } from '@prisma/client'
 export type UserHookProvider = 'real' | 'fake'
 export type SearchHookProvider = 'elastic' | 'transformer'
 export type BackendSearchProvider = 'algolia' | 'elastic'
-export type SuportedLocale = 'fr' | 'en'
+export type SupportedLocale = 'fr' | 'en'
 export type paymentProvider = 'stripe'
 
 type Config = {
