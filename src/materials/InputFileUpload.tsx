@@ -14,20 +14,24 @@ const VisuallyHiddenInput = styled('input')({
   width: 1
 })
 
-export default function InputFileUpload({ onChange }: { onChange: (files: FileList | null) => void}) {
+export default function InputFileUpload({
+  onChange,
+  disabled
+}: {
+  onChange: (files: FileList | null) => void
+  disabled?: boolean
+}) {
   return (
     <Button
       component="label"
       role={undefined}
       variant="outlined"
       tabIndex={-1}
+      disabled={disabled}
       startIcon={<CloudUploadIcon />}
     >
       Upload files
-      <VisuallyHiddenInput
-        type="file"
-        onChange={event => onChange(event.target.files)}
-      />
+      <VisuallyHiddenInput type="file" onChange={event => onChange(event.target.files)} />
     </Button>
   )
 }

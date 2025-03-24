@@ -21,6 +21,8 @@ type Config = {
     serviceDescriptionMaxLen: number
     messageMaxLen: number
     fixedPriceMax: number
+    maxUploadFileSize: number
+    maxUploadFiles: number
   }
   serviceTypeFromCategory: Record<Category, ServiceType>
 }
@@ -39,7 +41,9 @@ const config: Config = {
     serviceShortDescriptionMaxLen: 300,
     serviceDescriptionMaxLen: 2000,
     messageMaxLen: 1000,
-    fixedPriceMax: 50_000_00
+    fixedPriceMax: 50_000_00,
+    maxUploadFileSize: 10_000_000,
+    maxUploadFiles: 5
   },
   serviceTypeFromCategory: {
     ...(Object.fromEntries(Object.keys(Category).map(key => [key, 'digital'])) as Record<

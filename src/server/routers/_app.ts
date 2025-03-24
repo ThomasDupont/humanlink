@@ -2,6 +2,8 @@ import { createCallerFactory, publicProcedure, router } from '../trpc'
 import DOMPurify from 'dompurify'
 import { JSDOM } from 'jsdom'
 import { z } from 'zod'
+import { zfd } from 'zod-form-data'
+import fs from 'fs'
 import {
   messageOperations,
   serviceOperations,
@@ -252,7 +254,34 @@ export const appRouter = router({
             paymentProvider: input.paymentProvider,
             userId: ctx.session.user.id
           }).run()
+        ),
+      addRendering: protectedprocedure
+        .input(
+          z.any()
+          /*
+          zfd.formData({
+            text: z.string().min(0).max(config.userInteraction.serviceDescriptionMaxLen),
+            files: z
+              .array(zfd.file())
+              .min(0)
+              .max(config.userInteraction.maxUploadFiles)
+              .transform(files => {
+                const computeTotalSize = files.reduce((acc, file) => acc + file.size, 0)
+                if (computeTotalSize > config.userInteraction.maxUploadFileSize) {
+                  throw new TRPCError({
+                    code: 'BAD_REQUEST',
+                    message: 'files_too_big'
+                  })
+                }
+                return files
+              })
+          })
+              */
         )
+        .mutation(({ input }) => {
+          fs.writeFileSync('test.jpeg', input)
+          return 'ok'
+        })
     })
   })
 })

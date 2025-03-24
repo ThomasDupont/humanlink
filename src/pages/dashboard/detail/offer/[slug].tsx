@@ -26,7 +26,8 @@ const Base = ({ children }: { children: ReactElement }) => {
     <Container maxWidth="lg">
       <Box
         sx={{
-          pt: 15
+          pt: 15,
+          pb: 15
         }}
       >
         {children}
@@ -80,14 +81,26 @@ const AddARendering = () => {
     files: []
   })
 
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault()
+  const [showSpinner, setShowSpinner] = useState(false)
+  const [openSnackBar, setOpenSnackBar] = useState(false)
 
-    if (formValues.files) {
-      for (const file of formValues.files) {
-        const content = file.bytes
-      }
-    }
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault()
+    const formData = new FormData()
+
+    formData.append('files', formValues.files[0]!)
+
+    fetch('/api/upload', {
+      method: 'POST',
+      body: formData
+    })
+      .then(response => response.json())
+      .then(data => {
+        console.log(data)
+      })
+      .catch(error => {
+        console.error('Error:', error)
+      })
   }
 
   const handleDeleteFromFileList = (name: string) => {
@@ -96,11 +109,14 @@ const AddARendering = () => {
 
     setFormValues(state => ({
       ...state,
-      files : newFilesList
+      files: newFilesList
     }))
   }
 
-  return <Box
+  const totalFileSize = formValues.files.reduce((acc, file) => acc + file.size, 0)
+
+  return (
+    <Box
       sx={t => ({
         borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
         boxShadow: t.shadows[1],
@@ -109,51 +125,90 @@ const AddARendering = () => {
         p: 2
       })}
     >
-      <form onSubmit={handleSubmit}>
-        <TextField
-          type="textarea"
-          fullWidth
-          variant="standard"
-          color="primary"
-          label={`add a text (with external link)`}
-          // error={getErrorByTag(Tag.Description) !== null}
-          multiline
-          minRows={3}
-          onChange={e =>
-            setFormValues(state => ({
-              ...state,
-              description: e.target.value
-            }))
-          }
-          value={formValues.description}
-          helperText={`${formValues.description.length} / ${config.userInteraction.serviceDescriptionMaxLen}`}
-          slotProps={{
-            input: {
-              spellCheck: 'false'
-            },
-            htmlInput: { maxLength: config.userInteraction.serviceDescriptionMaxLen }
-          }}
-        />
-        <Box display={'flex'} flexDirection={'row'} gap={1} justifyContent={'space-around'}>
-          {formValues.files.map(file => <Chip key={file.name} label={file.name} onDelete={() => handleDeleteFromFileList(file.name)} />)}
-        </Box>
-        <Box display={'flex'} flexDirection={'row'} gap={1} justifyContent={'space-around'}>
-          <InputFileUpload onChange={(files) => {
-            if (files === null) return
-            const item = files.item(0)
-            if (item === null) return
-
-            setFormValues(state => ({
-              ...state,
-              files : [item, ...state.files]
-            }))
-          }} />
-          <Button size="medium" type="submit" variant="contained">
-            {commonT('save')}
-          </Button>
-        </Box>
-      </form>
+      {showSpinner ? (
+        <Spinner />
+      ) : (
+        <form onSubmit={handleSubmit}>
+          <TextField
+            type="textarea"
+            fullWidth
+            variant="standard"
+            color="primary"
+            label={`add a text (with external link)`}
+            // error={getErrorByTag(Tag.Description) !== null}
+            multiline
+            minRows={6}
+            onChange={e =>
+              setFormValues(state => ({
+                ...state,
+                description: e.target.value
+              }))
+            }
+            value={formValues.description}
+            helperText={`${formValues.description.length} / ${config.userInteraction.descriptionMaxLen}`}
+            slotProps={{
+              input: {
+                spellCheck: 'false'
+              },
+              htmlInput: { maxLength: config.userInteraction.descriptionMaxLen }
+            }}
+          />
+          <Box
+            display={'flex'}
+            flexDirection={'row'}
+            gap={1}
+            justifyContent={'space-around'}
+            flexWrap={'wrap'}
+            sx={{ mb: 2 }}
+          >
+            {formValues.files.map(file => (
+              <Chip
+                key={file.name}
+                label={file.name}
+                onDelete={() => handleDeleteFromFileList(file.name)}
+              />
+            ))}
+          </Box>
+          <Box
+            display={'flex'}
+            flexDirection={'row'}
+            gap={1}
+            justifyContent={'space-around'}
+            sx={{
+              mb: 2
+            }}
+          >
+            {formValues.files.length < 5 && (
+              <InputFileUpload
+                disabled={totalFileSize > config.userInteraction.maxUploadFileSize}
+                onChange={files => {
+                  if (files === null) return
+                  setFormValues(state => ({
+                    ...state,
+                    files: [...[...files], ...state.files]
+                  }))
+                }}
+              />
+            )}
+            <Button
+              disabled={totalFileSize > config.userInteraction.maxUploadFileSize}
+              size="medium"
+              type="submit"
+              variant="contained"
+            >
+              {commonT('save')}
+            </Button>
+          </Box>
+          {totalFileSize > config.userInteraction.maxUploadFileSize && (
+            <Typography variant="body2" color="error">
+              {`The total size of the files is too big (${totalFileSize / 1_000_000} Mb)`}
+            </Typography>
+          )}
+          <Typography variant="body2">{`The number of uploaded file is limited to ${config.userInteraction.maxUploadFiles} and limited to ${config.userInteraction.maxUploadFileSize / 1_000_000} Mb in total. If you want to share bigger file, you can add la link in the text field (like a WeTransfer link).`}</Typography>
+        </form>
+      )}
     </Box>
+  )
 }
 
 export default function OfferDetail({
@@ -328,9 +383,7 @@ export default function OfferDetail({
             )}
           </Grid>
         </Box>
-        {renderingBox && (
-          <AddARendering />
-        )}
+        {renderingBox && <AddARendering />}
       </Box>
     </Base>
   )
