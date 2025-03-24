@@ -18,7 +18,7 @@ import {
 import { GetStaticPaths, GetStaticProps } from 'next'
 import { useTranslation } from 'next-i18next'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
-import { ReactElement, useState } from 'react'
+import { FormEvent, ReactElement, useState } from 'react'
 import { z } from 'zod'
 
 const Base = ({ children }: { children: ReactElement }) => {
@@ -70,6 +70,92 @@ export const getStaticProps: GetStaticProps<Props> = async ({ locale, params }) 
   }
 }
 
+const AddARendering = () => {
+  const { t: commonT } = useTranslation('common')
+  const [formValues, setFormValues] = useState<{
+    description: string
+    files: File[]
+  }>({
+    description: '',
+    files: []
+  })
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault()
+
+    if (formValues.files) {
+      for (const file of formValues.files) {
+        const content = file.bytes
+      }
+    }
+  }
+
+  const handleDeleteFromFileList = (name: string) => {
+    const fileIndex = formValues.files.findIndex(f => f.name === name)
+    const newFilesList = formValues.files.filter((_, i) => i !== fileIndex)
+
+    setFormValues(state => ({
+      ...state,
+      files : newFilesList
+    }))
+  }
+
+  return <Box
+      sx={t => ({
+        borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
+        boxShadow: t.shadows[1],
+        backgroundColor: 'white',
+        mt: 2,
+        p: 2
+      })}
+    >
+      <form onSubmit={handleSubmit}>
+        <TextField
+          type="textarea"
+          fullWidth
+          variant="standard"
+          color="primary"
+          label={`add a text (with external link)`}
+          // error={getErrorByTag(Tag.Description) !== null}
+          multiline
+          minRows={3}
+          onChange={e =>
+            setFormValues(state => ({
+              ...state,
+              description: e.target.value
+            }))
+          }
+          value={formValues.description}
+          helperText={`${formValues.description.length} / ${config.userInteraction.serviceDescriptionMaxLen}`}
+          slotProps={{
+            input: {
+              spellCheck: 'false'
+            },
+            htmlInput: { maxLength: config.userInteraction.serviceDescriptionMaxLen }
+          }}
+        />
+        <Box display={'flex'} flexDirection={'row'} gap={1} justifyContent={'space-around'}>
+          {formValues.files.map(file => <Chip key={file.name} label={file.name} onDelete={() => handleDeleteFromFileList(file.name)} />)}
+        </Box>
+        <Box display={'flex'} flexDirection={'row'} gap={1} justifyContent={'space-around'}>
+          <InputFileUpload onChange={(files) => {
+            if (files === null) return
+            const item = files.item(0)
+            if (item === null) return
+
+            setFormValues(state => ({
+              ...state,
+              files : [item, ...state.files]
+            }))
+          }} />
+          <Button size="medium" type="submit" variant="contained">
+            {commonT('save')}
+          </Button>
+        </Box>
+      </form>
+    </Box>
+}
+
 export default function OfferDetail({
   offerId,
   locale
@@ -79,10 +165,6 @@ export default function OfferDetail({
 }) {
   const { data: offer, error, isFetching } = trpc.protectedGet.offerDetail.useQuery(offerId)
   const [renderingBox, setRenderingBox] = useState(false)
-  const { t: commonT } = useTranslation('common')
-  const [formValues, setFormValues] = useState({
-    description: ''
-  })
 
   const { parseOffer } = useOfferHook(locale, new Date())
   const {
@@ -247,46 +329,7 @@ export default function OfferDetail({
           </Grid>
         </Box>
         {renderingBox && (
-          <Box
-            sx={t => ({
-              borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
-              boxShadow: t.shadows[1],
-              backgroundColor: 'white',
-              mt: 2,
-              p: 2
-            })}
-          >
-            <form>
-              <InputFileUpload />
-              <TextField
-                type="textarea"
-                fullWidth
-                variant="standard"
-                color="primary"
-                label={`text`}
-                // error={getErrorByTag(Tag.Description) !== null}
-                multiline
-                minRows={3}
-                onChange={e =>
-                  setFormValues(state => ({
-                    ...state,
-                    description: e.target.value
-                  }))
-                }
-                value={formValues.description}
-                helperText={`${formValues.description.length} / ${config.userInteraction.serviceDescriptionMaxLen}`}
-                slotProps={{
-                  input: {
-                    spellCheck: 'false'
-                  },
-                  htmlInput: { maxLength: config.userInteraction.serviceDescriptionMaxLen }
-                }}
-              />
-              <Button size="medium" type="submit" variant="contained">
-                {commonT('save')}
-              </Button>
-            </form>
-          </Box>
+          <AddARendering />
         )}
       </Box>
     </Base>
