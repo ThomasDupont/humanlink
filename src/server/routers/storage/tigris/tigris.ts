@@ -6,11 +6,11 @@ export const crudFileTigris = (s3Fun: () => S3Client) => {
   const s3 = s3Fun()
   const addAFileToTheBucket =
     (bucket: string) =>
-    async ({ filepath, filename }: AddAFileToTheBucketArgs): Promise<string> => {
+    async ({ localFilepath, filename }: AddAFileToTheBucketArgs): Promise<string> => {
       const command = new PutObjectCommand({
         Bucket: bucket,
         Key: filename,
-        Body: await readFile(filepath)
+        Body: await readFile(localFilepath)
       })
 
       await s3.send(command)

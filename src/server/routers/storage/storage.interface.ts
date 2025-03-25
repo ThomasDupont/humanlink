@@ -1,5 +1,5 @@
 export type AddAFileToTheBucketArgs = {
-  filepath: string
+  localFilepath: string
   filename: string
 }
 

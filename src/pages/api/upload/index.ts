@@ -2,8 +2,11 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import path from 'path'
 import { copyFile } from 'fs/promises'
 import { Formidable } from 'formidable'
+import {createHash} from 'node:crypto';
+import {createReadStream} from 'node:fs';
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../auth/[...nextauth]'
+import { storageProviderFactory } from '@/server/routers/storage/storage.provider'
 
 export const config = {
   api: {
@@ -11,24 +14,50 @@ export const config = {
   }
 }
 
+async function hashFile(algorithm: string, path: string | URL) {
+  const hash = createHash(algorithm);
+
+  const stream = createReadStream(path);
+
+  for await (const chunk of stream) {
+      hash.update(chunk as Buffer);
+  }
+
+  return hash.digest('hex');
+}
+
 export default async function POST(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions)
-  const form = new Formidable()
 
-  const [fields, files] = await form.parse(req)
-  console.log(files.files)
+  if (!session) {
+    return res.status(401).json({message : 'user_not_loggin'})
+  }
+
+  const userId = session.user.id
+  const form = new Formidable({
+    hashAlgorithm: 'sha256'
+  })
+
+  const [_, files] = await form.parse(req)
 
   if (!files.files) {
     return res.status(400).json({ error: 'No files received.', status: 400 })
   }
 
-  const file = files.files[0]!
+  const { addAFileToTheBucket } = storageProviderFactory.tigris()
 
-  const filename = file.originalFilename
-  console.log(filename)
   try {
-    await copyFile(file.filepath, path.join(process.cwd(), 'public/' + filename))
-    return res.json({ Message: 'Success', status: 201 })
+    const hashs = []
+    for (const file of files.files) {
+      const hash = await hashFile('sha256', file.filepath)
+      hashs.push(hash)
+      await addAFileToTheBucket('')({
+        filename: `${userId}/''`,
+        localFilepath: file.filepath
+      })
+    }
+    
+    return res.json({ Message: 'Success', status: 201, hashs })
   } catch (error) {
     console.log('Error occured ', error)
     return res.json({ Message: 'Failed', status: 500 })

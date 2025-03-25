@@ -2,7 +2,6 @@ import { createCallerFactory, publicProcedure, router } from '../trpc'
 import DOMPurify from 'dompurify'
 import { JSDOM } from 'jsdom'
 import { z } from 'zod'
-import { zfd } from 'zod-form-data'
 import fs from 'fs'
 import {
   messageOperations,
@@ -204,7 +203,7 @@ export const appRouter = router({
             receiverId: z.number(),
             deadline: z.coerce
               .date()
-              .refine(data => data > new Date(), { message: 'The deadline must be in the future' })
+              .refine(date => date > new Date(), { message: 'date_in_the_past' })
           })
         )
         .mutation(({ input, ctx }) => {
