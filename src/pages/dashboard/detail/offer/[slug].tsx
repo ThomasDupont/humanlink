@@ -13,7 +13,9 @@ import {
   Divider,
   Grid2 as Grid,
   Button,
-  TextField
+  TextField,
+  Switch,
+  FormControlLabel
 } from '@mui/material'
 import { GetStaticPaths, GetStaticProps } from 'next'
 import { useTranslation } from 'next-i18next'
@@ -73,12 +75,16 @@ export const getStaticProps: GetStaticProps<Props> = async ({ locale, params }) 
 
 const AddARendering = () => {
   const { t: commonT } = useTranslation('common')
+  const { mutateAsync } = trpc.protectedMutation.offer.addRendering.useMutation()
+  
   const [formValues, setFormValues] = useState<{
     description: string
-    files: File[]
+    files: File[],
+    closeOffer: boolean
   }>({
     description: '',
-    files: []
+    files: [],
+    closeOffer: false
   })
 
   const [showSpinner, setShowSpinner] = useState(false)
@@ -190,6 +196,10 @@ const AddARendering = () => {
                 }}
               />
             )}
+            <FormControlLabel control={<Switch onChange={v => setFormValues(state => ({
+              ...state,
+              closeOffer: v.target.checked
+            }))} />} label="Close offer" />
             <Button
               disabled={totalFileSize > config.userInteraction.maxUploadFileSize}
               size="medium"
@@ -383,7 +393,7 @@ export default function OfferDetail({
             )}
           </Grid>
         </Box>
-        {renderingBox && <AddARendering />}
+        {renderingBox && <AddARendering offer={offer} />}
       </Box>
     </Base>
   )

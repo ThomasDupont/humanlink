@@ -20,7 +20,7 @@ import { useRouter } from 'next/router'
 import { z } from 'zod'
 import { useAuthSession } from '@/hooks/nextAuth.hook'
 import { trpc } from '../../utils/trpc'
-import { Send } from '@mui/icons-material'
+import { Refresh, Send } from '@mui/icons-material'
 import { FormEvent, useState, KeyboardEvent } from 'react'
 import { useConversation } from '@/hooks/chat/conversation.hook'
 import { Spinner } from '@/components/Spinner'
@@ -230,6 +230,7 @@ const Conversation = ({
                           mr: 1
                         }}
                       >
+                        <IconButton onClick={() => refetch()} edge="end"><Refresh /></IconButton>
                         <IconButton type="submit" edge="end">
                           <Send
                             fontSize="medium"
