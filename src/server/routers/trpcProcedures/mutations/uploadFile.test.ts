@@ -39,7 +39,7 @@ describe('upload service test', () => {
         T.provideService(Logger, { error: loggerErrorMock }),
         T.provideService(
           StorageProviderFactory,
-          storageProviderFactoryMock as typeof storageProviderFactory
+          storageProviderFactoryMock as unknown as typeof storageProviderFactory
         ),
         T.runPromise
       )

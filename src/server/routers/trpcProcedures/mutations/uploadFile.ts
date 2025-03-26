@@ -29,18 +29,22 @@ export const uploadFilesEffect = (files: formidable.File[], bucket: string, user
 
     const uploadAFile = (file: formidable.File) =>
       T.tryPromise({
-        try: () =>
-          addAFileToTheBucketFun({
+        try: () => {
+          const ext = file.originalFilename?.split('.').pop()
+          const filename = userId + '/' + file.hash! + (ext ? `.${ext}` : '')
+          return addAFileToTheBucketFun({
             localFilepath: file.filepath,
-            filename: userId + '/' + file.hash!
+            filename,
+            mimetype: file.mimetype ?? 'application/octet-stream'
           }).then(() => {
             Scope.addFinalizer(rollbackOps, removeFileForRollback(userId + '/' + file.hash!))
 
             return {
               ...file,
-              hash: userId + '/' + file.hash!
+              hash: filename
             }
-          }),
+          })
+        },
         catch: error => {
           logger.error({
             cause: 'storage_provider_error',

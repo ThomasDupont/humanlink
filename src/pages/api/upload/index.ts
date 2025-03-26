@@ -2,6 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { Formidable } from 'formidable'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../auth/[...nextauth]'
+import appConfig from '@/config'
+import { uploadsFile } from '@/server/routers/trpcProcedures/upsert.trpc'
 
 export const config = {
   api: {
@@ -13,7 +15,7 @@ export default async function POST(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions)
 
   if (!session) {
-    return res.status(401).json({ message: 'user_not_loggin' })
+    return res.status(401).json({ error: 'user_not_loggin' })
   }
 
   const userId = session.user.id
@@ -21,22 +23,26 @@ export default async function POST(req: NextApiRequest, res: NextApiResponse) {
     hashAlgorithm: 'sha256'
   })
 
-  const [_, files] = await form.parse(req)
-
-  if (!files.files) {
-    return res.status(400).json({ error: 'No files received.', status: 400 })
-  }
-
   try {
-    const hashs = []
-    for (const file of files.files) {
-      console.log(file)
-      hashs.push(file.hash)
+    const [_, files] = await form.parse(req)
+
+    if (!files.files) {
+      return res.status(400).json({ error: 'No files received.' })
     }
 
-    return res.json({ Message: 'Success', status: 201, hashs })
+    if (files.files.length > appConfig.userInteraction.maxUploadFiles) {
+      return res.status(400).json({ error: 'max_file_upload' })
+    }
+
+    const uploadResult = await uploadsFile(files.files, 'ascend-rendering-offer', userId).run()
+
+    return res.json({
+      files: uploadResult.map(file => ({
+        originalFileName: file.originalFilename,
+        hash: file.hash
+      }))
+    })
   } catch (error) {
-    console.log('Error occured ', error)
-    return res.json({ Message: 'Failed', status: 500 })
+    return res.status(500).json({ error: (error as Error).message })
   }
 }

@@ -12,6 +12,9 @@ import { effectPaymentProviderFactory } from '../paymentOperations/payment.provi
 import { acceptOfferEffect, AcceptOfferEffectArgs } from './mutations/acceptOffer'
 import { CreateOffer, createOfferWithMessageEffect } from './mutations/createOfferWithMessage'
 import { UpsertServiceArgs, upsertServiceEffect } from './mutations/upsertService'
+import formidable from 'formidable'
+import { uploadFilesEffect } from './mutations/uploadFile'
+import { effectStorageProviderFactory } from '../storage/storage.provider'
 
 export const upsertService = (args: UpsertServiceArgs) => ({
   run: () =>
@@ -72,3 +75,12 @@ export const createStripePaymentIntent = (input: Input) => {
       }
   }
 }
+
+export const uploadsFile = (files: formidable.File[], bucket: string, userId: number) => ({
+  run: () =>
+    uploadFilesEffect(files, bucket, userId).pipe(
+      effectLogger,
+      effectStorageProviderFactory,
+      T.runPromise
+    )
+})
