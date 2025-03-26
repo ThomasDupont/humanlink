@@ -17,9 +17,11 @@ export const crudFileTigris = (s3Fun: () => S3Client) => {
       return ''
     }
 
-  const removeAFileInTheBucket = (_: string): Promise<void> => {
-    return Promise.resolve()
-  }
+  const removeAFileInTheBucket =
+    (__: string) =>
+    (_: string): Promise<void> => {
+      return Promise.resolve()
+    }
 
   return { addAFileToTheBucket, removeAFileInTheBucket }
 }

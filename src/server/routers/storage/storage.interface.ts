@@ -5,5 +5,5 @@ export type AddAFileToTheBucketArgs = {
 
 export type GenericStorageProvider = {
   addAFileToTheBucket: (bucket: string) => (args: AddAFileToTheBucketArgs) => Promise<string>
-  removeAFileInTheBucket: (path: string) => Promise<void>
+  removeAFileInTheBucket: (bucket: string) => (path: string) => Promise<void>
 }

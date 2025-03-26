@@ -94,7 +94,9 @@ const AddARendering = () => {
     event.preventDefault()
     const formData = new FormData()
 
-    formData.append('files', formValues.files[0]!)
+    for (const file of formValues.files) {
+      formData.append('files', file)
+    }
 
     fetch('/api/upload', {
       method: 'POST',
