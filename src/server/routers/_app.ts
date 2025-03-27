@@ -256,10 +256,15 @@ export const appRouter = router({
       addRendering: protectedprocedure
         .input(
           z.object({
-            files: z.array(z.object({
-              originalFileName: z.string(),
-              path: z.string()
-            })).max(config.userInteraction.maxUploadFileSize),
+            milestoneId: z.number(),
+            files: z
+              .array(
+                z.object({
+                  originalFileName: z.string(),
+                  path: z.string()
+                })
+              )
+              .max(config.userInteraction.maxUploadFileSize),
             text: z.string().max(config.userInteraction.serviceDescriptionMaxLen),
             closeOffer: z.boolean()
           })

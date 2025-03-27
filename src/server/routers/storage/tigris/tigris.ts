@@ -1,6 +1,7 @@
 import {
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadObjectCommand,
   PutObjectCommand,
   S3Client
 } from '@aws-sdk/client-s3'
@@ -43,5 +44,18 @@ export const crudFileTigris = (s3Fun: () => S3Client): GenericStorageProvider =>
       })
     }
 
-  return { addAFileToTheBucket, removeAFileInTheBucket, getPresignedUrlForObject }
+  const getFileInfo = (bucket: string) => async (filepath: string) => {
+    const command = new HeadObjectCommand({
+      Bucket: bucket,
+      Key: filepath
+    })
+
+    return await s3.send(command).then(resp => ({
+      mimetype: resp.ContentType ?? null,
+      size: resp.ContentLength ?? null,
+      updatedAt: resp.LastModified ?? null
+    }))
+  }
+
+  return { addAFileToTheBucket, removeAFileInTheBucket, getPresignedUrlForObject, getFileInfo }
 }

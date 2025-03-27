@@ -1,4 +1,5 @@
 import { PaymentEventType, PaymentProvider, PrismaClient } from '@prisma/client'
+import { filesOperations, milestoneOperations } from './prisma.provider'
 
 type AddPaymentTransactionArgs = {
   sellerId: number
@@ -8,6 +9,17 @@ type AddPaymentTransactionArgs = {
   provider: PaymentProvider
   providerPaymentId: string
   offerId: number
+}
+
+type AddMilestoneRendering = {
+  milestoneId: number
+  files: {
+    originalFilename: string
+    mimetype: string
+    size: number
+    hash: string
+  }[]
+  text: string
 }
 
 export const transaction = (prisma: PrismaClient) => {
@@ -45,5 +57,19 @@ export const transaction = (prisma: PrismaClient) => {
     ])
   }
 
-  return { acceptOfferTransaction }
+  const addMilestoneRendering = (args: AddMilestoneRendering) => {
+    return prisma.$transaction([
+      ...args.files.map(file =>
+        filesOperations.addAFile({
+          ...file
+        })
+      ),
+      milestoneOperations.addRenderingToAMilestone(args.milestoneId, {
+        text: args.text,
+        files: args.files.map(file => file.hash)
+      })
+    ])
+  }
+
+  return { acceptOfferTransaction, addMilestoneRendering }
 }

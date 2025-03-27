@@ -8,6 +8,8 @@ import { messageCrud } from './messages/messages.prisma'
 import { offersCrud } from './offers/offers.prisma'
 import { userBalanceCrud } from './payment/payment.prisma'
 import { transaction } from './transactionBuilder'
+import { filesCrud } from './files/files.operation'
+import { milestoneCrud } from './offers/milestone.prisma'
 
 const prisma = new PrismaClient({
   log: [
@@ -53,6 +55,8 @@ export const serviceOperations = servicesCrud(extendedPrisma as unknown as Prism
 export const messageOperations = messageCrud(extendedPrisma as unknown as PrismaClient)
 export const offerOperations = offersCrud(extendedPrisma as unknown as PrismaClient)
 export const balanceOperations = userBalanceCrud(extendedPrisma as unknown as PrismaClient)
+export const filesOperations = filesCrud(extendedPrisma as unknown as PrismaClient)
+export const milestoneOperations = milestoneCrud(extendedPrisma as unknown as PrismaClient)
 export const transactionOperations = transaction(extendedPrisma as unknown as PrismaClient)
 
 export class UserOperations extends Context.Tag('userOperations')<
@@ -84,6 +88,21 @@ export class BalanceOperations extends Context.Tag('balanceOperations')<
   typeof balanceOperations
 >() {}
 export const effectBalanceOperations = Effect.provideService(BalanceOperations, balanceOperations)
+
+export class FilesOperations extends Context.Tag('filesOperations')<
+  FilesOperations,
+  typeof filesOperations
+>() {}
+export const effectFilesOperations = Effect.provideService(FilesOperations, filesOperations)
+
+export class MilestoneOperations extends Context.Tag('milestoneOperations')<
+  MilestoneOperations,
+  typeof milestoneOperations
+>() {}
+export const effectMilestoneOperations = Effect.provideService(
+  MilestoneOperations,
+  milestoneOperations
+)
 
 export class TransactionOperations extends Context.Tag('transactionOperations')<
   TransactionOperations,

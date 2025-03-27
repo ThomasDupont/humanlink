@@ -79,7 +79,7 @@ const AddARendering = ({ offer }: { offer: ConcernedOffer }) => {
 
   const [formValues, setFormValues] = useState<{
     description: string
-    files: File[],
+    files: File[]
     closeOffer: boolean
   }>({
     description: '',
@@ -89,6 +89,16 @@ const AddARendering = ({ offer }: { offer: ConcernedOffer }) => {
 
   const [showSpinner, setShowSpinner] = useState(false)
   const [openSnackBar, setOpenSnackBar] = useState(false)
+
+  const milestoneId = offer.milestone[0]?.id
+
+  if (!milestoneId) {
+    return (
+      <Typography variant="body1" color="error">
+        No milestone on offer
+      </Typography>
+    )
+  }
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -104,22 +114,25 @@ const AddARendering = ({ offer }: { offer: ConcernedOffer }) => {
       body: formData
     })
       .then(response => response.json())
-      .then((data: {
-        files: {
-          originalFilename: string,
-          hash: string
-        }[]
-      }) => {
-        console.log(data)
-        return mutateAsync({
-          files: data.files.map(file => ({
-            path: file.hash,
-            originalFileName: file.originalFilename
-          })),
-          text: formValues.description,
-          closeOffer: formValues.closeOffer
-        })
-      })
+      .then(
+        (data: {
+          files: {
+            originalFilename: string
+            hash: string
+          }[]
+        }) => {
+          console.log(data)
+          return mutateAsync({
+            milestoneId,
+            files: data.files.map(file => ({
+              path: file.hash,
+              originalFileName: file.originalFilename
+            })),
+            text: formValues.description,
+            closeOffer: formValues.closeOffer
+          })
+        }
+      )
       .catch(error => {
         console.error('Error:', error)
       })
@@ -212,10 +225,19 @@ const AddARendering = ({ offer }: { offer: ConcernedOffer }) => {
                 }}
               />
             )}
-            <FormControlLabel control={<Switch onChange={v => setFormValues(state => ({
-              ...state,
-              closeOffer: v.target.checked
-            }))} />} label="Close offer" />
+            <FormControlLabel
+              control={
+                <Switch
+                  onChange={v =>
+                    setFormValues(state => ({
+                      ...state,
+                      closeOffer: v.target.checked
+                    }))
+                  }
+                />
+              }
+              label="Close offer"
+            />
             <Button
               disabled={totalFileSize > config.userInteraction.maxUploadFileSize}
               size="medium"

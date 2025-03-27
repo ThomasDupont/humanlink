@@ -262,11 +262,11 @@ model Transaction {
 }
 
 model File {
-  id               Int      @id @default(autoincrement())
-  createdAt        DateTime @default(now())
-  hash             String   @unique
-  updatedAt        DateTime
+  id               Int       @id @default(autoincrement())
+  createdAt        DateTime  @default(now())
+  hash             String    @unique
+  updatedAt        DateTime?
   mimetype         String
   originalFilename String
-  size             BigInt
+  size             Int
 }
