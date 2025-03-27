@@ -3,7 +3,7 @@ import config, { SupportedLocale } from '@/config'
 import { useOfferHook } from '@/hooks/offer/offer.hook'
 import InputFileUpload from '@/materials/InputFileUpload'
 import { useUserState } from '@/state/user.state'
-import { trpc } from '@/utils/trpc'
+import { ConcernedOffer, trpc } from '@/utils/trpc'
 import {
   Container,
   Box,
@@ -73,10 +73,10 @@ export const getStaticProps: GetStaticProps<Props> = async ({ locale, params }) 
   }
 }
 
-const AddARendering = () => {
+const AddARendering = ({ offer }: { offer: ConcernedOffer }) => {
   const { t: commonT } = useTranslation('common')
   const { mutateAsync } = trpc.protectedMutation.offer.addRendering.useMutation()
-  
+
   const [formValues, setFormValues] = useState<{
     description: string
     files: File[],
@@ -98,13 +98,27 @@ const AddARendering = () => {
       formData.append('files', file)
     }
 
+    setShowSpinner(true)
     fetch('/api/upload', {
       method: 'POST',
       body: formData
     })
       .then(response => response.json())
-      .then(data => {
+      .then((data: {
+        files: {
+          originalFilename: string,
+          hash: string
+        }[]
+      }) => {
         console.log(data)
+        return mutateAsync({
+          files: data.files.map(file => ({
+            path: file.hash,
+            originalFileName: file.originalFilename
+          })),
+          text: formValues.description,
+          closeOffer: formValues.closeOffer
+        })
       })
       .catch(error => {
         console.error('Error:', error)

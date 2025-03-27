@@ -171,6 +171,7 @@ model Offer {
   paidDate       DateTime?
   isTerminated   Boolean
   terminatedAt   DateTime?
+  comment        String?
   message        Message?
   milestone      Milestone[]
 }
@@ -184,6 +185,8 @@ model Milestone {
   deadline         DateTime
   terminatedAt     DateTime?
   validatedAt      DateTime?
+  renderingText    String
+  renderingFiles   String[]
   priceMilestone   PriceMilestone @relation(fields: [priceMilestoneId], references: [id])
   priceMilestoneId Int            @unique
 }
@@ -256,4 +259,14 @@ model Transaction {
   offerId     Int?
   milestoneId Int?
   comment     String
+}
+
+model File {
+  id               Int      @id @default(autoincrement())
+  createdAt        DateTime @default(now())
+  hash             String   @unique
+  updatedAt        DateTime
+  mimetype         String
+  originalFilename String
+  size             BigInt
 }

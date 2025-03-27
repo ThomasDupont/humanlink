@@ -38,7 +38,7 @@ export default async function POST(req: NextApiRequest, res: NextApiResponse) {
 
     return res.json({
       files: uploadResult.map(file => ({
-        originalFileName: file.originalFilename,
+        originalFilename: file.originalFilename,
         hash: file.hash
       }))
     })
