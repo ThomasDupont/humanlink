@@ -15,6 +15,7 @@ import { UpsertServiceArgs, upsertServiceEffect } from './mutations/upsertServic
 import formidable from 'formidable'
 import { uploadFilesEffect } from './mutations/uploadFile'
 import { effectStorageProviderFactory } from '../storage/storage.provider'
+import { addRenderingEffect, AddRenderingEffectArgs } from './mutations/addRendering'
 
 export const upsertService = (args: UpsertServiceArgs) => ({
   run: () =>
@@ -42,7 +43,7 @@ export const acceptOffer = (args: AcceptOfferEffectArgs) => ({
     )
 })
 
-type Input =
+type CreateStripePaymentIntentInput =
   | {
       type: 'offer'
       offerId: number
@@ -55,7 +56,7 @@ type Input =
       idempotencyKey: string
       voucherCode?: string | undefined
     }
-export const createStripePaymentIntent = (input: Input) => {
+export const createStripePaymentIntent = (input: CreateStripePaymentIntentInput) => {
   switch (input.type) {
     case 'offer':
       return {
@@ -80,6 +81,17 @@ export const uploadsFile = (files: formidable.File[], bucket: string, userId: nu
   run: () =>
     uploadFilesEffect(files, bucket, userId).pipe(
       effectLogger,
+      effectStorageProviderFactory,
+      T.runPromise
+    )
+})
+
+export const addRendering = (args: AddRenderingEffectArgs) => ({
+  run: () =>
+    addRenderingEffect(args).pipe(
+      effectLogger,
+      effectOfferOperations,
+      effectTransactionOperations,
       effectStorageProviderFactory,
       T.runPromise
     )

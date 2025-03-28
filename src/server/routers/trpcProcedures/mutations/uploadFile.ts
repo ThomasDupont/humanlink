@@ -3,6 +3,7 @@ import { Exit, pipe, Scope, Effect as T } from 'effect'
 import { StorageProviderFactory } from '../../storage/storage.provider'
 import { TRPCError } from '@trpc/server'
 import formidable from 'formidable'
+import config from '@/config'
 
 export const uploadFilesEffect = (files: formidable.File[], bucket: string, userId: number) =>
   T.gen(function* () {
@@ -10,7 +11,7 @@ export const uploadFilesEffect = (files: formidable.File[], bucket: string, user
     const storageProviderFactory = yield* StorageProviderFactory
     const rollbackOps = yield* Scope.make()
 
-    const storage = storageProviderFactory.tigris()
+    const storage = storageProviderFactory[config.storageProvider]()
 
     const addAFileToTheBucketFun = storage.addAFileToTheBucket(bucket)
     const removeAFileInTheBucketFun = storage.removeAFileInTheBucket(bucket)

@@ -38,7 +38,7 @@ export const crudFileTigris = (s3Fun: () => S3Client): GenericStorageProvider =>
 
   const getPresignedUrlForObject =
     (bucket: string) =>
-    async (filepath: string, expiresIn = 3600): Promise<string> => {
+    async (filepath: string, expiresIn?: number): Promise<string> => {
       return await getSignedUrl(s3, new GetObjectCommand({ Bucket: bucket, Key: filepath }), {
         expiresIn
       })

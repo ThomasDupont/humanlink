@@ -185,7 +185,7 @@ model Milestone {
   deadline         DateTime
   terminatedAt     DateTime?
   validatedAt      DateTime?
-  renderingText    String
+  renderingText    String?
   renderingFiles   String[]
   priceMilestone   PriceMilestone @relation(fields: [priceMilestoneId], references: [id])
   priceMilestoneId Int            @unique

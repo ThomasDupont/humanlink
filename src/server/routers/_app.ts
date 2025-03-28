@@ -4,6 +4,7 @@ import { JSDOM } from 'jsdom'
 import { z } from 'zod'
 import {
   messageOperations,
+  offerOperations,
   serviceOperations,
   userOperations
 } from './databaseOperations/prisma.provider'
@@ -16,6 +17,7 @@ import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
 import { Category, Lang, PaymentProvider } from '@prisma/client'
 import {
   acceptOffer,
+  addRendering,
   createOfferWithMessage,
   createStripePaymentIntent,
   upsertService
@@ -217,6 +219,7 @@ export const appRouter = router({
             terminatedAt: null,
             acceptedAt: null,
             paidDate: null,
+            comment: null,
             userIdReceiver: input.receiverId,
             // default: 1
             milestones: [
@@ -224,6 +227,8 @@ export const appRouter = router({
                 description: input.description,
                 deadline: input.deadline,
                 terminatedAt: null,
+                renderingFiles: [],
+                renderingText: null,
                 validatedAt: null,
                 priceMilestone: {
                   number: input.price,
@@ -257,6 +262,7 @@ export const appRouter = router({
         .input(
           z.object({
             milestoneId: z.number(),
+            offerId: z.number(),
             files: z
               .array(
                 z.object({
@@ -265,12 +271,24 @@ export const appRouter = router({
                 })
               )
               .max(config.userInteraction.maxUploadFileSize),
-            text: z.string().max(config.userInteraction.serviceDescriptionMaxLen),
-            closeOffer: z.boolean()
+            text: z.string().max(config.userInteraction.serviceDescriptionMaxLen)
           })
         )
         .mutation(({ input, ctx }) => {
-          return 'ok'
+          return addRendering({
+            userId: ctx.session.user.id,
+            bucket: 'ascend-rendering-offer',
+            ...input
+          })
+        }),
+      closeOffer: protectedprocedure
+        .input(
+          z.object({
+            offerId: z.number()
+          })
+        )
+        .mutation(({ input, ctx }) => {
+          return offerOperations.closeOffer(input.offerId, ctx.session.user.id)
         })
     })
   })

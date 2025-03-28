@@ -13,6 +13,7 @@ type Config = {
   authorizeHTMLTagForDescription: string[]
   paymentProvider: 'stripe'
   defaultCurrency: Currency
+  storageProvider: 'tigris'
   userInteraction: {
     descriptionMaxLen: number
     jobTitleMaxLen: number
@@ -34,6 +35,7 @@ const config: Config = {
   authorizeHTMLTagForDescription: ['p', 'strong', 'br', 'ul', 'li', 'em', 'u'],
   paymentProvider: 'stripe',
   defaultCurrency: 'EUR',
+  storageProvider: 'tigris',
   userInteraction: {
     descriptionMaxLen: 2000,
     jobTitleMaxLen: 100,

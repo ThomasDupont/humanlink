@@ -15,7 +15,9 @@ import {
   Button,
   TextField,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  Snackbar,
+  Alert
 } from '@mui/material'
 import { GetStaticPaths, GetStaticProps } from 'next'
 import { useTranslation } from 'next-i18next'
@@ -89,6 +91,7 @@ const AddARendering = ({ offer }: { offer: ConcernedOffer }) => {
 
   const [showSpinner, setShowSpinner] = useState(false)
   const [openSnackBar, setOpenSnackBar] = useState(false)
+  const [error, setError] = useState<string>()
 
   const milestoneId = offer.milestone[0]?.id
 
@@ -123,18 +126,23 @@ const AddARendering = ({ offer }: { offer: ConcernedOffer }) => {
         }) => {
           console.log(data)
           return mutateAsync({
+            offerId: offer.id,
             milestoneId,
             files: data.files.map(file => ({
               path: file.hash,
               originalFileName: file.originalFilename
             })),
-            text: formValues.description,
-            closeOffer: formValues.closeOffer
+            text: formValues.description
           })
         }
       )
       .catch(error => {
         console.error('Error:', error)
+        setError(error.message)
+      })
+      .finally(() => {
+        setShowSpinner(false)
+        setOpenSnackBar(true)
       })
   }
 
@@ -160,6 +168,16 @@ const AddARendering = ({ offer }: { offer: ConcernedOffer }) => {
         p: 2
       })}
     >
+      <Snackbar open={openSnackBar} autoHideDuration={3000} onClose={() => setOpenSnackBar(false)}>
+        <Alert
+          onClose={() => setOpenSnackBar(false)}
+          severity={error ? 'error' : 'success'}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {error ? commonT(error) : commonT('saved')}
+        </Alert>
+      </Snackbar>
       {showSpinner ? (
         <Spinner />
       ) : (
