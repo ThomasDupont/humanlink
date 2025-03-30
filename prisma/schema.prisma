@@ -266,6 +266,7 @@ model File {
   createdAt        DateTime  @default(now())
   hash             String    @unique
   updatedAt        DateTime?
+  relatedUsers     Int[]
   mimetype         String
   originalFilename String
   size             Int

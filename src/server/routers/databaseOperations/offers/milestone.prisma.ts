@@ -7,7 +7,7 @@ export const milestoneCrud = (prisma: PrismaClient) => {
       text,
       files
     }: {
-      text: string
+      text: string | null
       files: string[]
     }
   ) => {
@@ -15,7 +15,7 @@ export const milestoneCrud = (prisma: PrismaClient) => {
       where: { id },
       data: {
         renderingText: text,
-        renderingFiles: files
+        renderingFiles: { push: files }
       }
     })
   }

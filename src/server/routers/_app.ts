@@ -11,7 +11,12 @@ import {
 import config from '@/config'
 import searchFactory from './searchService/search.factory'
 import { protectedprocedure } from './middlewares'
-import { getContactList, getOfferDetail, listOffer } from './trpcProcedures/get.trpc'
+import {
+  getContactList,
+  getOfferDetail,
+  getProtectedFiles,
+  listOffer
+} from './trpcProcedures/get.trpc'
 import { userMe } from './trpcProcedures/get.trpc'
 import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
 import { Category, Lang, PaymentProvider } from '@prisma/client'
@@ -77,7 +82,16 @@ export const appRouter = router({
     listOffers: protectedprocedure.query(({ ctx }) => listOffer(ctx.session.user.id).run()),
     offerDetail: protectedprocedure
       .input(z.number())
-      .query(({ input, ctx }) => getOfferDetail(ctx.session.user.id, input).run())
+      .query(({ input, ctx }) => getOfferDetail(ctx.session.user.id, input).run()),
+    getProtectedFiles: protectedprocedure
+      .input(
+        z.object({
+          files: z.array(z.string())
+        })
+      )
+      .query(({ input, ctx }) =>
+        getProtectedFiles(ctx.session.user.id, input.files, 'ascend-rendering-offer').run()
+      )
   }),
   protectedMutation: router({
     sendMessage: protectedprocedure
@@ -207,8 +221,8 @@ export const appRouter = router({
               .refine(date => date > new Date(), { message: 'date_in_the_past' })
           })
         )
-        .mutation(({ input, ctx }) => {
-          return createOfferWithMessage({
+        .mutation(({ input, ctx }) =>
+          createOfferWithMessage({
             description: input.description,
             deadline: input.deadline,
             serviceId: input.serviceId,
@@ -240,8 +254,7 @@ export const appRouter = router({
               }
             ]
           }).run()
-        }),
-
+        ),
       accept: protectedprocedure
         .input(
           z.object({
@@ -266,30 +279,30 @@ export const appRouter = router({
             files: z
               .array(
                 z.object({
-                  originalFileName: z.string(),
+                  originalFilename: z.string(),
                   path: z.string()
                 })
               )
               .max(config.userInteraction.maxUploadFileSize),
-            text: z.string().max(config.userInteraction.serviceDescriptionMaxLen)
+            text: z.string().max(config.userInteraction.serviceDescriptionMaxLen).nullable()
           })
         )
-        .mutation(({ input, ctx }) => {
-          return addRendering({
+        .mutation(({ input, ctx }) =>
+          addRendering({
             userId: ctx.session.user.id,
             bucket: 'ascend-rendering-offer',
             ...input
-          })
-        }),
+          }).run()
+        ),
       closeOffer: protectedprocedure
         .input(
           z.object({
             offerId: z.number()
           })
         )
-        .mutation(({ input, ctx }) => {
-          return offerOperations.closeOffer(input.offerId, ctx.session.user.id)
-        })
+        .mutation(({ input, ctx }) =>
+          offerOperations.closeOffer(input.offerId, ctx.session.user.id)
+        )
     })
   })
 })

@@ -9,6 +9,7 @@ type RouterOutput = inferRouterOutputs<AppRouter>
 export type CreateOfferReturnType = RouterOutput['protectedMutation']['offer']['create']
 export type GetConversationReturnType = ArrayElement<RouterOutput['protectedGet']['conversation']>
 export type ConcernedOffer = ArrayElement<RouterOutput['protectedGet']['listOffers']>
+export type FilesFromAPI = RouterOutput['protectedGet']['getProtectedFiles']
 
 function getBaseUrl() {
   if (typeof window !== 'undefined')

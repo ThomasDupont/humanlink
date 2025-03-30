@@ -1,5 +1,4 @@
 import { PaymentEventType, PaymentProvider, PrismaClient } from '@prisma/client'
-import { filesOperations, milestoneOperations } from './prisma.provider'
 
 type AddPaymentTransactionArgs = {
   sellerId: number
@@ -18,8 +17,9 @@ type AddMilestoneRendering = {
     mimetype: string
     size: number
     hash: string
+    relatedUsers: number[]
   }[]
-  text: string
+  text: string | null
 }
 
 export const transaction = (prisma: PrismaClient) => {
@@ -58,17 +58,35 @@ export const transaction = (prisma: PrismaClient) => {
   }
 
   const addMilestoneRendering = (args: AddMilestoneRendering) => {
-    return prisma.$transaction([
-      ...args.files.map(file =>
-        filesOperations.addAFile({
-          ...file
+    return prisma.$transaction(async tx => {
+      for (const file of args.files) {
+        const existing = await tx.file.findUnique({
+          where: { hash: file.hash },
+          select: { relatedUsers: true }
         })
-      ),
-      milestoneOperations.addRenderingToAMilestone(args.milestoneId, {
-        text: args.text,
-        files: args.files.map(file => file.hash)
+
+        const existingUsers = existing?.relatedUsers ?? []
+        const mergedUsers = Array.from(new Set([...existingUsers, ...file.relatedUsers]))
+
+        await tx.file.upsert({
+          where: { hash: file.hash },
+          update: {
+            relatedUsers: {
+              set: mergedUsers
+            }
+          },
+          create: file
+        })
+      }
+
+      await tx.milestone.update({
+        where: { id: args.milestoneId },
+        data: {
+          renderingText: args.text,
+          renderingFiles: { push: args.files.map(file => file.hash) }
+        }
       })
-    ])
+    })
   }
 
   return { acceptOfferTransaction, addMilestoneRendering }

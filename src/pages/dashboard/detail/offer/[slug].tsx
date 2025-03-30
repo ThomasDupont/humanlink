@@ -1,9 +1,11 @@
 import { Spinner } from '@/components/Spinner'
-import config, { SupportedLocale } from '@/config'
+import { SupportedLocale } from '@/config'
+import { AddARendering } from '@/elements/offer/AddARendering'
+import { DisplayRendering } from '@/elements/offer/DisplayRendering'
 import { useOfferHook } from '@/hooks/offer/offer.hook'
-import InputFileUpload from '@/materials/InputFileUpload'
+import { useRendering } from '@/hooks/offer/rendering.hook'
 import { useUserState } from '@/state/user.state'
-import { ConcernedOffer, trpc } from '@/utils/trpc'
+import { trpc } from '@/utils/trpc'
 import {
   Container,
   Box,
@@ -12,17 +14,11 @@ import {
   Avatar,
   Divider,
   Grid2 as Grid,
-  Button,
-  TextField,
-  Switch,
-  FormControlLabel,
-  Snackbar,
-  Alert
+  Button
 } from '@mui/material'
 import { GetStaticPaths, GetStaticProps } from 'next'
-import { useTranslation } from 'next-i18next'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
-import { FormEvent, ReactElement, useState } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import { z } from 'zod'
 
 const Base = ({ children }: { children: ReactElement }) => {
@@ -75,208 +71,6 @@ export const getStaticProps: GetStaticProps<Props> = async ({ locale, params }) 
   }
 }
 
-const AddARendering = ({ offer }: { offer: ConcernedOffer }) => {
-  const { t: commonT } = useTranslation('common')
-  const { mutateAsync } = trpc.protectedMutation.offer.addRendering.useMutation()
-
-  const [formValues, setFormValues] = useState<{
-    description: string
-    files: File[]
-    closeOffer: boolean
-  }>({
-    description: '',
-    files: [],
-    closeOffer: false
-  })
-
-  const [showSpinner, setShowSpinner] = useState(false)
-  const [openSnackBar, setOpenSnackBar] = useState(false)
-  const [error, setError] = useState<string>()
-
-  const milestoneId = offer.milestone[0]?.id
-
-  if (!milestoneId) {
-    return (
-      <Typography variant="body1" color="error">
-        No milestone on offer
-      </Typography>
-    )
-  }
-
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault()
-    const formData = new FormData()
-
-    for (const file of formValues.files) {
-      formData.append('files', file)
-    }
-
-    setShowSpinner(true)
-    fetch('/api/upload', {
-      method: 'POST',
-      body: formData
-    })
-      .then(response => response.json())
-      .then(
-        (data: {
-          files: {
-            originalFilename: string
-            hash: string
-          }[]
-        }) => {
-          console.log(data)
-          return mutateAsync({
-            offerId: offer.id,
-            milestoneId,
-            files: data.files.map(file => ({
-              path: file.hash,
-              originalFileName: file.originalFilename
-            })),
-            text: formValues.description
-          })
-        }
-      )
-      .catch(error => {
-        console.error('Error:', error)
-        setError(error.message)
-      })
-      .finally(() => {
-        setShowSpinner(false)
-        setOpenSnackBar(true)
-      })
-  }
-
-  const handleDeleteFromFileList = (name: string) => {
-    const fileIndex = formValues.files.findIndex(f => f.name === name)
-    const newFilesList = formValues.files.filter((_, i) => i !== fileIndex)
-
-    setFormValues(state => ({
-      ...state,
-      files: newFilesList
-    }))
-  }
-
-  const totalFileSize = formValues.files.reduce((acc, file) => acc + file.size, 0)
-
-  return (
-    <Box
-      sx={t => ({
-        borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
-        boxShadow: t.shadows[1],
-        backgroundColor: 'white',
-        mt: 2,
-        p: 2
-      })}
-    >
-      <Snackbar open={openSnackBar} autoHideDuration={3000} onClose={() => setOpenSnackBar(false)}>
-        <Alert
-          onClose={() => setOpenSnackBar(false)}
-          severity={error ? 'error' : 'success'}
-          variant="filled"
-          sx={{ width: '100%' }}
-        >
-          {error ? commonT(error) : commonT('saved')}
-        </Alert>
-      </Snackbar>
-      {showSpinner ? (
-        <Spinner />
-      ) : (
-        <form onSubmit={handleSubmit}>
-          <TextField
-            type="textarea"
-            fullWidth
-            variant="standard"
-            color="primary"
-            label={`add a text (with external link)`}
-            // error={getErrorByTag(Tag.Description) !== null}
-            multiline
-            minRows={6}
-            onChange={e =>
-              setFormValues(state => ({
-                ...state,
-                description: e.target.value
-              }))
-            }
-            value={formValues.description}
-            helperText={`${formValues.description.length} / ${config.userInteraction.descriptionMaxLen}`}
-            slotProps={{
-              input: {
-                spellCheck: 'false'
-              },
-              htmlInput: { maxLength: config.userInteraction.descriptionMaxLen }
-            }}
-          />
-          <Box
-            display={'flex'}
-            flexDirection={'row'}
-            gap={1}
-            justifyContent={'space-around'}
-            flexWrap={'wrap'}
-            sx={{ mb: 2 }}
-          >
-            {formValues.files.map(file => (
-              <Chip
-                key={file.name}
-                label={file.name}
-                onDelete={() => handleDeleteFromFileList(file.name)}
-              />
-            ))}
-          </Box>
-          <Box
-            display={'flex'}
-            flexDirection={'row'}
-            gap={1}
-            justifyContent={'space-around'}
-            sx={{
-              mb: 2
-            }}
-          >
-            {formValues.files.length < 5 && (
-              <InputFileUpload
-                disabled={totalFileSize > config.userInteraction.maxUploadFileSize}
-                onChange={files => {
-                  if (files === null) return
-                  setFormValues(state => ({
-                    ...state,
-                    files: [...[...files], ...state.files]
-                  }))
-                }}
-              />
-            )}
-            <FormControlLabel
-              control={
-                <Switch
-                  onChange={v =>
-                    setFormValues(state => ({
-                      ...state,
-                      closeOffer: v.target.checked
-                    }))
-                  }
-                />
-              }
-              label="Close offer"
-            />
-            <Button
-              disabled={totalFileSize > config.userInteraction.maxUploadFileSize}
-              size="medium"
-              type="submit"
-              variant="contained"
-            >
-              {commonT('save')}
-            </Button>
-          </Box>
-          {totalFileSize > config.userInteraction.maxUploadFileSize && (
-            <Typography variant="body2" color="error">
-              {`The total size of the files is too big (${totalFileSize / 1_000_000} Mb)`}
-            </Typography>
-          )}
-          <Typography variant="body2">{`The number of uploaded file is limited to ${config.userInteraction.maxUploadFiles} and limited to ${config.userInteraction.maxUploadFileSize / 1_000_000} Mb in total. If you want to share bigger file, you can add la link in the text field (like a WeTransfer link).`}</Typography>
-        </form>
-      )}
-    </Box>
-  )
-}
-
 export default function OfferDetail({
   offerId,
   locale
@@ -284,13 +78,24 @@ export default function OfferDetail({
   offerId: number
   locale: SupportedLocale
 }) {
-  const { data: offer, error, isFetching } = trpc.protectedGet.offerDetail.useQuery(offerId)
+  const {
+    data: offer,
+    error,
+    isFetching,
+    refetch
+  } = trpc.protectedGet.offerDetail.useQuery(offerId)
   const [renderingBox, setRenderingBox] = useState(false)
 
   const { parseOffer } = useOfferHook(locale, new Date())
   const {
     userSnapshot: { userId }
   } = useUserState()
+
+  const { fetchRendering, renderings } = useRendering(offer ?? null)
+
+  useEffect(() => {
+    if (offer) fetchRendering()
+  }, [offer])
 
   if (error) {
     return (
@@ -308,10 +113,6 @@ export default function OfferDetail({
         <Spinner />
       </Base>
     )
-  }
-
-  const handleAddRendering = () => {
-    setRenderingBox(true)
   }
 
   const parsedOffer = parseOffer(offer, userId!)
@@ -441,7 +242,7 @@ export default function OfferDetail({
             {parsedOffer.couldAddRendering && parsedOffer.offerFrom == 'me' && (
               <Grid size={12}>
                 <Box display={'flex'} flexDirection={'row'} gap={1} justifyContent={'center'}>
-                  <Button onClick={handleAddRendering} variant="contained" color="primary">
+                  <Button onClick={() => setRenderingBox(true)} variant="contained" color="primary">
                     Add a rendering
                   </Button>
                 </Box>
@@ -449,7 +250,17 @@ export default function OfferDetail({
             )}
           </Grid>
         </Box>
-        {renderingBox && <AddARendering offer={offer} />}
+        <DisplayRendering offer={offer} locale={locale} renderings={renderings} />
+        {renderingBox && (
+          <AddARendering
+            renderings={renderings}
+            offer={offer}
+            handleClose={() => {
+              refetch()
+              setRenderingBox(false)
+            }}
+          />
+        )}
       </Box>
     </Base>
   )

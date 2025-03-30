@@ -5,15 +5,16 @@ import { StorageProviderFactory } from '../../storage/storage.provider'
 import config from '@/config'
 import { TRPCError } from '@trpc/server'
 import { Prisma } from '@prisma/client'
+import { rebuildPathForSecurity } from '@/utils/rebuildPathForSecurity'
 
 export type AddRenderingEffectArgs = {
   milestoneId: number
   offerId: number
   bucket: string
   userId: number
-  text: string
+  text: string | null
   files: {
-    originalFileName: string
+    originalFilename: string
     path: string
   }[]
 }
@@ -33,22 +34,12 @@ export const addRenderingEffect = ({
 
     const storage = storageFactory[config.storageProvider]()
 
-    const rebuildPathForSecurity = (path: string): string => {
-      const [_, filepath] = path.split('/')
-
-      if (!filepath) {
-        throw new Error(`path ${path} is wrong`)
-      }
-
-      return `${userId}/filepath`
-    }
-
     return T.all(
       files.map(file =>
         T.tryPromise({
           try: () =>
             storage
-              .getFileInfo(bucket)(rebuildPathForSecurity(file.path))
+              .getFileInfo(bucket)(rebuildPathForSecurity(userId, file.path))
               .then(info => ({
                 ...info,
                 ...file
@@ -105,7 +96,12 @@ export const addRenderingEffect = ({
               })
             }
           ),
-          T.map(() => fileinfo)
+          T.map(offer =>
+            fileinfo.map(file => ({
+              ...file,
+              relatedUsers: [offer!.userId!, offer!.userIdReceiver!]
+            }))
+          )
         )
       ),
       T.flatMap(fileInfo =>
@@ -116,7 +112,8 @@ export const addRenderingEffect = ({
                 hash: info.path,
                 size: info.size ?? 0,
                 mimetype: info.mimetype ?? 'octet/stream',
-                originalFilename: info.originalFileName
+                originalFilename: info.originalFilename,
+                relatedUsers: info.relatedUsers
               })),
               milestoneId,
               text
