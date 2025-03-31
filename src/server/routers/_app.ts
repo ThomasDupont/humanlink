@@ -27,7 +27,7 @@ import {
   createStripePaymentIntent,
   upsertService
 } from './trpcProcedures/upsert.trpc'
-import { deleteAService } from './trpcProcedures/delete.trpc'
+import { deleteAMilestoneFile, deleteAService } from './trpcProcedures/delete.trpc'
 import {
   singleUserToDisplayUserForOther,
   userWithServiceToDisplayUserForOther
@@ -294,6 +294,17 @@ export const appRouter = router({
             ...input
           }).run()
         ),
+      deleteAMilestoneFile: protectedprocedure.input(z.object({
+        offerId: z.number(),
+        milestoneId: z.number(),
+        hash: z.string()
+      })).mutation(({input, ctx}) => 
+        deleteAMilestoneFile({
+          userId: ctx.session.user.id,
+          bucket:  'ascend-rendering-offer',
+          ...input
+        }).run()
+      ),
       closeOffer: protectedprocedure
         .input(
           z.object({

@@ -89,5 +89,26 @@ export const transaction = (prisma: PrismaClient) => {
     })
   }
 
-  return { acceptOfferTransaction, addMilestoneRendering }
+  const deleteAMilestoneFile = (milestoneId: number, hash: string) => {
+    return prisma.$transaction(async tx => {
+      const milestone = await tx.milestone.findUnique({
+        where: { id: milestoneId }
+      })
+
+      const newFiles = milestone?.renderingFiles.filter(file => file !== hash)
+
+      await tx.milestone.update({
+        where: { id: milestoneId },
+        data: {
+          renderingFiles: newFiles ?? []
+        }
+      })
+
+      await tx.file.delete({
+        where: { hash }
+      })
+    })
+  }
+
+  return { acceptOfferTransaction, addMilestoneRendering, deleteAMilestoneFile }
 }
