@@ -3,7 +3,7 @@ import { ConcernedOffer, FilesFromAPI, trpc } from '@/utils/trpc'
 import { useState } from 'react'
 
 export type Rendering = {
-  id: number
+  milestoneId: number
   files: FilesFromAPI
   text: string | null
 }
@@ -30,7 +30,7 @@ export const useRendering = (offer: ConcernedOffer | null) => {
         files: milestone.files
       })
       .then(renderingFiles => ({
-        id: milestone.id,
+        milestoneId: milestone.id,
         text: milestone.text,
         files: renderingFiles
       }))

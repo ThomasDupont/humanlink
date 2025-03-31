@@ -250,7 +250,14 @@ export default function OfferDetail({
             )}
           </Grid>
         </Box>
-        <DisplayRendering offer={offer} locale={locale} renderings={renderings} />
+        <DisplayRendering
+          offer={offer}
+          locale={locale}
+          renderings={renderings}
+          handleChange={() => {
+            refetch()
+          }}
+        />
         {renderingBox && (
           <AddARendering
             renderings={renderings}

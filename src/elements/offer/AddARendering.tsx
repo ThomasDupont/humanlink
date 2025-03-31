@@ -66,54 +66,47 @@ export const AddARendering = ({
 
     setShowSpinner(true)
 
-    fetch('/api/upload', {
-      method: 'POST',
-      body: formData
-    })
-      .then(async response => {
-        const json = await response.json()
-        if (response.status > 201) {
-          throw new Error(json.error)
-        }
-        return json
+    const upload = async (): Promise<
+      {
+        originalFilename: string
+        hash: string
+      }[]
+    > => {
+      if (formValues.files.length) {
+        return fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        }).then(response => response.json())
+      }
+
+      return []
+    }
+
+    try {
+      const files = await upload()
+
+      await mutateAsync({
+        offerId: offer.id,
+        milestoneId,
+        files: files.map(file => ({
+          path: file.hash,
+          originalFilename: file.originalFilename
+        })),
+        text: formValues.description
       })
-      .then(
-        (data: {
-          files: {
-            originalFilename: string
-            hash: string
-          }[]
-        }) => {
-          console.log(data)
-          return mutateAsync({
-            offerId: offer.id,
-            milestoneId,
-            files: data.files.map(file => ({
-              path: file.hash,
-              originalFilename: file.originalFilename
-            })),
-            text: formValues.description
-          })
-        }
-      )
-      .then(() => {
-        if (formValues.closeOffer) {
-          return closeOfferMutateAsync({
-            offerId: offer.id
-          })
-        }
-      })
-      .then(() => {
-        setTimeout(() => handleClose(), 1000)
-      })
-      .catch(error => {
-        console.warn('Error:', error)
-        setError(error.message)
-      })
-      .finally(() => {
-        setShowSpinner(false)
-        setOpenSnackBar(true)
-      })
+      if (formValues.closeOffer) {
+        await closeOfferMutateAsync({
+          offerId: offer.id
+        })
+      }
+      setTimeout(() => handleClose(), 1000)
+    } catch (error) {
+      console.warn('Error:', error)
+      setError((error as Error).message)
+    } finally {
+      setShowSpinner(false)
+      setOpenSnackBar(true)
+    }
   }
 
   const handleDeleteFromFileList = (name: string) => {
