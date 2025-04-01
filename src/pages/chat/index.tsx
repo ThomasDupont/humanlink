@@ -20,16 +20,17 @@ import { useRouter } from 'next/router'
 import { z } from 'zod'
 import { useAuthSession } from '@/hooks/nextAuth.hook'
 import { trpc } from '../../utils/trpc'
-import { Send } from '@mui/icons-material'
+import { Refresh, Send } from '@mui/icons-material'
 import { FormEvent, useState, KeyboardEvent } from 'react'
 import { useConversation } from '@/hooks/chat/conversation.hook'
 import { Spinner } from '@/components/Spinner'
-import config, { SuportedLocale } from '@/config'
+import config, { SupportedLocale } from '@/config'
 import BaseModal from '@/components/BaseModal'
 import CreateOfferModal from '@/components/Modals/CreateOffer.modal'
 import { useTranslation } from 'next-i18next'
 import ShowOffer from '@/elements/chat/ShowOffer.element'
 import { UserWithServicesWithPrices } from '@/types/User.type'
+import { logger } from '@/server/logger'
 
 export const getStaticProps: GetStaticProps = async ({ locale }) => {
   return {
@@ -57,12 +58,17 @@ const Conversation = ({
   iAmAFreelance
 }: {
   conversationWithUserId: number
-  locale: SuportedLocale
+  locale: SupportedLocale
   iAmAFreelance: boolean
   serviceId?: number
 }) => {
   const { t } = useTranslation('chat')
-  const { data: user, isFetching } = trpc.get.userById.useQuery(conversationWithUserId)
+  const {
+    data: user,
+    isFetching,
+    status,
+    error
+  } = trpc.get.userById.useQuery(conversationWithUserId)
   const [message, setMessage] = useState<string>()
   const [openCreateOfferModal, setOpenCreateOfferModal] = useState(false)
 
@@ -84,6 +90,15 @@ const Conversation = ({
       refetch()
       setMessage('')
     })
+  }
+
+  if (status === 'error') {
+    logger.error({
+      error: 'trpcError',
+      message: error.message,
+      errorDetail: error
+    })
+    return <Typography variant="body1">{error.message}</Typography>
   }
 
   if (isFetching) {
@@ -215,6 +230,7 @@ const Conversation = ({
                           mr: 1
                         }}
                       >
+                        <IconButton onClick={() => refetch()} edge="end"><Refresh /></IconButton>
                         <IconButton type="submit" edge="end">
                           <Send
                             fontSize="medium"
@@ -330,7 +346,7 @@ const ChatContainer = ({
 }: {
   userId?: number
   serviceId?: number
-  locale: SuportedLocale
+  locale: SupportedLocale
   user: UserWithServicesWithPrices
 }) => {
   const [conversationWithUserId, setConversationWithUserId] = useState(userId)
@@ -359,7 +375,7 @@ const ChatContainer = ({
   )
 }
 
-export default function Chat({ locale }: { locale: SuportedLocale }) {
+export default function Chat({ locale }: { locale: SupportedLocale }) {
   const router = useRouter()
   const { user } = useAuthSession()
 

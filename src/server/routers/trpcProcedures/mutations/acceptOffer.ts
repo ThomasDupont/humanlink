@@ -1,13 +1,8 @@
 import { PaymentProvider, Prisma } from '@prisma/client'
 import { Exit, Scope, Effect as T } from 'effect'
 import { TRPCError } from '@trpc/server'
-import {
-  BalanceOperations,
-  TransactionOperations,
-} from '../../databaseOperations/prisma.provider'
-import {
-  PaymentProviderFactory
-} from '../../paymentOperations/payment.provider'
+import { OfferOperations, TransactionOperations } from '../../databaseOperations/prisma.provider'
+import { PaymentProviderFactory } from '../../paymentOperations/payment.provider'
 import { Logger } from '@/server/logger'
 
 export type AcceptOfferEffectArgs = {
@@ -20,8 +15,8 @@ export const acceptOfferEffect = (args: AcceptOfferEffectArgs) =>
   T.gen(function* () {
     const logger = yield* Logger
     const transactionOperations = yield* TransactionOperations
-    const balanceOperations = yield* BalanceOperations
     const paymentProviderFactory = yield* PaymentProviderFactory
+    const offerOperations = yield* OfferOperations
     const rollbackOps = yield* Scope.make()
 
     const paymentProvider = paymentProviderFactory[args.paymentProvider]()
@@ -69,22 +64,28 @@ export const acceptOfferEffect = (args: AcceptOfferEffectArgs) =>
       ),
       T.map(payment => {
         Scope.addFinalizer(rollbackOps, refundPayment)
-        return payment
+        return {
+          providerPaymentId: args.paymentId,
+          userId: args.userId,
+          fromId: args.offerId,
+          provider: args.paymentProvider,
+          amount: payment.amount
+        }
       }),
-      T.flatMap(payment => 
+      T.flatMap(obj =>
         T.tryPromise({
-          try: () => balanceOperations.getUserBalance(args.userId),
+          try: () => offerOperations.getAnOfferByIdAndReceiverId(args.offerId, args.userId),
           catch: error => {
             logger.error({
               cause: 'database_error',
-              message: `balance for user ${args.userId} db get error`,
+              message: `get offer ${args.offerId} db error`,
               detailedError: error
             })
 
             if (error instanceof Prisma.PrismaClientKnownRequestError) {
               return new TRPCError({
                 code: 'NOT_FOUND',
-                message: 'error_when_retrieve_user_balance'
+                message: 'offer_not_found_for_user'
               })
             }
             return new TRPCError({
@@ -93,37 +94,38 @@ export const acceptOfferEffect = (args: AcceptOfferEffectArgs) =>
           }
         }).pipe(
           T.filterOrFail(
-            balance => balance !== null,
+            offer => offer !== null && offer.userId !== null,
             () => {
               logger.error({
-                cause: 'balance_not_found',
-                message: `balance for user ${args.userId} not found on db`,
+                cause: 'offer_not_found',
+                message: `offer ${args.offerId} not found on db`,
                 detailedError: {}
               })
               return new TRPCError({
                 code: 'NOT_FOUND',
-                message: 'balance_not_found_for_user'
+                message: 'offer_not_found_for_user'
               })
             }
           ),
-          T.flatMap(balance =>
+          T.flatMap(offer =>
             T.tryPromise({
-              try: () => transactionOperations.acceptOfferTransaction({
-                balanceId: balance.id,
-                providerPaymentId: args.paymentId,
-                userId: args.userId,
-                offerId: args.offerId,
-                provider: args.paymentProvider,
-                amount: payment.amount,
-                eventType: 'payment',
-              }),
+              try: () =>
+                transactionOperations.acceptOfferTransaction({
+                  providerPaymentId: args.paymentId,
+                  sellerId: offer!.userId!,
+                  userId: args.userId,
+                  offerId: offer!.id,
+                  provider: args.paymentProvider,
+                  amount: obj.amount,
+                  eventType: 'payment'
+                }),
               catch: error => {
                 logger.error({
                   cause: 'database_error',
                   message: `offer ${args.offerId} db accept error`,
                   detailedError: error
                 })
-    
+
                 if (error instanceof Prisma.PrismaClientKnownRequestError) {
                   return new TRPCError({
                     code: 'NOT_FOUND',

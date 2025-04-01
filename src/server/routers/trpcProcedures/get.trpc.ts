@@ -1,132 +1,22 @@
+import { effectLogger } from '@/server/logger'
 import { Effect as T } from 'effect'
-import { Logger, effectLogger } from '@/server/logger'
-import { TRPCError } from '@trpc/server'
 import {
-  MessageOperations,
-  UserOperations,
+  effectFilesOperations,
   effectMessageOperations,
+  effectOfferOperations,
+  effectServiceOperations,
   effectUserOperations
 } from '../databaseOperations/prisma.provider'
-import { UserWithServicesWithPrices } from '@/types/User.type'
+import { userMeEffect } from './queries/userMe'
+import { getContactListEffect } from './queries/getContactList'
+import { listOffersEffect } from './queries/listOffers'
+import { getOfferDetailEffect } from './queries/getOfferDetail'
+import { getProtectedFilesEffect } from './queries/getProtectedFiles'
+import { effectStorageProviderFactory } from '../storage/storage.provider'
 
-export const userMeEffect = (email: string) =>
-  T.gen(function* () {
-    const logger = yield* Logger
-    const userOperations = yield* UserOperations
-
-    return T.tryPromise({
-      try: () =>
-        userOperations.getUserByEmail<UserWithServicesWithPrices>(email, { withServices: true }),
-      catch: error => {
-        logger.error({
-          cause: 'database_error',
-          message: `${email} db fetch error`,
-          detailedError: error
-        })
-        return new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR'
-        })
-      }
-    }).pipe(
-      T.filterOrFail(
-        user => user !== null,
-        () => {
-          logger.error({
-            cause: 'incoherent_session_and_db_data',
-            message: `${email} not found on db`,
-            detailedError: {}
-          })
-          return new TRPCError({
-            code: 'NOT_FOUND'
-          })
-        }
-      )
-    )
-  }).pipe(T.flatten)
-
-export const userMe = (email: string) => ({
-  run: () => userMeEffect(email).pipe(effectLogger, effectUserOperations, T.runPromise)
+export const userMe = (id: number) => ({
+  run: () => userMeEffect(id).pipe(effectLogger, effectUserOperations, T.runPromise)
 })
-
-export const getContactListEffect = (userId: number) =>
-  T.gen(function* () {
-    const logger = yield* Logger
-    const userOperations = yield* UserOperations
-    const messageOperations = yield* MessageOperations
-
-    return T.tryPromise({
-      try: () => messageOperations.getContactList(userId),
-      catch: error => {
-        logger.error({
-          cause: 'database_error',
-          message: `getContactList ${userId} db fetch error`,
-          detailedError: error
-        })
-        return new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR'
-        })
-      }
-    }).pipe(
-      T.flatMap(list => {
-        const contactList = list
-          .map(element => {
-            const contactId =
-              (element.senderId !== userId ? element.senderId : element.receiverId) ?? 0
-            return {
-              id: contactId,
-              lastDateMessage: element._max.createdAt!, // createdAt is NOT NULL
-              isUnread: element.readAt === null
-            }
-          })
-          .filter(el => el.id > 0)
-          .filter((el, i, arr) => arr.findIndex(e => e.id === el.id) === i)
-
-        return T.all(
-          contactList.map(contact => {
-            return T.tryPromise({
-              try: () => userOperations.getUserById(contact.id),
-              catch: error => {
-                logger.error({
-                  cause: 'database_error',
-                  message: `getContactList getUserById ${userId} db fetch error`,
-                  detailedError: error
-                })
-
-                return new TRPCError({
-                  code: 'INTERNAL_SERVER_ERROR'
-                })
-              }
-            }).pipe(
-              T.filterOrFail(
-                user => user !== null,
-                () => {
-                  logger.error({
-                    cause: 'incoherent_session_and_db_data',
-                    message: `etContactList getUserById ${contact.id} not found on db`,
-                    detailedError: {}
-                  })
-                  return new TRPCError({
-                    code: 'NOT_FOUND'
-                  })
-                }
-              ),
-              T.map(user => ({
-                ...contact,
-                firstname: user.firstname,
-                lastname: user.lastname,
-                image: user.image
-              }))
-            )
-          }),
-          { mode: 'either' }
-        ).pipe(
-          T.map(eitherContacts => {
-            return eitherContacts.filter(either => either._tag === 'Right').map(el => el.right)
-          })
-        )
-      })
-    )
-  }).pipe(T.flatten)
 
 export const getContactList = (id: number) => ({
   run: () =>
@@ -134,6 +24,36 @@ export const getContactList = (id: number) => ({
       effectLogger,
       effectUserOperations,
       effectMessageOperations,
+      T.runPromise
+    )
+})
+
+export const listOffer = (user: number) => ({
+  run: () =>
+    listOffersEffect(user).pipe(
+      effectLogger,
+      effectOfferOperations,
+      effectServiceOperations,
+      T.runPromise
+    )
+})
+
+export const getOfferDetail = (userId: number, offerId: number) => ({
+  run: () =>
+    getOfferDetailEffect(userId, offerId).pipe(
+      effectLogger,
+      effectOfferOperations,
+      effectServiceOperations,
+      T.runPromise
+    )
+})
+
+export const getProtectedFiles = (userId: number, files: string[], bucket: string) => ({
+  run: () =>
+    getProtectedFilesEffect(userId, files, bucket).pipe(
+      effectLogger,
+      effectStorageProviderFactory,
+      effectFilesOperations,
       T.runPromise
     )
 })

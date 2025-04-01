@@ -1,6 +1,5 @@
 import BaseModal from '@/components/BaseModal'
 import LoginModal from '@/components/Modals/Login.modal'
-import { useAuthSession } from '@/hooks/nextAuth.hook'
 import { StyledBadge, StyledGrid } from '@/materials/styledElement'
 import { ServiceFromDB } from '@/types/Services.type'
 import { trpc } from '@/utils/trpc'
@@ -29,6 +28,7 @@ import { logger } from '../../server/logger'
 import { Spinner } from '../../components/Spinner'
 import { useManagePrice } from '../../hooks/managePrice.hook'
 import { useRouter } from 'next/router'
+import { useUserState } from '@/state/user.state'
 
 const Base = ({ children }: { children: ReactElement }) => {
   return (
@@ -93,7 +93,7 @@ export default function Service({ userId, serviceId }: Props) {
   const { data: user, status, error } = trpc.get.userById.useQuery(userId) // @todo use a slug
   const [openLoginModal, setOpenLoginModal] = useState<boolean>(false)
 
-  const { user: me } = useAuthSession()
+  const { userSnapshot } = useUserState()
 
   if (!user) {
     return (
@@ -135,7 +135,7 @@ export default function Service({ userId, serviceId }: Props) {
   const price = managePrice(priceInService)
 
   const openChatOrLoginModal = () => {
-    if (!me) {
+    if (userSnapshot.userId === null) {
       setOpenLoginModal(true)
     } else {
       router.push(`/${router.locale ?? 'en'}/chat?userId=${user.id}&serviceId=${service.id}`)
@@ -273,7 +273,7 @@ export default function Service({ userId, serviceId }: Props) {
             </ListItem>
           </List>
           <Button
-            disabled={me?.id === user.id}
+            disabled={userSnapshot.userId === user.id}
             onClick={() => openChatOrLoginModal()}
             variant="contained"
           >

@@ -4,17 +4,35 @@ import { JSDOM } from 'jsdom'
 import { z } from 'zod'
 import {
   messageOperations,
+  offerOperations,
   serviceOperations,
   userOperations
 } from './databaseOperations/prisma.provider'
 import config from '@/config'
 import searchFactory from './searchService/search.factory'
 import { protectedprocedure } from './middlewares'
-import { getContactList, userMe } from './trpcProcedures/get.trpc'
+import {
+  getContactList,
+  getOfferDetail,
+  getProtectedFiles,
+  listOffer
+} from './trpcProcedures/get.trpc'
+import { userMe } from './trpcProcedures/get.trpc'
 import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
 import { Category, Lang, PaymentProvider } from '@prisma/client'
-import { acceptOffer, createOfferWithMessage, createStripePaymentIntent, upsertService } from './trpcProcedures/upsert.trpc'
-import { deleteAService } from './trpcProcedures/delete.trpc'
+import {
+  acceptOffer,
+  addRendering,
+  createOfferWithMessage,
+  createStripePaymentIntent,
+  upsertService
+} from './trpcProcedures/upsert.trpc'
+import { deleteAMilestoneFile, deleteAService } from './trpcProcedures/delete.trpc'
+import {
+  singleUserToDisplayUserForOther,
+  userWithServiceToDisplayUserForOther
+} from '../dto/user.dto'
+import { TRPCError } from '@trpc/server'
 
 export const appRouter = router({
   get: router({
@@ -23,34 +41,57 @@ export const appRouter = router({
       .query(options =>
         searchFactory[config.backendSearchProvider]({ query: options.input.query })
       ),
-    userById: publicProcedure
-      .input(z.number())
-      .query(options => userOperations.getUserById(options.input)),
+    userById: publicProcedure.input(z.number()).query(options =>
+      userOperations.getUserById(options.input).then(u => {
+        if (!u) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'user_not_found'
+          })
+        }
+        return userWithServiceToDisplayUserForOther(u)
+      })
+    ),
     userByIds: publicProcedure
       .input(z.array(z.number()))
-      .query(options => userOperations.getUserByIds(options.input)),
+      .query(options =>
+        userOperations.getUserByIds(options.input).then(u => u.map(singleUserToDisplayUserForOther))
+      ),
     serviceById: publicProcedure
       .input(z.number())
       .query(options => serviceOperations.getServiceById(options.input))
   }),
   protectedGet: router({
-    me: protectedprocedure.query(({ ctx }) => userMe(ctx.session.user.email).run()),
+    me: protectedprocedure.query(({ ctx }) => userMe(ctx.session.user.id).run()),
     conversation: protectedprocedure
       .input(
         z.object({
           receiverId: z.number()
         })
       )
-      .query(options =>
+      .query(({ input, ctx }) =>
         messageOperations.getConversation({
-          receiverId: options.input.receiverId,
-          senderId: options.ctx.session.user.id
+          receiverId: input.receiverId,
+          senderId: ctx.session.user.id
         })
       ),
     getContacts: protectedprocedure.query(({ ctx }) => getContactList(ctx.session.user.id).run()),
     userServices: protectedprocedure.query(({ ctx }) =>
       serviceOperations.getuserServices(ctx.session.user.id)
-    )
+    ),
+    listOffers: protectedprocedure.query(({ ctx }) => listOffer(ctx.session.user.id).run()),
+    offerDetail: protectedprocedure
+      .input(z.number())
+      .query(({ input, ctx }) => getOfferDetail(ctx.session.user.id, input).run()),
+    getProtectedFiles: protectedprocedure
+      .input(
+        z.object({
+          files: z.array(z.string())
+        })
+      )
+      .query(({ input, ctx }) =>
+        getProtectedFiles(ctx.session.user.id, input.files, 'ascend-rendering-offer').run()
+      )
   }),
   protectedMutation: router({
     sendMessage: protectedprocedure
@@ -153,11 +194,13 @@ export const appRouter = router({
               z.object({
                 type: z.literal('offer'),
                 offerId: z.number(),
+                idempotencyKey: z.string(),
                 voucherCode: z.string().optional()
               }),
               z.object({
                 type: z.literal('milestone'),
                 milestoneId: z.number(),
+                idempotencyKey: z.string(),
                 voucherCode: z.string().optional()
               })
             ])
@@ -175,11 +218,11 @@ export const appRouter = router({
             receiverId: z.number(),
             deadline: z.coerce
               .date()
-              .refine(data => data > new Date(), { message: 'The deadline must be in the future' })
+              .refine(date => date > new Date(), { message: 'date_in_the_past' })
           })
         )
-        .mutation(({ input, ctx }) => {
-          return createOfferWithMessage({
+        .mutation(({ input, ctx }) =>
+          createOfferWithMessage({
             description: input.description,
             deadline: input.deadline,
             serviceId: input.serviceId,
@@ -190,6 +233,7 @@ export const appRouter = router({
             terminatedAt: null,
             acceptedAt: null,
             paidDate: null,
+            comment: null,
             userIdReceiver: input.receiverId,
             // default: 1
             milestones: [
@@ -197,6 +241,8 @@ export const appRouter = router({
                 description: input.description,
                 deadline: input.deadline,
                 terminatedAt: null,
+                renderingFiles: [],
+                renderingText: null,
                 validatedAt: null,
                 priceMilestone: {
                   number: input.price,
@@ -208,8 +254,7 @@ export const appRouter = router({
               }
             ]
           }).run()
-        }),
-
+        ),
       accept: protectedprocedure
         .input(
           z.object({
@@ -225,6 +270,49 @@ export const appRouter = router({
             paymentProvider: input.paymentProvider,
             userId: ctx.session.user.id
           }).run()
+        ),
+      addRendering: protectedprocedure
+        .input(
+          z.object({
+            milestoneId: z.number(),
+            offerId: z.number(),
+            files: z
+              .array(
+                z.object({
+                  originalFilename: z.string(),
+                  path: z.string()
+                })
+              )
+              .max(config.userInteraction.maxUploadFileSize),
+            text: z.string().max(config.userInteraction.serviceDescriptionMaxLen).nullable()
+          })
+        )
+        .mutation(({ input, ctx }) =>
+          addRendering({
+            userId: ctx.session.user.id,
+            bucket: 'ascend-rendering-offer',
+            ...input
+          }).run()
+        ),
+      deleteAMilestoneFile: protectedprocedure.input(z.object({
+        offerId: z.number(),
+        milestoneId: z.number(),
+        hash: z.string()
+      })).mutation(({input, ctx}) => 
+        deleteAMilestoneFile({
+          userId: ctx.session.user.id,
+          bucket:  'ascend-rendering-offer',
+          ...input
+        }).run()
+      ),
+      closeOffer: protectedprocedure
+        .input(
+          z.object({
+            offerId: z.number()
+          })
+        )
+        .mutation(({ input, ctx }) =>
+          offerOperations.closeOffer(input.offerId, ctx.session.user.id)
         )
     })
   })

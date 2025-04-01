@@ -14,9 +14,15 @@ import ShareIcon from '@mui/icons-material/Share'
 import { ServiceInElastic } from '@/types/Services.type'
 import VerifiedIcon from '@mui/icons-material/Verified'
 import { Box, Tooltip } from '@mui/material'
-import { User } from '@prisma/client'
+import { UserDTO } from '@/server/dto/user.dto'
 
-export default function ServiceCard({ service, user }: { service: ServiceInElastic; user?: User }) {
+export default function ServiceCard({
+  service,
+  user
+}: {
+  service: ServiceInElastic
+  user?: UserDTO
+}) {
   const router = useRouter()
   const priceInService = service.prices[0]
   return (

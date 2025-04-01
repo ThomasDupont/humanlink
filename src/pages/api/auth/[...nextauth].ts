@@ -50,9 +50,7 @@ export const authOptions: NextAuthOptions = {
       }
 
       try {
-        const userExists = await userOperations.getUserByEmail(dbUser.email, {
-          withServices: false
-        })
+        const userExists = await userOperations.verifyIfUserExistsByEmail(dbUser.email)
 
         if (!userExists) {
           const createdUser = await userOperations.createUser(dbUser)

@@ -39,5 +39,108 @@ export const offersCrud = (prisma: PrismaClient) => {
     })
   }
 
-  return { createAnOffer, getAnOfferByIdAndReceiverId }
+  const listConcernOffers = (userId: number) => {
+    return prisma.offer.findMany({
+      where: {
+        OR: [{ userId }, { userIdReceiver: userId }],
+        isAccepted: true
+      },
+      orderBy: {
+        id: 'desc'
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstname: true,
+            lastname: true,
+            image: true,
+            jobTitle: true
+          }
+        },
+        userReceiver: {
+          select: {
+            id: true,
+            firstname: true,
+            lastname: true,
+            image: true,
+            jobTitle: true
+          }
+        },
+        milestone: {
+          include: {
+            priceMilestone: true
+          }
+        }
+      }
+    })
+  }
+
+  const getAnOfferByCreatorId = (offerId: number, userId: number) => {
+    return prisma.offer.findUnique({
+      where: {
+        id: offerId,
+        userId
+      },
+      include: {
+        milestone: {
+          include: {
+            priceMilestone: true
+          }
+        }
+      }
+    })
+  }
+
+  const getOfferDetailById = (offerId: number) => {
+    return prisma.offer.findUnique({
+      where: {
+        id: offerId
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstname: true,
+            lastname: true,
+            image: true,
+            jobTitle: true
+          }
+        },
+        userReceiver: {
+          select: {
+            id: true,
+            firstname: true,
+            lastname: true,
+            image: true,
+            jobTitle: true
+          }
+        },
+        milestone: {
+          include: {
+            priceMilestone: true
+          }
+        }
+      }
+    })
+  }
+
+  const closeOffer = (offerId: number, userId: number) => {
+    return prisma.offer.update({
+      where: { id: offerId, userId },
+      data: {
+        isTerminated: true,
+        terminatedAt: new Date()
+      }
+    })
+  }
+
+  return {
+    createAnOffer,
+    getAnOfferByIdAndReceiverId,
+    listConcernOffers,
+    getOfferDetailById,
+    getAnOfferByCreatorId,
+    closeOffer
+  }
 }
