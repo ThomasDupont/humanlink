@@ -129,7 +129,7 @@ const Item = ({ locale, offer }: { locale: SupportedLocale; offer: ConcernedOffe
             target="_blank"
           >
             <Button variant="outlined" color="primary">
-              Add a rendering
+              Detail
             </Button>
           </Link>
         </Box>

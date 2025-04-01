@@ -97,6 +97,9 @@ export default function OfferDetail({
     if (offer) fetchRendering()
   }, [offer])
 
+  const handleValidateRenderingOfOffer = () => {}
+  const handleDeclareDispute = () => {}
+
   if (error) {
     return (
       <Base>
@@ -239,7 +242,7 @@ export default function OfferDetail({
                 </Grid>
               </>
             ))*/}
-            {parsedOffer.couldAddRendering && parsedOffer.offerFrom == 'me' && (
+            {parsedOffer.couldAddRendering && parsedOffer.offerFrom === 'me' && (
               <Grid size={12}>
                 <Box display={'flex'} flexDirection={'row'} gap={1} justifyContent={'center'}>
                   <Button onClick={() => setRenderingBox(true)} variant="contained" color="primary">
@@ -268,6 +271,31 @@ export default function OfferDetail({
             }}
           />
         )}
+
+        <Box
+          sx={t => ({
+            borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
+            boxShadow: t.shadows[1],
+            backgroundColor: 'white',
+            mt: 2,
+            p: 2
+          })}
+        >
+          <Box display={'flex'} flexDirection={'row'} gap={1} justifyContent={'space-around'}>
+            {parsedOffer.offerFrom === 'other' && renderings.length && offer.isTerminated && (
+              <Button
+                onClick={() => handleValidateRenderingOfOffer()}
+                variant="contained"
+                color="primary"
+              >
+                Validate offer renderings
+              </Button>
+            )}
+            <Button onClick={() => handleDeclareDispute()} variant="contained" color="error">
+              Declare dispute
+            </Button>
+          </Box>
+        </Box>
       </Box>
     </Base>
   )

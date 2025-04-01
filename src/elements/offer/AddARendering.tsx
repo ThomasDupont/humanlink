@@ -66,12 +66,12 @@ export const AddARendering = ({
 
     setShowSpinner(true)
 
-    const upload = async (): Promise<
-      {
+    const upload = async (): Promise<{
+      files: {
         originalFilename: string
         hash: string
       }[]
-    > => {
+    }> => {
       if (formValues.files.length) {
         return fetch('/api/upload', {
           method: 'POST',
@@ -79,11 +79,11 @@ export const AddARendering = ({
         }).then(response => response.json())
       }
 
-      return []
+      return { files: [] }
     }
 
     try {
-      const files = await upload()
+      const { files } = await upload()
 
       await mutateAsync({
         offerId: offer.id,

@@ -74,7 +74,7 @@ export default function AccountModal({
           <StyledButton
             onClick={() => {
               handleClose()
-              router.push(`${router.locale}/dashboard`)
+              router.push(`/${router.locale}/dashboard`)
             }}
           >
             {t('myDashboard')}

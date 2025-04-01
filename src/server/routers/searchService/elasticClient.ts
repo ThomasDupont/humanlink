@@ -3,7 +3,7 @@ import https from 'https'
 import { env } from '../../env'
 
 export const elastic = () =>
-  env.NODE_ENV === 'development'
+  env.ELASTIC_URL.includes('localhost')
     ? axios.create({
         baseURL: env.ELASTIC_URL,
         headers: {
