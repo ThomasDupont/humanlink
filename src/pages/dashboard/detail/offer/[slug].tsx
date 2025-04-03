@@ -1,3 +1,5 @@
+import BaseModal from '@/components/BaseModal'
+import ValidateOfferRenderingsModal from '@/components/Modals/ValidateOfferRenderings.modal'
 import { Spinner } from '@/components/Spinner'
 import { SupportedLocale } from '@/config'
 import { AddARendering } from '@/elements/offer/AddARendering'
@@ -84,7 +86,9 @@ export default function OfferDetail({
     isFetching,
     refetch
   } = trpc.protectedGet.offerDetail.useQuery(offerId)
+
   const [renderingBox, setRenderingBox] = useState(false)
+  const [openValidateRenderingModal, setOpenValidateRenderingModal] = useState(false)
 
   const { parseOffer } = useOfferHook(locale, new Date())
   const {
@@ -97,7 +101,6 @@ export default function OfferDetail({
     if (offer) fetchRendering()
   }, [offer])
 
-  const handleValidateRenderingOfOffer = () => {}
   const handleDeclareDispute = () => {}
 
   if (error) {
@@ -281,10 +284,21 @@ export default function OfferDetail({
             p: 2
           })}
         >
+          <BaseModal
+            open={openValidateRenderingModal}
+            handleClose={() => setOpenValidateRenderingModal(false)}
+          >
+            <ValidateOfferRenderingsModal
+              handleClose={() => {
+                setOpenValidateRenderingModal(false)
+              }}
+              offer={offer}
+            />
+          </BaseModal>
           <Box display={'flex'} flexDirection={'row'} gap={1} justifyContent={'space-around'}>
             {parsedOffer.offerFrom === 'other' && renderings.length && offer.isTerminated && (
               <Button
-                onClick={() => handleValidateRenderingOfOffer()}
+                onClick={() => setOpenValidateRenderingModal(true)}
                 variant="contained"
                 color="primary"
               >

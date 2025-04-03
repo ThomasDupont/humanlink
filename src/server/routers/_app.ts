@@ -294,17 +294,21 @@ export const appRouter = router({
             ...input
           }).run()
         ),
-      deleteAMilestoneFile: protectedprocedure.input(z.object({
-        offerId: z.number(),
-        milestoneId: z.number(),
-        hash: z.string()
-      })).mutation(({input, ctx}) => 
-        deleteAMilestoneFile({
-          userId: ctx.session.user.id,
-          bucket:  'ascend-rendering-offer',
-          ...input
-        }).run()
-      ),
+      deleteAMilestoneFile: protectedprocedure
+        .input(
+          z.object({
+            offerId: z.number(),
+            milestoneId: z.number(),
+            hash: z.string()
+          })
+        )
+        .mutation(({ input, ctx }) =>
+          deleteAMilestoneFile({
+            userId: ctx.session.user.id,
+            bucket: 'ascend-rendering-offer',
+            ...input
+          }).run()
+        ),
       closeOffer: protectedprocedure
         .input(
           z.object({
@@ -313,7 +317,14 @@ export const appRouter = router({
         )
         .mutation(({ input, ctx }) =>
           offerOperations.closeOffer(input.offerId, ctx.session.user.id)
+        ),
+      acceptOfferRenderingAndCreateMoneyTransfert: protectedprocedure
+        .input(
+          z.object({
+            offerId: z.number()
+          })
         )
+        .mutation(() => {})
     })
   })
 })
