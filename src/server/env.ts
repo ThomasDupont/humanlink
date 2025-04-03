@@ -13,7 +13,12 @@ const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string(),
   AUTH_SECRET: z.string(),
   STRIPE_API_KEY: z.string(),
-  NEXT_PUBLIC_STRIPE_API_KEY_PUBLIC: z.string()
+  NEXT_PUBLIC_STRIPE_API_KEY_PUBLIC: z.string(),
+  AWS_REGION: z.string(),
+  AWS_ENDPOINT_URL_IAM: z.string(),
+  AWS_ENDPOINT_URL_S3: z.string(),
+  AWS_SECRET_ACCESS_KEY: z.string(),
+  AWS_ACCESS_KEY_ID: z.string()
 })
 
 const _env = envSchema.safeParse(process.env)
