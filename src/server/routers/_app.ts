@@ -324,6 +324,14 @@ export const appRouter = router({
             offerId: z.number()
           })
         )
+        .mutation(() => {}),
+      declareADisputeOnOffer: protectedprocedure
+        .input(
+          z.object({
+            offerId: z.number(),
+            comment: z.string().min(1).max(config.userInteraction.serviceDescriptionMaxLen)
+          })
+        )
         .mutation(() => {})
     })
   })

@@ -1,4 +1,5 @@
 import BaseModal from '@/components/BaseModal'
+import DeclareADisputeModal from '@/components/Modals/DeclareADisputeOnOffer'
 import ValidateOfferRenderingsModal from '@/components/Modals/ValidateOfferRenderings.modal'
 import { Spinner } from '@/components/Spinner'
 import { SupportedLocale } from '@/config'
@@ -89,6 +90,7 @@ export default function OfferDetail({
 
   const [renderingBox, setRenderingBox] = useState(false)
   const [openValidateRenderingModal, setOpenValidateRenderingModal] = useState(false)
+  const [openDeclareADisputeModal, setOpenDeclareADisputeModal] = useState(false)
 
   const { parseOffer } = useOfferHook(locale, new Date())
   const {
@@ -100,8 +102,6 @@ export default function OfferDetail({
   useEffect(() => {
     if (offer) fetchRendering()
   }, [offer])
-
-  const handleDeclareDispute = () => {}
 
   if (error) {
     return (
@@ -295,6 +295,17 @@ export default function OfferDetail({
               offer={offer}
             />
           </BaseModal>
+          <BaseModal
+            open={openDeclareADisputeModal}
+            handleClose={() => setOpenDeclareADisputeModal(false)}
+          >
+            <DeclareADisputeModal
+              handleClose={() => {
+                setOpenDeclareADisputeModal(false)
+              }}
+              offer={offer}
+            />
+          </BaseModal>
           <Box display={'flex'} flexDirection={'row'} gap={1} justifyContent={'space-around'}>
             {parsedOffer.offerFrom === 'other' && renderings.length && offer.isTerminated && (
               <Button
@@ -305,7 +316,11 @@ export default function OfferDetail({
                 Validate offer renderings
               </Button>
             )}
-            <Button onClick={() => handleDeclareDispute()} variant="contained" color="error">
+            <Button
+              onClick={() => setOpenDeclareADisputeModal(true)}
+              variant="contained"
+              color="error"
+            >
               Declare dispute
             </Button>
           </Box>
