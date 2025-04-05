@@ -1,5 +1,5 @@
 import { PaymentProvider, Prisma } from '@prisma/client'
-import { Exit, Scope, Effect as T } from 'effect'
+import { Exit, Effect as T } from 'effect'
 import { TRPCError } from '@trpc/server'
 import { OfferOperations, TransactionOperations } from '../../databaseOperations/prisma.provider'
 import { PaymentProviderFactory } from '../../paymentOperations/payment.provider'
@@ -17,7 +17,6 @@ export const acceptOfferEffect = (args: AcceptOfferEffectArgs) =>
     const transactionOperations = yield* TransactionOperations
     const paymentProviderFactory = yield* PaymentProviderFactory
     const offerOperations = yield* OfferOperations
-    const rollbackOps = yield* Scope.make()
 
     const paymentProvider = paymentProviderFactory[args.paymentProvider]()
 
@@ -34,7 +33,7 @@ export const acceptOfferEffect = (args: AcceptOfferEffectArgs) =>
       }
     }).pipe(T.either)
 
-    return T.tryPromise({
+    const getPayment = T.tryPromise({
       try: () => paymentProvider.getPaymentById(args.paymentId),
       catch: error => {
         logger.error({
@@ -62,16 +61,18 @@ export const acceptOfferEffect = (args: AcceptOfferEffectArgs) =>
           })
         }
       ),
-      T.map(payment => {
-        Scope.addFinalizer(rollbackOps, refundPayment)
-        return {
-          providerPaymentId: args.paymentId,
-          userId: args.userId,
-          fromId: args.offerId,
-          provider: args.paymentProvider,
-          amount: payment.amount
-        }
-      }),
+      T.map(payment => ({
+        providerPaymentId: args.paymentId,
+        userId: args.userId,
+        fromId: args.offerId,
+        provider: args.paymentProvider,
+        amount: payment.amount
+      }))
+    )
+
+    return T.acquireRelease(getPayment, (_, exit) =>
+      Exit.isFailure(exit) ? refundPayment : T.void
+    ).pipe(
       T.flatMap(obj =>
         T.tryPromise({
           try: () => offerOperations.getAnOfferByIdAndReceiverId(args.offerId, args.userId),
@@ -93,20 +94,27 @@ export const acceptOfferEffect = (args: AcceptOfferEffectArgs) =>
             })
           }
         }).pipe(
-          T.filterOrFail(
-            offer => offer !== null && offer.userId !== null,
-            () => {
-              logger.error({
-                cause: 'offer_not_found',
-                message: `offer ${args.offerId} not found on db`,
-                detailedError: {}
+          T.flatMap(offer => {
+            if (offer !== null && offer.userId !== null) {
+              const { userId, ...rest } = offer
+              return T.succeed({
+                userId,
+                ...rest
               })
-              return new TRPCError({
+            }
+
+            logger.error({
+              cause: 'offer_not_found',
+              message: `offer ${args.offerId} not found on db`,
+              detailedError: {}
+            })
+            return T.fail(
+              new TRPCError({
                 code: 'NOT_FOUND',
                 message: 'offer_not_found_for_user'
               })
-            }
-          ),
+            )
+          }),
           T.flatMap(offer =>
             T.tryPromise({
               try: () =>
@@ -116,8 +124,7 @@ export const acceptOfferEffect = (args: AcceptOfferEffectArgs) =>
                   userId: args.userId,
                   offerId: offer!.id,
                   provider: args.paymentProvider,
-                  amount: obj.amount,
-                  eventType: 'payment'
+                  amount: obj.amount
                 }),
               catch: error => {
                 logger.error({
@@ -138,12 +145,8 @@ export const acceptOfferEffect = (args: AcceptOfferEffectArgs) =>
               }
             })
           ),
-          T.mapError(error => {
-            Scope.close(rollbackOps, Exit.void)
-            return error
-          }),
           T.map(() => true)
         )
       )
     )
-  }).pipe(T.flatten)
+  }).pipe(T.flatten, T.scoped)

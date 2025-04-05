@@ -179,7 +179,8 @@ describe('upsert service test', () => {
     }
 
     serviceOperationsMock.updateService.mockResolvedValueOnce(serviceWithPrice)
-    syncMock.sync.mockRejectedValue(new Error('error'))
+    const error = new Error('error')
+    syncMock.sync.mockRejectedValue(error)
 
     const upsertService = upsertServiceEffect({
       userId: 1,
@@ -198,20 +199,23 @@ describe('upsert service test', () => {
           serviceOperationsMock as unknown as typeof serviceOperations
         ),
         T.provideService(Sync, syncMock),
-        T.mapError(e => {
-          expect(Date.now() - time).toBeGreaterThan(100)
-          expect(e).toBeInstanceOf(Error)
-          expect(loggerErrorMock).toBeCalledTimes(2)
-          expect(loggerErrorMock).toBeCalledWith({
-            cause: 'sync_error',
-            message: `service 1 sync error`,
-            detailedError: 'error'
-          })
-        }),
-        T.runPromiseExit
+        T.runPromise
       )
+      .then(() => true)
+      .catch(err => {
+        expect(Date.now() - time).toBeGreaterThan(100)
+        expect(err).toBeInstanceOf(Error)
+        expect(loggerErrorMock).toBeCalledTimes(2)
+        expect(loggerErrorMock).toBeCalledWith({
+          cause: 'sync_error',
+          message: `service 1 sync error`,
+          detailedError: error
+        })
+
+        return false
+      })
       .then(exit => {
-        expect(exit._tag).toBe('Failure')
+        expect(exit).toBe(false)
       })
   })
 })

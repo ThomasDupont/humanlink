@@ -19,7 +19,7 @@ export default function ValidateOfferRenderingsModal({
   const [showSpinner, setShowSpinner] = useState(false)
 
   const { mutateAsync } =
-    trpc.protectedMutation.offer.acceptOfferRenderingAndCreateMoneyTransfert.useMutation()
+    trpc.protectedMutation.offer.acceptOfferRenderingsAndCreateMoneyTransfert.useMutation()
 
   const handleValidateRenderingOfOffer = () => {
     setShowSpinner(true)

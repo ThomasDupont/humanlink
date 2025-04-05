@@ -1,12 +1,20 @@
-import { PaymentEventType, PaymentProvider, PrismaClient } from '@prisma/client'
+import { PaymentProvider, PrismaClient } from '@prisma/client'
 
 type AddPaymentTransactionArgs = {
   sellerId: number
   amount: number
   userId: number
-  eventType: PaymentEventType
   provider: PaymentProvider
   providerPaymentId: string
+  offerId: number
+}
+
+type AcceptOfferRenderingsAndCreateMoneyTransfertTransactionArgs = {
+  sellerId: number
+  balanceId: number
+  fees: number
+  amount: number
+  userId: number
   offerId: number
 }
 
@@ -28,7 +36,7 @@ export const transaction = (prisma: PrismaClient) => {
       prisma.userBalanceEventsLog.create({
         data: {
           amount: args.amount,
-          eventType: args.eventType,
+          eventType: 'payment',
           provider: args.provider,
           providerPaymentId: args.providerPaymentId,
           from: 'offer',
@@ -110,5 +118,58 @@ export const transaction = (prisma: PrismaClient) => {
     })
   }
 
-  return { acceptOfferTransaction, addMilestoneRendering, deleteAMilestoneFile }
+  const acceptOfferRenderingsAndCreateMoneyTransfertTransaction = (
+    args: AcceptOfferRenderingsAndCreateMoneyTransfertTransactionArgs
+  ) => {
+    const updatedAt = new Date()
+    return prisma.$transaction([
+      prisma.userBalance.update({
+        where: { id: args.balanceId },
+        data: {
+          balance: {
+            increment: args.amount
+          },
+          updatedAt: updatedAt
+        }
+      }),
+      prisma.transaction.create({
+        data: {
+          createdAt: updatedAt,
+          amount: args.amount,
+          buyerId: args.userId,
+          offerId: args.offerId,
+          sellerId: args.sellerId,
+          type: 'transfertToSellerBalance',
+          milestoneId: null,
+          comment: ''
+        }
+      }),
+      prisma.transaction.create({
+        data: {
+          createdAt: updatedAt,
+          amount: args.fees,
+          buyerId: args.userId,
+          offerId: args.offerId,
+          sellerId: args.sellerId,
+          type: 'fees',
+          milestoneId: null,
+          comment: `Main amount ${args.amount}`
+        }
+      }),
+      prisma.offer.update({
+        where: { id: args.offerId, userIdReceiver: args.userId },
+        data: {
+          isPaid: true,
+          paidDate: updatedAt
+        }
+      })
+    ])
+  }
+
+  return {
+    acceptOfferTransaction,
+    addMilestoneRendering,
+    deleteAMilestoneFile,
+    acceptOfferRenderingsAndCreateMoneyTransfertTransaction
+  }
 }

@@ -318,7 +318,7 @@ export const appRouter = router({
         .mutation(({ input, ctx }) =>
           offerOperations.closeOffer(input.offerId, ctx.session.user.id)
         ),
-      acceptOfferRenderingAndCreateMoneyTransfert: protectedprocedure
+      acceptOfferRenderingsAndCreateMoneyTransfert: protectedprocedure
         .input(
           z.object({
             offerId: z.number()

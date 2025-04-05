@@ -81,25 +81,38 @@ export const addRenderingEffect = ({
             })
           }
         }).pipe(
-          T.filterOrFail(
-            offer =>
-              offer !== null && offer.milestone.find(m => m.id === milestoneId) !== undefined,
-            () => {
-              logger.error({
-                cause: 'offer_or_milestone_not_found',
-                message: `offer ${offerId} or milestone ${milestoneId} not found on db`,
-                detailedError: {}
+          T.flatMap(offer => {
+            if (
+              offer !== null &&
+              offer.milestone.find(m => m.id === milestoneId) !== undefined &&
+              offer.userId !== null &&
+              offer.userIdReceiver !== null
+            ) {
+              const { milestone, userId, userIdReceiver, ...rest } = offer
+              return T.succeed({
+                userIdReceiver,
+                userId,
+                milestone,
+                ...rest
               })
-              return new TRPCError({
+            }
+
+            logger.error({
+              cause: 'offer_or_milestone_not_found',
+              message: `offer ${offerId} or milestone ${milestoneId} not found on db`,
+              detailedError: {}
+            })
+            return T.fail(
+              new TRPCError({
                 code: 'NOT_FOUND',
                 message: 'offer_or_milestone_not_found_for_user'
               })
-            }
-          ),
+            )
+          }),
           T.map(offer =>
             fileinfo.map(file => ({
               ...file,
-              relatedUsers: [offer!.userId!, offer!.userIdReceiver!]
+              relatedUsers: [offer.userId, offer.userIdReceiver]
             }))
           )
         )
