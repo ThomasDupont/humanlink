@@ -22,6 +22,7 @@ import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
 import { Category, Lang, PaymentProvider } from '@prisma/client'
 import {
   acceptOffer,
+  acceptOfferRenderingsAndCreateMoneyTransfert,
   addRendering,
   createOfferWithMessage,
   createStripePaymentIntent,
@@ -324,7 +325,9 @@ export const appRouter = router({
             offerId: z.number()
           })
         )
-        .mutation(() => {}),
+        .mutation(({ input, ctx }) =>
+          acceptOfferRenderingsAndCreateMoneyTransfert(input.offerId, ctx.session.user.id).run()
+        ),
       declareADisputeOnOffer: protectedprocedure
         .input(
           z.object({

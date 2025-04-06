@@ -1,5 +1,6 @@
 import { Effect as T } from 'effect'
 import {
+  effectBalanceOperations,
   effectMessageOperations,
   effectOfferOperations,
   effectServiceOperations,
@@ -16,6 +17,7 @@ import formidable from 'formidable'
 import { uploadFilesEffect } from './mutations/uploadFile'
 import { effectStorageProviderFactory } from '../storage/storage.provider'
 import { addRenderingEffect, AddRenderingEffectArgs } from './mutations/addRendering'
+import { acceptOfferRenderingsAndCreateMoneyTransfertEffect } from './mutations/acceptOfferRenderingsAndCreateMoneyTransfert'
 
 export const upsertService = (args: UpsertServiceArgs) => ({
   run: () =>
@@ -93,6 +95,20 @@ export const addRendering = (args: AddRenderingEffectArgs) => ({
       effectOfferOperations,
       effectTransactionOperations,
       effectStorageProviderFactory,
+      T.runPromise
+    )
+})
+
+export const acceptOfferRenderingsAndCreateMoneyTransfert = (offerId: number, userId: number) => ({
+  run: () =>
+    acceptOfferRenderingsAndCreateMoneyTransfertEffect({
+      offerId,
+      userId
+    }).pipe(
+      effectLogger,
+      effectBalanceOperations,
+      effectOfferOperations,
+      effectTransactionOperations,
       T.runPromise
     )
 })
