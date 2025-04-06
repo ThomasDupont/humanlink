@@ -7,11 +7,11 @@ import {
   OfferOperations,
   transactionOperations,
   TransactionOperations
-} from '../../databaseOperations/prisma.provider'
+} from '../../../databaseOperations/prisma.provider'
 import {
   paymentProviderFactory,
   PaymentProviderFactory
-} from '../../paymentOperations/payment.provider'
+} from '../../../paymentOperations/payment.provider'
 
 describe('upsert service test', () => {
   const loggerErrorMock = vi.fn()
@@ -159,7 +159,6 @@ describe('upsert service test', () => {
         return true
       })
       .catch(error => {
-        console.log(error)
         expect(error.message).toBe('offer_not_found_for_user')
         expect(paymentMock.refundFullTransaction).toBeCalledTimes(1)
         expect(loggerErrorMock).toBeCalledWith({

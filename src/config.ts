@@ -14,6 +14,7 @@ type Config = {
   paymentProvider: 'stripe'
   defaultCurrency: Currency
   storageProvider: 'tigris'
+  emailProvider: 'mailjet'
   fees: number
   userInteraction: {
     descriptionMaxLen: number
@@ -37,6 +38,7 @@ const config: Config = {
   paymentProvider: 'stripe',
   defaultCurrency: 'EUR',
   storageProvider: 'tigris',
+  emailProvider: 'mailjet',
   fees: 0.08,
   userInteraction: {
     descriptionMaxLen: 2000,

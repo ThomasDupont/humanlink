@@ -1,6 +1,6 @@
 import { Logger } from '@/server/logger'
 import { Exit, pipe, Effect as T } from 'effect'
-import { StorageProviderFactory } from '../../storage/storage.provider'
+import { StorageProviderFactory } from '../../../storage/storage.provider'
 import { TRPCError } from '@trpc/server'
 import formidable from 'formidable'
 import config from '@/config'

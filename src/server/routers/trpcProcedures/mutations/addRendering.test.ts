@@ -2,13 +2,13 @@ import { describe, expect, it, vi } from 'vitest'
 import { Effect as T } from 'effect'
 import { addRenderingEffect } from './addRendering'
 import { Logger } from '@/server/logger'
-import { storageProviderFactory, StorageProviderFactory } from '../../storage/storage.provider'
+import { storageProviderFactory, StorageProviderFactory } from '../../../storage/storage.provider'
 import {
   offerOperations,
   OfferOperations,
   transactionOperations,
   TransactionOperations
-} from '../../databaseOperations/prisma.provider'
+} from '../../../databaseOperations/prisma.provider'
 
 describe('Test addRendering', () => {
   const loggerErrorMock = vi.fn()
@@ -18,7 +18,7 @@ describe('Test addRendering', () => {
   }
 
   const transactionOperationsMock = {
-    addMilestoneRendering: vi.fn()
+    addMilestoneRenderingTransaction: vi.fn()
   }
 
   const getFileInfoMock = vi.fn()
@@ -45,7 +45,7 @@ describe('Test addRendering', () => {
       ]
     })
 
-    transactionOperationsMock.addMilestoneRendering.mockResolvedValueOnce({})
+    transactionOperationsMock.addMilestoneRenderingTransaction.mockResolvedValueOnce({})
 
     addRenderingEffect({
       userId: 1,
@@ -73,9 +73,13 @@ describe('Test addRendering', () => {
         T.provideService(OfferOperations, offerOperationsMock as unknown as typeof offerOperations),
         T.runPromise
       )
+      .catch(v => {
+        console.error(v)
+        return v
+      })
       .then(() => {
         expect(getFileInfoMock).toHaveBeenCalledWith('1/test')
-        expect(transactionOperationsMock.addMilestoneRendering).toHaveBeenCalledWith({
+        expect(transactionOperationsMock.addMilestoneRenderingTransaction).toHaveBeenCalledWith({
           text: null,
           milestoneId: 10,
           files: [

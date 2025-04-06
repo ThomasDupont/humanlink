@@ -1,7 +1,7 @@
 import { Effect as T } from 'effect'
 import { Logger } from '@/server/logger'
 import { TRPCError } from '@trpc/server'
-import { OfferOperations, ServiceOperations } from '../../databaseOperations/prisma.provider'
+import { OfferOperations, ServiceOperations } from '../../../databaseOperations/prisma.provider'
 
 export const listOffersEffect = (userId: number) =>
   T.gen(function* () {

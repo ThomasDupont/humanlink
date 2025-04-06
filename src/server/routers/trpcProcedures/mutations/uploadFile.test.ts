@@ -3,7 +3,7 @@ import { Effect as T } from 'effect'
 import { uploadFilesEffect } from './uploadFile'
 import formidable from 'formidable'
 import { Logger } from '@/server/logger'
-import { StorageProviderFactory, storageProviderFactory } from '../../storage/storage.provider'
+import { StorageProviderFactory, storageProviderFactory } from '../../../storage/storage.provider'
 
 describe('upload service test', () => {
   const loggerErrorMock = vi.fn()

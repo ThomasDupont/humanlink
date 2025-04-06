@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { elastic as elasticFun } from '@/server/routers/searchService/elasticClient'
+import { elastic as elasticFun } from '@/server/searchService/elasticClient'
 import DOMPurify from 'dompurify'
 import { JSDOM } from 'jsdom'
 import { removeHtmlTags } from '@/utils/cleanHtmlTag'

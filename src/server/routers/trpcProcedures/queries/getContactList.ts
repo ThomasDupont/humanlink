@@ -1,7 +1,7 @@
 import { Effect as T } from 'effect'
 import { Logger } from '@/server/logger'
 import { TRPCError } from '@trpc/server'
-import { MessageOperations, UserOperations } from '../../databaseOperations/prisma.provider'
+import { MessageOperations, UserOperations } from '../../../databaseOperations/prisma.provider'
 import { singleUserToDisplayUserForOther } from '@/server/dto/user.dto'
 
 export const getContactListEffect = (userId: number) =>

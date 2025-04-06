@@ -5,19 +5,20 @@ import {
   effectOfferOperations,
   effectServiceOperations,
   effectTransactionOperations
-} from '../databaseOperations/prisma.provider'
+} from '../../databaseOperations/prisma.provider'
 import { effectLogger } from '@/server/logger'
-import { effectSync } from '../databaseOperations/sync/sync'
+import { effectSync } from '../../databaseOperations/sync/sync'
 import { createStripePaymentIntentForOfferEffect } from './mutations/createStripePaymentIntentForOffer'
-import { effectPaymentProviderFactory } from '../paymentOperations/payment.provider'
+import { effectPaymentProviderFactory } from '../../paymentOperations/payment.provider'
 import { acceptOfferEffect, AcceptOfferEffectArgs } from './mutations/acceptOffer'
 import { CreateOffer, createOfferWithMessageEffect } from './mutations/createOfferWithMessage'
 import { UpsertServiceArgs, upsertServiceEffect } from './mutations/upsertService'
 import formidable from 'formidable'
 import { uploadFilesEffect } from './mutations/uploadFile'
-import { effectStorageProviderFactory } from '../storage/storage.provider'
+import { effectStorageProviderFactory } from '../../storage/storage.provider'
 import { addRenderingEffect, AddRenderingEffectArgs } from './mutations/addRendering'
 import { acceptOfferRenderingsAndCreateMoneyTransfertEffect } from './mutations/acceptOfferRenderingsAndCreateMoneyTransfert'
+import { CloseMilestoneArgs, closeMilestoneEffect } from './mutations/closeMilestone'
 
 export const upsertService = (args: UpsertServiceArgs) => ({
   run: () =>
@@ -107,6 +108,16 @@ export const acceptOfferRenderingsAndCreateMoneyTransfert = (offerId: number, us
     }).pipe(
       effectLogger,
       effectBalanceOperations,
+      effectOfferOperations,
+      effectTransactionOperations,
+      T.runPromise
+    )
+})
+
+export const closeMilestone = (args: CloseMilestoneArgs) => ({
+  run: () =>
+    closeMilestoneEffect(args).pipe(
+      effectLogger,
       effectOfferOperations,
       effectTransactionOperations,
       T.runPromise

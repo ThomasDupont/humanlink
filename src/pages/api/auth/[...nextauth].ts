@@ -4,7 +4,7 @@ import NextAuth, { NextAuthOptions } from 'next-auth'
 import LinkedinProvider, { LinkedInProfile } from 'next-auth/providers/linkedin'
 import GoogleProvider from 'next-auth/providers/google'
 import { User } from '@prisma/client'
-import { userOperations } from '@/server/routers/databaseOperations/prisma.provider'
+import { userOperations } from '@/server/databaseOperations/prisma.provider'
 import { logger } from '@/server/logger'
 
 export const authOptions: NextAuthOptions = {

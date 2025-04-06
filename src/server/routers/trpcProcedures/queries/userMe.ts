@@ -1,6 +1,6 @@
 import { Logger } from '@/server/logger'
 import { Effect as T } from 'effect'
-import { UserOperations } from '../../databaseOperations/prisma.provider'
+import { UserOperations } from '../../../databaseOperations/prisma.provider'
 import { TRPCError } from '@trpc/server'
 
 export const userMeEffect = (id: number) =>

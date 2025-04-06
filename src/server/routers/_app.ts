@@ -4,12 +4,11 @@ import { JSDOM } from 'jsdom'
 import { z } from 'zod'
 import {
   messageOperations,
-  offerOperations,
   serviceOperations,
   userOperations
-} from './databaseOperations/prisma.provider'
+} from '../databaseOperations/prisma.provider'
 import config from '@/config'
-import searchFactory from './searchService/search.factory'
+import searchFactory from '../searchService/search.factory'
 import { protectedprocedure } from './middlewares'
 import {
   getContactList,
@@ -24,6 +23,7 @@ import {
   acceptOffer,
   acceptOfferRenderingsAndCreateMoneyTransfert,
   addRendering,
+  closeMilestone,
   createOfferWithMessage,
   createStripePaymentIntent,
   upsertService
@@ -272,6 +272,25 @@ export const appRouter = router({
             userId: ctx.session.user.id
           }).run()
         ),
+      acceptOfferRenderingsAndCreateMoneyTransfert: protectedprocedure
+        .input(
+          z.object({
+            offerId: z.number()
+          })
+        )
+        .mutation(({ input, ctx }) =>
+          acceptOfferRenderingsAndCreateMoneyTransfert(input.offerId, ctx.session.user.id).run()
+        ),
+      declareADisputeOnOffer: protectedprocedure
+        .input(
+          z.object({
+            offerId: z.number(),
+            comment: z.string().min(1).max(config.userInteraction.serviceDescriptionMaxLen)
+          })
+        )
+        .mutation(() => {})
+    }),
+    milestone: router({
       addRendering: protectedprocedure
         .input(
           z.object({
@@ -310,32 +329,20 @@ export const appRouter = router({
             ...input
           }).run()
         ),
-      closeOffer: protectedprocedure
+      closeMilestone: protectedprocedure
         .input(
           z.object({
+            milestoneId: z.number(),
             offerId: z.number()
           })
         )
-        .mutation(({ input, ctx }) =>
-          offerOperations.closeOffer(input.offerId, ctx.session.user.id)
-        ),
-      acceptOfferRenderingsAndCreateMoneyTransfert: protectedprocedure
-        .input(
-          z.object({
-            offerId: z.number()
+        .mutation(({ input: { milestoneId, offerId }, ctx }) =>
+          closeMilestone({
+            milestoneId,
+            userId: ctx.session.user.id,
+            offerId
           })
         )
-        .mutation(({ input, ctx }) =>
-          acceptOfferRenderingsAndCreateMoneyTransfert(input.offerId, ctx.session.user.id).run()
-        ),
-      declareADisputeOnOffer: protectedprocedure
-        .input(
-          z.object({
-            offerId: z.number(),
-            comment: z.string().min(1).max(config.userInteraction.serviceDescriptionMaxLen)
-          })
-        )
-        .mutation(() => {})
     })
   })
 })

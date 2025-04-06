@@ -20,5 +20,14 @@ export const milestoneCrud = (prisma: PrismaClient) => {
     })
   }
 
-  return { addRenderingToAMilestone }
+  const closeMilestone = (id: number) => {
+    return prisma.milestone.update({
+      where: { id },
+      data: {
+        terminatedAt: new Date()
+      }
+    })
+  }
+
+  return { addRenderingToAMilestone, closeMilestone }
 }

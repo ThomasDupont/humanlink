@@ -4,7 +4,7 @@ import {
   BalanceOperations,
   OfferOperations,
   TransactionOperations
-} from '../../databaseOperations/prisma.provider'
+} from '../../../databaseOperations/prisma.provider'
 import { Prisma } from '@prisma/client'
 import { TRPCError } from '@trpc/server'
 import config from '@/config'
@@ -34,12 +34,12 @@ export const acceptOfferRenderingsAndCreateMoneyTransfertEffect = ({
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
           return new TRPCError({
             code: 'NOT_FOUND',
-            message: 'offer_not_found_for_user'
+            message: 'offer_not_found_for_user_or_not_accepted_or_not_terminated'
           })
         }
         return new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'offer_not_found_for_user'
+          message: 'offer_not_found_for_user_or_not_accepted_or_not_terminated'
         })
       }
     }).pipe(

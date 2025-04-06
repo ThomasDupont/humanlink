@@ -30,6 +30,12 @@ type AddMilestoneRendering = {
   text: string | null
 }
 
+type CloseMilestoneAndOfferArgs = {
+  hasDoneAllMilestone: boolean
+  milestoneId: number
+  offerId: number
+}
+
 export const transaction = (prisma: PrismaClient) => {
   const acceptOfferTransaction = (args: AddPaymentTransactionArgs) => {
     return prisma.$transaction([
@@ -65,7 +71,7 @@ export const transaction = (prisma: PrismaClient) => {
     ])
   }
 
-  const addMilestoneRendering = (args: AddMilestoneRendering) => {
+  const addMilestoneRenderingTransaction = (args: AddMilestoneRendering) => {
     return prisma.$transaction(async tx => {
       for (const file of args.files) {
         const existing = await tx.file.findUnique({
@@ -97,7 +103,7 @@ export const transaction = (prisma: PrismaClient) => {
     })
   }
 
-  const deleteAMilestoneFile = (milestoneId: number, hash: string) => {
+  const deleteAMilestoneFileTransaction = (milestoneId: number, hash: string) => {
     return prisma.$transaction(async tx => {
       const milestone = await tx.milestone.findUnique({
         where: { id: milestoneId }
@@ -166,10 +172,33 @@ export const transaction = (prisma: PrismaClient) => {
     ])
   }
 
+  const closeMilestoneAndOfferTransaction = (args: CloseMilestoneAndOfferArgs) => {
+    return prisma.$transaction(async tx => {
+      const terminatedAt = new Date()
+      await tx.milestone.update({
+        where: { id: args.milestoneId },
+        data: {
+          terminatedAt
+        }
+      })
+
+      if (args.hasDoneAllMilestone) {
+        await tx.offer.update({
+          where: { id: args.offerId },
+          data: {
+            terminatedAt,
+            isTerminated: true
+          }
+        })
+      }
+    })
+  }
+
   return {
     acceptOfferTransaction,
-    addMilestoneRendering,
-    deleteAMilestoneFile,
-    acceptOfferRenderingsAndCreateMoneyTransfertTransaction
+    addMilestoneRenderingTransaction,
+    deleteAMilestoneFileTransaction,
+    acceptOfferRenderingsAndCreateMoneyTransfertTransaction,
+    closeMilestoneAndOfferTransaction
   }
 }

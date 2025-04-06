@@ -1,8 +1,8 @@
 import { PaymentProvider, Prisma } from '@prisma/client'
 import { Exit, Effect as T } from 'effect'
 import { TRPCError } from '@trpc/server'
-import { OfferOperations, TransactionOperations } from '../../databaseOperations/prisma.provider'
-import { PaymentProviderFactory } from '../../paymentOperations/payment.provider'
+import { OfferOperations, TransactionOperations } from '../../../databaseOperations/prisma.provider'
+import { PaymentProviderFactory } from '../../../paymentOperations/payment.provider'
 import { Logger } from '@/server/logger'
 
 export type AcceptOfferEffectArgs = {

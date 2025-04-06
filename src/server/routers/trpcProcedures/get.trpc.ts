@@ -6,13 +6,13 @@ import {
   effectOfferOperations,
   effectServiceOperations,
   effectUserOperations
-} from '../databaseOperations/prisma.provider'
+} from '../../databaseOperations/prisma.provider'
 import { userMeEffect } from './queries/userMe'
 import { getContactListEffect } from './queries/getContactList'
 import { listOffersEffect } from './queries/listOffers'
 import { getOfferDetailEffect } from './queries/getOfferDetail'
 import { getProtectedFilesEffect } from './queries/getProtectedFiles'
-import { effectStorageProviderFactory } from '../storage/storage.provider'
+import { effectStorageProviderFactory } from '../../storage/storage.provider'
 
 export const userMe = (id: number) => ({
   run: () => userMeEffect(id).pipe(effectLogger, effectUserOperations, T.runPromise)

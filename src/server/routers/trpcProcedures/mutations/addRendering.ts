@@ -1,7 +1,7 @@
 import { Logger } from '@/server/logger'
 import { Effect as T } from 'effect'
-import { OfferOperations, TransactionOperations } from '../../databaseOperations/prisma.provider'
-import { StorageProviderFactory } from '../../storage/storage.provider'
+import { OfferOperations, TransactionOperations } from '../../../databaseOperations/prisma.provider'
+import { StorageProviderFactory } from '../../../storage/storage.provider'
 import config from '@/config'
 import { TRPCError } from '@trpc/server'
 import { Prisma } from '@prisma/client'
@@ -120,7 +120,7 @@ export const addRenderingEffect = ({
       T.flatMap(fileInfo =>
         T.tryPromise({
           try: () =>
-            transactionOperations.addMilestoneRendering({
+            transactionOperations.addMilestoneRenderingTransaction({
               files: fileInfo.map(info => ({
                 hash: info.path,
                 size: info.size ?? 0,
