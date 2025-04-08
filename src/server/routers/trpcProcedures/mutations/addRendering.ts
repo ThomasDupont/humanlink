@@ -86,7 +86,8 @@ export const addRenderingEffect = ({
               offer !== null &&
               offer.milestone.find(m => m.id === milestoneId) !== undefined &&
               offer.userId !== null &&
-              offer.userIdReceiver !== null
+              offer.userIdReceiver !== null &&
+              offer.isAccepted
             ) {
               const { milestone, userId, userIdReceiver, ...rest } = offer
               return T.succeed({

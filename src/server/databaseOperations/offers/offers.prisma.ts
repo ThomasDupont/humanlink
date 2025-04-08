@@ -41,7 +41,7 @@ export const offersCrud = (prisma: PrismaClient) => {
 
   const getAnAcceptedAndTerminatedOfferByIdAndReceiverId = (id: number, userIdReceiver: number) => {
     return prisma.offer.findUnique({
-      where: { id, userIdReceiver, isAccepted: true, isTerminated: true },
+      where: { id, userIdReceiver, isAccepted: true, isTerminated: true, isPaid: false },
       include: {
         milestone: {
           include: {

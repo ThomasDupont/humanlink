@@ -122,6 +122,15 @@ export default function OfferDetail({
   }
 
   const parsedOffer = parseOffer(offer, userId!)
+
+  if (parsedOffer.acceptedAt === null) {
+    return <Base>
+      <Typography textAlign={'center'} variant="h1">
+          Offer is not accepted
+        </Typography>
+    </Base>
+  }
+
   return (
     <Base>
       <Box>
@@ -307,7 +316,7 @@ export default function OfferDetail({
             />
           </BaseModal>
           <Box display={'flex'} flexDirection={'row'} gap={1} justifyContent={'space-around'}>
-            {parsedOffer.offerFrom === 'other' && renderings.length && offer.isTerminated && (
+            {parsedOffer.offerFrom === 'other' && renderings.length && offer.isTerminated && !offer.isPaid && (
               <Button
                 onClick={() => setOpenValidateRenderingModal(true)}
                 variant="contained"

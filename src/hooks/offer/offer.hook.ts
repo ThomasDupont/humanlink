@@ -8,7 +8,7 @@ export const useOfferHook = (locale: SupportedLocale, actualDate: Date) => {
     const deadline = new Date(offer.deadline)
 
     return {
-      acceptedAt: format(new Date(offer.createdAt), 'PPP', {
+      acceptedAt: offer.acceptedAt && format(new Date(offer.acceptedAt), 'PPP', {
         locale: localeToDateFnsLocale(locale)
       }),
       offerFrom: offer.userId === userId ? 'me' : 'other',
