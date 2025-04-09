@@ -3,6 +3,7 @@ import DOMPurify from 'dompurify'
 import { JSDOM } from 'jsdom'
 import { z } from 'zod'
 import {
+  disputesOperations,
   messageOperations,
   serviceOperations,
   userOperations
@@ -288,7 +289,11 @@ export const appRouter = router({
             comment: z.string().min(1).max(config.userInteraction.serviceDescriptionMaxLen)
           })
         )
-        .mutation(() => {})
+        .mutation(({ input, ctx }) => disputesOperations.createADispute({
+          userId: ctx.session.user.id,
+          offerId: input.offerId,
+          text: input.comment
+        }))
     }),
     milestone: router({
       addRendering: protectedprocedure

@@ -138,34 +138,12 @@ export const offersCrud = (prisma: PrismaClient) => {
     })
   }
 
-  const closeOffer = (offerId: number, userId: number) => {
-    return prisma.offer.update({
-      where: { id: offerId, userId },
-      data: {
-        isTerminated: true,
-        terminatedAt: new Date()
-      }
-    })
-  }
-
-  const acceptOfferRenderings = (offerId: number, userId: number) => {
-    return prisma.offer.update({
-      where: { id: offerId, userIdReceiver: userId },
-      data: {
-        isPaid: true,
-        paidDate: new Date()
-      }
-    })
-  }
-
   return {
     createAnOffer,
     getAnAcceptedAndTerminatedOfferByIdAndReceiverId,
     getAnOfferByIdAndReceiverId,
     listConcernOffers,
     getOfferDetailById,
-    getAnOfferByCreatorId,
-    closeOffer,
-    acceptOfferRenderings
+    getAnOfferByCreatorId
   }
 }

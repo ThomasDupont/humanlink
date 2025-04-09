@@ -271,3 +271,22 @@ model File {
   originalFilename String
   size             Int
 }
+
+enum Decision {
+  pending
+  rejected
+  fullRefund
+  partialRefund
+}
+
+model Dispute {
+  createdAt       DateTime  @default(now())
+  offerId         Int
+  userId          Int
+  text            String
+  decision        Decision
+  decisionAt      DateTime?
+  decisionComment String?
+
+  @@id([offerId, userId, decision])
+}

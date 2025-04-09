@@ -298,7 +298,8 @@ export default function OfferDetail({
             handleClose={() => setOpenValidateRenderingModal(false)}
           >
             <ValidateOfferRenderingsModal
-              handleClose={() => {
+              handleClose={(t) => {
+                if (t === 'yes') refetch()
                 setOpenValidateRenderingModal(false)
               }}
               offer={offer}
