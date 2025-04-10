@@ -93,7 +93,13 @@ export const appRouter = router({
       )
       .query(({ input, ctx }) =>
         getProtectedFiles(ctx.session.user.id, input.files, 'ascend-rendering-offer').run()
+      ),
+      getConcernedDisputeForAnOffer: protectedprocedure.input(
+        z.object({
+          offerId: z.number(),
+        })
       )
+      .query(({ input, ctx }) => disputesOperations.getConcernedDisputesForOneOffer(input.offerId, ctx.session.user.id))
   }),
   protectedMutation: router({
     sendMessage: protectedprocedure

@@ -88,6 +88,8 @@ export default function OfferDetail({
     refetch
   } = trpc.protectedGet.offerDetail.useQuery(offerId)
 
+  const { data: disputes, refetch } = trpc.protectedGet.getConcernedDisputeForAnOffer.useQuery()
+
   const [renderingBox, setRenderingBox] = useState(false)
   const [openValidateRenderingModal, setOpenValidateRenderingModal] = useState(false)
   const [openDeclareADisputeModal, setOpenDeclareADisputeModal] = useState(false)
