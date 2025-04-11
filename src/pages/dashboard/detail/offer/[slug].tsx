@@ -4,6 +4,7 @@ import ValidateOfferRenderingsModal from '@/components/Modals/ValidateOfferRende
 import { Spinner } from '@/components/Spinner'
 import { SupportedLocale } from '@/config'
 import { AddARendering } from '@/elements/offer/AddARendering'
+import { DisplayDisputes } from '@/elements/offer/DisplayDisputes'
 import { DisplayRendering } from '@/elements/offer/DisplayRendering'
 import { useOfferHook } from '@/hooks/offer/offer.hook'
 import { useRendering } from '@/hooks/offer/rendering.hook'
@@ -88,8 +89,6 @@ export default function OfferDetail({
     refetch
   } = trpc.protectedGet.offerDetail.useQuery(offerId)
 
-  const { data: disputes, refetch } = trpc.protectedGet.getConcernedDisputeForAnOffer.useQuery()
-
   const [renderingBox, setRenderingBox] = useState(false)
   const [openValidateRenderingModal, setOpenValidateRenderingModal] = useState(false)
   const [openDeclareADisputeModal, setOpenDeclareADisputeModal] = useState(false)
@@ -126,11 +125,13 @@ export default function OfferDetail({
   const parsedOffer = parseOffer(offer, userId!)
 
   if (parsedOffer.acceptedAt === null) {
-    return <Base>
-      <Typography textAlign={'center'} variant="h1">
+    return (
+      <Base>
+        <Typography textAlign={'center'} variant="h1">
           Offer is not accepted
         </Typography>
-    </Base>
+      </Base>
+    )
   }
 
   return (
@@ -300,7 +301,7 @@ export default function OfferDetail({
             handleClose={() => setOpenValidateRenderingModal(false)}
           >
             <ValidateOfferRenderingsModal
-              handleClose={(t) => {
+              handleClose={t => {
                 if (t === 'yes') refetch()
                 setOpenValidateRenderingModal(false)
               }}
@@ -319,15 +320,18 @@ export default function OfferDetail({
             />
           </BaseModal>
           <Box display={'flex'} flexDirection={'row'} gap={1} justifyContent={'space-around'}>
-            {parsedOffer.offerFrom === 'other' && renderings.length && offer.isTerminated && !offer.isPaid && (
-              <Button
-                onClick={() => setOpenValidateRenderingModal(true)}
-                variant="contained"
-                color="primary"
-              >
-                Validate offer renderings
-              </Button>
-            )}
+            {parsedOffer.offerFrom === 'other' &&
+              renderings.length &&
+              offer.isTerminated &&
+              !offer.isPaid && (
+                <Button
+                  onClick={() => setOpenValidateRenderingModal(true)}
+                  variant="contained"
+                  color="primary"
+                >
+                  Validate offer renderings
+                </Button>
+              )}
             <Button
               onClick={() => setOpenDeclareADisputeModal(true)}
               variant="contained"
@@ -337,6 +341,8 @@ export default function OfferDetail({
             </Button>
           </Box>
         </Box>
+
+        <DisplayDisputes offer={offer} locale={locale} />
       </Box>
     </Base>
   )

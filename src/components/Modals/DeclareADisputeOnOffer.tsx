@@ -53,13 +53,13 @@ export default function DeclareADisputeModal({
     <Spinner />
   ) : (
     <Box
-      height={200}
+      minHeight={300}
       display={'flex'}
       flexDirection={'column'}
       justifyContent={'space-around'}
       gap={2}
       sx={{
-        m: 1
+        m: 2
       }}
     >
       <Snackbar open={openSnackBar} autoHideDuration={3000} onClose={() => setOpenSnackBar(false)}>
