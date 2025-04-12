@@ -13,5 +13,5 @@
   "[prisma]": {
     "editor.defaultFormatter": "Prisma.prisma"
   },
-  "prettier.configPath": "/Users/thomas/Documents/dev/perso/humanlink/prettier.js"
+  "prettier.configPath": "prettier.js"
 }

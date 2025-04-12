@@ -1,20 +1,16 @@
 import { SupportedLocale } from '@/config'
 import { localeToDateFnsLocale } from '@/utils/localeToDateFnsLocale'
-import { ConcernedOffer, trpc } from '@/utils/trpc'
+import { DisplayDispute } from '@/utils/trpc'
 import { Box, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material'
 import { format } from 'date-fns'
 
 export const DisplayDisputes = ({
-  offer,
-  locale
+  locale,
+  disputes
 }: {
-  offer: ConcernedOffer
   locale: SupportedLocale
+  disputes?: DisplayDispute[]
 }) => {
-  const { data: disputes } = trpc.protectedGet.getConcernedDisputeForAnOffer.useQuery({
-    offerId: offer.id
-  })
-
   if (!disputes) return null
 
   const parsedCreatedDate = (date: string) =>

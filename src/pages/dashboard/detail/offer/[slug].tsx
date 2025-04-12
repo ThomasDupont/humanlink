@@ -9,7 +9,7 @@ import { DisplayRendering } from '@/elements/offer/DisplayRendering'
 import { useOfferHook } from '@/hooks/offer/offer.hook'
 import { useRendering } from '@/hooks/offer/rendering.hook'
 import { useUserState } from '@/state/user.state'
-import { trpc } from '@/utils/trpc'
+import { ConcernedOffer, trpc } from '@/utils/trpc'
 import {
   Container,
   Box,
@@ -23,6 +23,7 @@ import {
 import { GetStaticPaths, GetStaticProps } from 'next'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import { ReactElement, useEffect, useState } from 'react'
+import type { QueryObserverResult } from '@tanstack/react-query'
 import { z } from 'zod'
 
 const Base = ({ children }: { children: ReactElement }) => {
@@ -89,21 +90,6 @@ export default function OfferDetail({
     refetch
   } = trpc.protectedGet.offerDetail.useQuery(offerId)
 
-  const [renderingBox, setRenderingBox] = useState(false)
-  const [openValidateRenderingModal, setOpenValidateRenderingModal] = useState(false)
-  const [openDeclareADisputeModal, setOpenDeclareADisputeModal] = useState(false)
-
-  const { parseOffer } = useOfferHook(locale, new Date())
-  const {
-    userSnapshot: { userId }
-  } = useUserState()
-
-  const { fetchRendering, renderings } = useRendering(offer ?? null)
-
-  useEffect(() => {
-    if (offer) fetchRendering()
-  }, [offer])
-
   if (error) {
     return (
       <Base>
@@ -121,6 +107,38 @@ export default function OfferDetail({
       </Base>
     )
   }
+
+  return <DisplayOfferDetail offer={offer} refetchOffer={refetch} locale={locale} />
+}
+
+const DisplayOfferDetail = ({
+  offer,
+  refetchOffer,
+  locale
+}: {
+  offer: ConcernedOffer
+  refetchOffer: () => Promise<QueryObserverResult<ConcernedOffer, unknown>>
+  locale: SupportedLocale
+}) => {
+  const [renderingBox, setRenderingBox] = useState(false)
+  const [openValidateRenderingModal, setOpenValidateRenderingModal] = useState(false)
+  const [openDeclareADisputeModal, setOpenDeclareADisputeModal] = useState(false)
+
+  const { parseOffer } = useOfferHook(locale, new Date())
+  const {
+    userSnapshot: { userId }
+  } = useUserState()
+
+  const { fetchRendering, renderings } = useRendering(offer)
+
+  const { data: disputes, refetch: refetchDisputes } =
+    trpc.protectedGet.getConcernedDisputeForAnOffer.useQuery({
+      offerId: offer.id
+    })
+
+  useEffect(() => {
+    fetchRendering()
+  }, [])
 
   const parsedOffer = parseOffer(offer, userId!)
 
@@ -273,7 +291,7 @@ export default function OfferDetail({
           locale={locale}
           renderings={renderings}
           handleChange={() => {
-            refetch()
+            refetchOffer()
           }}
         />
         {renderingBox && (
@@ -281,7 +299,7 @@ export default function OfferDetail({
             renderings={renderings}
             offer={offer}
             handleClose={() => {
-              refetch()
+              refetchOffer()
               setRenderingBox(false)
             }}
           />
@@ -302,7 +320,7 @@ export default function OfferDetail({
           >
             <ValidateOfferRenderingsModal
               handleClose={t => {
-                if (t === 'yes') refetch()
+                if (t === 'yes') refetchOffer()
                 setOpenValidateRenderingModal(false)
               }}
               offer={offer}
@@ -314,6 +332,7 @@ export default function OfferDetail({
           >
             <DeclareADisputeModal
               handleClose={() => {
+                refetchDisputes()
                 setOpenDeclareADisputeModal(false)
               }}
               offer={offer}
@@ -342,7 +361,7 @@ export default function OfferDetail({
           </Box>
         </Box>
 
-        <DisplayDisputes offer={offer} locale={locale} />
+        <DisplayDisputes disputes={disputes} locale={locale} />
       </Box>
     </Base>
   )
