@@ -7,7 +7,7 @@ import {
   ServiceOperations,
   offerOperations,
   serviceOperations
-} from '../../databaseOperations/prisma.provider'
+} from '../../../databaseOperations/prisma.provider'
 
 describe('test getOfferDetail test', () => {
   afterEach(() => {

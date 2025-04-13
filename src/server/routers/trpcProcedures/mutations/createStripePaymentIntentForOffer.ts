@@ -1,8 +1,8 @@
 import { Prisma } from '@prisma/client'
 import { Effect as T } from 'effect'
 import { TRPCError } from '@trpc/server'
-import { OfferOperations } from '../../databaseOperations/prisma.provider'
-import { PaymentProviderFactory } from '../../paymentOperations/payment.provider'
+import { OfferOperations } from '../../../databaseOperations/prisma.provider'
+import { PaymentProviderFactory } from '../../../paymentOperations/payment.provider'
 import { Logger } from '@/server/logger'
 import config from '@/config'
 

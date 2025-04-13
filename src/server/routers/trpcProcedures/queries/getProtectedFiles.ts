@@ -1,8 +1,8 @@
 import { Logger } from '@/server/logger'
 import { Effect as T } from 'effect'
-import { StorageProviderFactory } from '../../storage/storage.provider'
+import { StorageProviderFactory } from '../../../storage/storage.provider'
 import config from '@/config'
-import { FilesOperations } from '../../databaseOperations/prisma.provider'
+import { FilesOperations } from '../../../databaseOperations/prisma.provider'
 import { TRPCError } from '@trpc/server'
 
 export const getProtectedFilesEffect = (userId: number, files: string[], bucket: string) =>

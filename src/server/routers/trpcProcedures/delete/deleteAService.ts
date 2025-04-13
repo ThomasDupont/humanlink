@@ -1,7 +1,7 @@
 import { Logger } from '@/server/logger'
 import { Schedule, Effect as T } from 'effect'
-import { ServiceOperations } from '../../databaseOperations/prisma.provider'
-import { Sync } from '../../databaseOperations/sync/sync'
+import { ServiceOperations } from '../../../databaseOperations/prisma.provider'
+import { Sync } from '../../../databaseOperations/sync/sync'
 import { Prisma } from '@prisma/client'
 import { TRPCError } from '@trpc/server'
 

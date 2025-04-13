@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Effect as T } from 'effect'
 import { userMeEffect } from './userMe'
 import { Logger } from '@/server/logger'
-import { UserOperations, userOperations } from '../../databaseOperations/prisma.provider'
+import { UserOperations, userOperations } from '../../../databaseOperations/prisma.provider'
 
 describe('test useMe test', () => {
   const loggerErrorMock = vi.fn()

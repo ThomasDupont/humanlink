@@ -45,6 +45,18 @@ export const userCrud = (prisma: PrismaClient) => {
     })
   }
 
+  const selectUserById = (
+    id: number,
+    select: {
+      [key in keyof Partial<User>]: boolean
+    }
+  ) => {
+    return prisma.user.findUnique({
+      where: { id },
+      select
+    })
+  }
+
   const verifyIfUserExistsByEmail = (email: string) => {
     return prisma.user.findUnique({
       where: { email },
@@ -78,6 +90,7 @@ export const userCrud = (prisma: PrismaClient) => {
     deleteUser,
     getUserById,
     getUserByIds,
-    verifyIfUserExistsByEmail
+    verifyIfUserExistsByEmail,
+    selectUserById
   }
 }

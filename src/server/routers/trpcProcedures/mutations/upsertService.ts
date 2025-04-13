@@ -1,9 +1,9 @@
 import { Service, Prisma, Price } from '@prisma/client'
 import { TRPCError } from '@trpc/server'
 import { Schedule, Effect as T } from 'effect'
-import { ServiceOperations } from '../../databaseOperations/prisma.provider'
+import { ServiceOperations } from '../../../databaseOperations/prisma.provider'
 import { Logger } from '@/server/logger'
-import { Sync } from '../../databaseOperations/sync/sync'
+import { Sync } from '../../../databaseOperations/sync/sync'
 
 const RETRY = 1
 const RETRY_DELAY = 100

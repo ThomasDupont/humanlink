@@ -7,7 +7,7 @@ import {
   MessageOperations,
   userOperations,
   UserOperations
-} from '../../databaseOperations/prisma.provider'
+} from '../../../databaseOperations/prisma.provider'
 import { afterEach } from 'node:test'
 
 describe('test getContactList test', () => {

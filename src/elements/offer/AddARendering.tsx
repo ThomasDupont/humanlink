@@ -27,9 +27,9 @@ export const AddARendering = ({
   renderings: Rendering[]
 }) => {
   const { t: commonT } = useTranslation('common')
-  const { mutateAsync } = trpc.protectedMutation.offer.addRendering.useMutation()
-  const { mutateAsync: closeOfferMutateAsync } =
-    trpc.protectedMutation.offer.closeOffer.useMutation()
+  const { mutateAsync } = trpc.protectedMutation.milestone.addRendering.useMutation()
+  const { mutateAsync: closeMilestoneMutateAsync } =
+    trpc.protectedMutation.milestone.closeMilestone.useMutation()
 
   const [formValues, setFormValues] = useState<{
     description: string
@@ -95,8 +95,9 @@ export const AddARendering = ({
         text: formValues.description
       })
       if (formValues.closeOffer) {
-        await closeOfferMutateAsync({
-          offerId: offer.id
+        await closeMilestoneMutateAsync({
+          offerId: offer.id,
+          milestoneId
         })
       }
       setTimeout(() => handleClose(), 1000)

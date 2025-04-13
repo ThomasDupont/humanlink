@@ -39,6 +39,19 @@ export const offersCrud = (prisma: PrismaClient) => {
     })
   }
 
+  const getAnAcceptedAndTerminatedOfferByIdAndReceiverId = (id: number, userIdReceiver: number) => {
+    return prisma.offer.findUnique({
+      where: { id, userIdReceiver, isAccepted: true, isTerminated: true, isPaid: false },
+      include: {
+        milestone: {
+          include: {
+            priceMilestone: true
+          }
+        }
+      }
+    })
+  }
+
   const listConcernOffers = (userId: number) => {
     return prisma.offer.findMany({
       where: {
@@ -125,22 +138,12 @@ export const offersCrud = (prisma: PrismaClient) => {
     })
   }
 
-  const closeOffer = (offerId: number, userId: number) => {
-    return prisma.offer.update({
-      where: { id: offerId, userId },
-      data: {
-        isTerminated: true,
-        terminatedAt: new Date()
-      }
-    })
-  }
-
   return {
     createAnOffer,
+    getAnAcceptedAndTerminatedOfferByIdAndReceiverId,
     getAnOfferByIdAndReceiverId,
     listConcernOffers,
     getOfferDetailById,
-    getAnOfferByCreatorId,
-    closeOffer
+    getAnOfferByCreatorId
   }
 }

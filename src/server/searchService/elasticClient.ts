@@ -1,6 +1,6 @@
 import axios from 'axios'
 import https from 'https'
-import { env } from '../../env'
+import { env } from '../env'
 
 export const elastic = () =>
   env.ELASTIC_URL.includes('localhost')

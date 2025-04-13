@@ -3,13 +3,13 @@ import DOMPurify from 'dompurify'
 import { JSDOM } from 'jsdom'
 import { z } from 'zod'
 import {
+  disputesOperations,
   messageOperations,
-  offerOperations,
   serviceOperations,
   userOperations
-} from './databaseOperations/prisma.provider'
+} from '../databaseOperations/prisma.provider'
 import config from '@/config'
-import searchFactory from './searchService/search.factory'
+import searchFactory from '../searchService/search.factory'
 import { protectedprocedure } from './middlewares'
 import {
   getContactList,
@@ -22,9 +22,12 @@ import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
 import { Category, Lang, PaymentProvider } from '@prisma/client'
 import {
   acceptOffer,
+  acceptOfferRenderingsAndCreateMoneyTransfert,
   addRendering,
+  closeMilestone,
   createOfferWithMessage,
   createStripePaymentIntent,
+  sendMessage,
   upsertService
 } from './trpcProcedures/upsert.trpc'
 import { deleteAMilestoneFile, deleteAService } from './trpcProcedures/delete.trpc'
@@ -91,6 +94,15 @@ export const appRouter = router({
       )
       .query(({ input, ctx }) =>
         getProtectedFiles(ctx.session.user.id, input.files, 'ascend-rendering-offer').run()
+      ),
+    getConcernedDisputeForAnOffer: protectedprocedure
+      .input(
+        z.object({
+          offerId: z.number()
+        })
+      )
+      .query(({ input, ctx }) =>
+        disputesOperations.getConcernedDisputesForOneOffer(input.offerId, ctx.session.user.id)
       )
   }),
   protectedMutation: router({
@@ -103,17 +115,12 @@ export const appRouter = router({
         })
       )
       .mutation(({ input, ctx }) =>
-        input.offerId
-          ? messageOperations.sendMessageWithOffer({
-              senderId: ctx.session.user.id,
-              receiverId: input.receiverId,
-              offerId: input.offerId
-            })
-          : messageOperations.sendMessage({
-              senderId: ctx.session.user.id,
-              receiverId: input.receiverId,
-              message: input.message
-            })
+        sendMessage({
+          senderId: ctx.session.user.id,
+          receiverId: input.receiverId,
+          message: input.message,
+          offerId: input.offerId
+        }).run()
       ),
 
     user: router({
@@ -271,6 +278,31 @@ export const appRouter = router({
             userId: ctx.session.user.id
           }).run()
         ),
+      acceptOfferRenderingsAndCreateMoneyTransfert: protectedprocedure
+        .input(
+          z.object({
+            offerId: z.number()
+          })
+        )
+        .mutation(({ input, ctx }) =>
+          acceptOfferRenderingsAndCreateMoneyTransfert(input.offerId, ctx.session.user.id).run()
+        ),
+      declareADisputeOnOffer: protectedprocedure
+        .input(
+          z.object({
+            offerId: z.number(),
+            comment: z.string().min(1).max(config.userInteraction.serviceDescriptionMaxLen)
+          })
+        )
+        .mutation(({ input, ctx }) =>
+          disputesOperations.createADispute({
+            userId: ctx.session.user.id,
+            offerId: input.offerId,
+            text: input.comment
+          })
+        )
+    }),
+    milestone: router({
       addRendering: protectedprocedure
         .input(
           z.object({
@@ -294,25 +326,34 @@ export const appRouter = router({
             ...input
           }).run()
         ),
-      deleteAMilestoneFile: protectedprocedure.input(z.object({
-        offerId: z.number(),
-        milestoneId: z.number(),
-        hash: z.string()
-      })).mutation(({input, ctx}) => 
-        deleteAMilestoneFile({
-          userId: ctx.session.user.id,
-          bucket:  'ascend-rendering-offer',
-          ...input
-        }).run()
-      ),
-      closeOffer: protectedprocedure
+      deleteAMilestoneFile: protectedprocedure
         .input(
           z.object({
-            offerId: z.number()
+            offerId: z.number(),
+            milestoneId: z.number(),
+            hash: z.string()
           })
         )
         .mutation(({ input, ctx }) =>
-          offerOperations.closeOffer(input.offerId, ctx.session.user.id)
+          deleteAMilestoneFile({
+            userId: ctx.session.user.id,
+            bucket: 'ascend-rendering-offer',
+            ...input
+          }).run()
+        ),
+      closeMilestone: protectedprocedure
+        .input(
+          z.object({
+            milestoneId: z.number(),
+            offerId: z.number()
+          })
+        )
+        .mutation(({ input: { milestoneId, offerId }, ctx }) =>
+          closeMilestone({
+            milestoneId,
+            userId: ctx.session.user.id,
+            offerId
+          })
         )
     })
   })

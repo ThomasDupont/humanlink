@@ -6,14 +6,28 @@ import {
   offerOperations,
   OfferOperations,
   transactionOperations,
-  TransactionOperations
-} from '../../databaseOperations/prisma.provider'
+  TransactionOperations,
+  userOperations,
+  UserOperations
+} from '../../../databaseOperations/prisma.provider'
 import {
   paymentProviderFactory,
   PaymentProviderFactory
-} from '../../paymentOperations/payment.provider'
+} from '../../../paymentOperations/payment.provider'
+import { MailProviderFactory, mailProviderFactory } from '@/server/emailOperations/email.provider'
 
 describe('upsert service test', () => {
+  const sendEmailMock = vi.fn()
+  const mailProviderFactoryMock = {
+    mailjet: () => ({
+      sendEmail: sendEmailMock
+    })
+  }
+
+  const userOperationsMock = {
+    selectUserById: vi.fn()
+  }
+
   const loggerErrorMock = vi.fn()
   const transactionOperationsMock = {
     acceptOfferTransaction: vi.fn()
@@ -32,7 +46,7 @@ describe('upsert service test', () => {
     stripe: () => paymentMock
   }
   afterEach(() => {
-    vi.resetAllMocks()
+    vi.restoreAllMocks()
   })
 
   it('Should accept the offer', async () => {
@@ -50,6 +64,10 @@ describe('upsert service test', () => {
       userId: 3
     })
 
+    userOperationsMock.selectUserById.mockResolvedValueOnce({ firstname: 'John' })
+    userOperationsMock.selectUserById.mockResolvedValueOnce({ firstname: 'Josh' })
+    sendEmailMock.mockResolvedValueOnce({})
+
     const acceptOffer = acceptOfferEffect(payload)
 
     await acceptOffer
@@ -64,6 +82,11 @@ describe('upsert service test', () => {
           PaymentProviderFactory,
           paymentProviderFactoryMock as unknown as typeof paymentProviderFactory
         ),
+        T.provideService(
+          MailProviderFactory,
+          mailProviderFactoryMock as unknown as typeof mailProviderFactory
+        ),
+        T.provideService(UserOperations, userOperationsMock as unknown as typeof userOperations),
         T.runPromise
       )
       .then(result => {
@@ -73,7 +96,6 @@ describe('upsert service test', () => {
         expect(paymentMock.refundFullTransaction).toBeCalledTimes(0)
         expect(transactionOperationsMock.acceptOfferTransaction).toHaveBeenCalledWith({
           amount: 1000,
-          eventType: 'payment',
           sellerId: 3,
           offerId: 1,
           providerPaymentId: 'test_p',
@@ -92,7 +114,6 @@ describe('upsert service test', () => {
     }
 
     paymentMock.getPaymentById.mockResolvedValueOnce({ id: 'test', amount: 1000, paid: false })
-    paymentMock.refundFullTransaction.mockResolvedValueOnce({})
 
     const acceptOffer = acceptOfferEffect(payload)
 
@@ -108,19 +129,79 @@ describe('upsert service test', () => {
           PaymentProviderFactory,
           paymentProviderFactoryMock as unknown as typeof paymentProviderFactory
         ),
-        T.mapError(error => {
-          expect(error.message).toBe('FORBIDDEN')
-          expect(paymentMock.refundFullTransaction).toBeCalledTimes(1)
-          expect(loggerErrorMock).toBeCalledWith({
-            cause: 'payment_not_paid',
-            message: `payment for user 2 of id test_p not paid`,
-            detailedError: {}
-          })
-        }),
-        T.runPromiseExit
+        T.provideService(
+          MailProviderFactory,
+          mailProviderFactoryMock as unknown as typeof mailProviderFactory
+        ),
+        T.provideService(UserOperations, userOperationsMock as unknown as typeof userOperations),
+        T.runPromise
       )
-      .then(exit => {
-        expect(exit._tag).toBe('Failure')
+      .then(() => true)
+      .catch(error => {
+        expect(error.message).toBe('transaction_is_not_validated')
+        expect(loggerErrorMock).toBeCalledWith({
+          cause: 'payment_not_paid',
+          message: `payment test_p not paid`,
+          detailedError: undefined
+        })
+
+        return false
+      })
+      .then(v => {
+        expect(v).toBe(false)
+      })
+  })
+
+  it('Should return NOT_FOUND for not found offer', async () => {
+    const payload: AcceptOfferEffectArgs = {
+      offerId: 1,
+      paymentProvider: 'stripe',
+      userId: 2,
+      paymentId: 'test_p'
+    }
+
+    paymentMock.getPaymentById.mockResolvedValueOnce({ id: 'test', amount: 1000, paid: true })
+    paymentMock.refundFullTransaction.mockResolvedValueOnce({})
+    offerOperationsMock.getAnOfferByIdAndReceiverId.mockResolvedValueOnce({
+      id: 1,
+      userId: null
+    })
+
+    const acceptOffer = acceptOfferEffect(payload)
+
+    await acceptOffer
+      .pipe(
+        T.provideService(Logger, { error: loggerErrorMock }),
+        T.provideService(
+          TransactionOperations,
+          transactionOperationsMock as unknown as typeof transactionOperations
+        ),
+        T.provideService(OfferOperations, offerOperationsMock as unknown as typeof offerOperations),
+        T.provideService(
+          PaymentProviderFactory,
+          paymentProviderFactoryMock as unknown as typeof paymentProviderFactory
+        ),
+        T.provideService(
+          MailProviderFactory,
+          mailProviderFactoryMock as unknown as typeof mailProviderFactory
+        ),
+        T.provideService(UserOperations, userOperationsMock as unknown as typeof userOperations),
+        T.runPromise
+      )
+      .then(() => {
+        return true
+      })
+      .catch(error => {
+        expect(error.message).toBe('offer_not_found_for_user')
+        expect(paymentMock.refundFullTransaction).toBeCalledTimes(1)
+        expect(loggerErrorMock).toBeCalledWith({
+          cause: 'offer_not_found',
+          message: `offer 1 not found`
+        })
+        return false
+      })
+      .then(v => {
+        expect(v).toBe(false)
       })
   })
 })

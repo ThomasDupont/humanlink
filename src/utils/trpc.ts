@@ -10,6 +10,9 @@ export type CreateOfferReturnType = RouterOutput['protectedMutation']['offer']['
 export type GetConversationReturnType = ArrayElement<RouterOutput['protectedGet']['conversation']>
 export type ConcernedOffer = ArrayElement<RouterOutput['protectedGet']['listOffers']>
 export type FilesFromAPI = RouterOutput['protectedGet']['getProtectedFiles']
+export type DisplayDispute = ArrayElement<
+  RouterOutput['protectedGet']['getConcernedDisputeForAnOffer']
+>
 
 function getBaseUrl() {
   if (typeof window !== 'undefined')

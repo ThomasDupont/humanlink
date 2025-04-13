@@ -2,13 +2,13 @@ import { describe, expect, it, vi } from 'vitest'
 import { Effect as T } from 'effect'
 import { addRenderingEffect } from './addRendering'
 import { Logger } from '@/server/logger'
-import { storageProviderFactory, StorageProviderFactory } from '../../storage/storage.provider'
+import { storageProviderFactory, StorageProviderFactory } from '../../../storage/storage.provider'
 import {
   offerOperations,
   OfferOperations,
   transactionOperations,
   TransactionOperations
-} from '../../databaseOperations/prisma.provider'
+} from '../../../databaseOperations/prisma.provider'
 
 describe('Test addRendering', () => {
   const loggerErrorMock = vi.fn()
@@ -18,7 +18,7 @@ describe('Test addRendering', () => {
   }
 
   const transactionOperationsMock = {
-    addMilestoneRendering: vi.fn()
+    addMilestoneRenderingTransaction: vi.fn()
   }
 
   const getFileInfoMock = vi.fn()
@@ -38,6 +38,7 @@ describe('Test addRendering', () => {
     offerOperationsMock.getAnOfferByCreatorId.mockResolvedValueOnce({
       userId: 1,
       userIdReceiver: 3,
+      isAccepted: true,
       milestone: [
         {
           id: 10
@@ -45,7 +46,7 @@ describe('Test addRendering', () => {
       ]
     })
 
-    transactionOperationsMock.addMilestoneRendering.mockResolvedValueOnce({})
+    transactionOperationsMock.addMilestoneRenderingTransaction.mockResolvedValueOnce({})
 
     addRenderingEffect({
       userId: 1,
@@ -73,9 +74,13 @@ describe('Test addRendering', () => {
         T.provideService(OfferOperations, offerOperationsMock as unknown as typeof offerOperations),
         T.runPromise
       )
+      .catch(v => {
+        console.error(v)
+        return v
+      })
       .then(() => {
         expect(getFileInfoMock).toHaveBeenCalledWith('1/test')
-        expect(transactionOperationsMock.addMilestoneRendering).toHaveBeenCalledWith({
+        expect(transactionOperationsMock.addMilestoneRenderingTransaction).toHaveBeenCalledWith({
           text: null,
           milestoneId: 10,
           files: [
@@ -89,5 +94,58 @@ describe('Test addRendering', () => {
           ]
         })
       })
+  })
+
+  it('Should return an Error when offer is not accepted', () => {
+    getFileInfoMock.mockResolvedValueOnce({
+      mimetype: 'test',
+      size: 100
+    })
+
+    offerOperationsMock.getAnOfferByCreatorId.mockResolvedValueOnce({
+      userId: 1,
+      userIdReceiver: 3,
+      isAccepted: false,
+      milestone: [
+        {
+          id: 10
+        }
+      ]
+    })
+
+    addRenderingEffect({
+      userId: 1,
+      offerId: 2,
+      milestoneId: 10,
+      files: [
+        {
+          path: '1/test',
+          originalFilename: 'foo.bar'
+        }
+      ],
+      bucket: 'bar',
+      text: null
+    })
+      .pipe(
+        T.provideService(Logger, { error: loggerErrorMock }),
+        T.provideService(
+          StorageProviderFactory,
+          storageProviderFactoryMock as unknown as typeof storageProviderFactory
+        ),
+        T.provideService(
+          TransactionOperations,
+          transactionOperationsMock as unknown as typeof transactionOperations
+        ),
+        T.provideService(OfferOperations, offerOperationsMock as unknown as typeof offerOperations),
+        T.runPromise
+      ).then(() => true)
+      .catch(error => {
+        expect(error.message).equals('offer_or_milestone_not_found_for_user')
+        return false
+      })
+      .then(v => {
+        expect(v).toBe(false)
+      })
+
   })
 })

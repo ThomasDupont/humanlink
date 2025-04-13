@@ -24,7 +24,7 @@ export default function DeleteAMilestoneFileModal({
   const [deleteError, setDeleteError] = useState<string>('')
 
   const { mutateAsync: deleteAMilestoneFile } =
-    trpc.protectedMutation.offer.deleteAMilestoneFile.useMutation()
+    trpc.protectedMutation.milestone.deleteAMilestoneFile.useMutation()
   return showSpinner ? (
     <Spinner />
   ) : (

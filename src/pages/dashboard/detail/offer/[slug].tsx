@@ -1,11 +1,15 @@
+import BaseModal from '@/components/BaseModal'
+import DeclareADisputeModal from '@/components/Modals/DeclareADisputeOnOffer'
+import ValidateOfferRenderingsModal from '@/components/Modals/ValidateOfferRenderings.modal'
 import { Spinner } from '@/components/Spinner'
 import { SupportedLocale } from '@/config'
 import { AddARendering } from '@/elements/offer/AddARendering'
+import { DisplayDisputes } from '@/elements/offer/DisplayDisputes'
 import { DisplayRendering } from '@/elements/offer/DisplayRendering'
 import { useOfferHook } from '@/hooks/offer/offer.hook'
 import { useRendering } from '@/hooks/offer/rendering.hook'
 import { useUserState } from '@/state/user.state'
-import { trpc } from '@/utils/trpc'
+import { ConcernedOffer, trpc } from '@/utils/trpc'
 import {
   Container,
   Box,
@@ -19,6 +23,7 @@ import {
 import { GetStaticPaths, GetStaticProps } from 'next'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import { ReactElement, useEffect, useState } from 'react'
+import type { QueryObserverResult } from '@tanstack/react-query'
 import { z } from 'zod'
 
 const Base = ({ children }: { children: ReactElement }) => {
@@ -84,21 +89,6 @@ export default function OfferDetail({
     isFetching,
     refetch
   } = trpc.protectedGet.offerDetail.useQuery(offerId)
-  const [renderingBox, setRenderingBox] = useState(false)
-
-  const { parseOffer } = useOfferHook(locale, new Date())
-  const {
-    userSnapshot: { userId }
-  } = useUserState()
-
-  const { fetchRendering, renderings } = useRendering(offer ?? null)
-
-  useEffect(() => {
-    if (offer) fetchRendering()
-  }, [offer])
-
-  const handleValidateRenderingOfOffer = () => {}
-  const handleDeclareDispute = () => {}
 
   if (error) {
     return (
@@ -118,7 +108,50 @@ export default function OfferDetail({
     )
   }
 
+  return <DisplayOfferDetail offer={offer} refetchOffer={refetch} locale={locale} />
+}
+
+const DisplayOfferDetail = ({
+  offer,
+  refetchOffer,
+  locale
+}: {
+  offer: ConcernedOffer
+  refetchOffer: () => Promise<QueryObserverResult<ConcernedOffer, unknown>>
+  locale: SupportedLocale
+}) => {
+  const [renderingBox, setRenderingBox] = useState(false)
+  const [openValidateRenderingModal, setOpenValidateRenderingModal] = useState(false)
+  const [openDeclareADisputeModal, setOpenDeclareADisputeModal] = useState(false)
+
+  const { parseOffer } = useOfferHook(locale, new Date())
+  const {
+    userSnapshot: { userId }
+  } = useUserState()
+
+  const { fetchRendering, renderings } = useRendering(offer)
+
+  const { data: disputes, refetch: refetchDisputes } =
+    trpc.protectedGet.getConcernedDisputeForAnOffer.useQuery({
+      offerId: offer.id
+    })
+
+  useEffect(() => {
+    fetchRendering()
+  }, [])
+
   const parsedOffer = parseOffer(offer, userId!)
+
+  if (parsedOffer.acceptedAt === null) {
+    return (
+      <Base>
+        <Typography textAlign={'center'} variant="h1">
+          Offer is not accepted
+        </Typography>
+      </Base>
+    )
+  }
+
   return (
     <Base>
       <Box>
@@ -258,7 +291,7 @@ export default function OfferDetail({
           locale={locale}
           renderings={renderings}
           handleChange={() => {
-            refetch()
+            refetchOffer()
           }}
         />
         {renderingBox && (
@@ -266,7 +299,7 @@ export default function OfferDetail({
             renderings={renderings}
             offer={offer}
             handleClose={() => {
-              refetch()
+              refetchOffer()
               setRenderingBox(false)
             }}
           />
@@ -281,21 +314,54 @@ export default function OfferDetail({
             p: 2
           })}
         >
+          <BaseModal
+            open={openValidateRenderingModal}
+            handleClose={() => setOpenValidateRenderingModal(false)}
+          >
+            <ValidateOfferRenderingsModal
+              handleClose={t => {
+                if (t === 'yes') refetchOffer()
+                setOpenValidateRenderingModal(false)
+              }}
+              offer={offer}
+            />
+          </BaseModal>
+          <BaseModal
+            open={openDeclareADisputeModal}
+            handleClose={() => setOpenDeclareADisputeModal(false)}
+          >
+            <DeclareADisputeModal
+              handleClose={() => {
+                refetchDisputes()
+                setOpenDeclareADisputeModal(false)
+              }}
+              offer={offer}
+            />
+          </BaseModal>
           <Box display={'flex'} flexDirection={'row'} gap={1} justifyContent={'space-around'}>
-            {parsedOffer.offerFrom === 'other' && renderings.length && offer.isTerminated && (
-              <Button
-                onClick={() => handleValidateRenderingOfOffer()}
-                variant="contained"
-                color="primary"
-              >
-                Validate offer renderings
-              </Button>
-            )}
-            <Button onClick={() => handleDeclareDispute()} variant="contained" color="error">
+            {parsedOffer.offerFrom === 'other' &&
+              renderings.length &&
+              offer.isTerminated &&
+              !offer.isPaid && (
+                <Button
+                  onClick={() => setOpenValidateRenderingModal(true)}
+                  variant="contained"
+                  color="primary"
+                >
+                  Validate offer renderings
+                </Button>
+              )}
+            <Button
+              onClick={() => setOpenDeclareADisputeModal(true)}
+              variant="contained"
+              color="error"
+            >
               Declare dispute
             </Button>
           </Box>
         </Box>
+
+        <DisplayDisputes disputes={disputes} locale={locale} />
       </Box>
     </Base>
   )
