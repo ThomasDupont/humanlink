@@ -27,6 +27,7 @@ import {
   closeMilestone,
   createOfferWithMessage,
   createStripePaymentIntent,
+  sendMessage,
   upsertService
 } from './trpcProcedures/upsert.trpc'
 import { deleteAMilestoneFile, deleteAService } from './trpcProcedures/delete.trpc'
@@ -94,12 +95,15 @@ export const appRouter = router({
       .query(({ input, ctx }) =>
         getProtectedFiles(ctx.session.user.id, input.files, 'ascend-rendering-offer').run()
       ),
-      getConcernedDisputeForAnOffer: protectedprocedure.input(
+    getConcernedDisputeForAnOffer: protectedprocedure
+      .input(
         z.object({
-          offerId: z.number(),
+          offerId: z.number()
         })
       )
-      .query(({ input, ctx }) => disputesOperations.getConcernedDisputesForOneOffer(input.offerId, ctx.session.user.id))
+      .query(({ input, ctx }) =>
+        disputesOperations.getConcernedDisputesForOneOffer(input.offerId, ctx.session.user.id)
+      )
   }),
   protectedMutation: router({
     sendMessage: protectedprocedure
@@ -111,17 +115,12 @@ export const appRouter = router({
         })
       )
       .mutation(({ input, ctx }) =>
-        input.offerId
-          ? messageOperations.sendMessageWithOffer({
-              senderId: ctx.session.user.id,
-              receiverId: input.receiverId,
-              offerId: input.offerId
-            })
-          : messageOperations.sendMessage({
-              senderId: ctx.session.user.id,
-              receiverId: input.receiverId,
-              message: input.message
-            })
+        sendMessage({
+          senderId: ctx.session.user.id,
+          receiverId: input.receiverId,
+          message: input.message,
+          offerId: input.offerId
+        }).run()
       ),
 
     user: router({
@@ -295,11 +294,13 @@ export const appRouter = router({
             comment: z.string().min(1).max(config.userInteraction.serviceDescriptionMaxLen)
           })
         )
-        .mutation(({ input, ctx }) => disputesOperations.createADispute({
-          userId: ctx.session.user.id,
-          offerId: input.offerId,
-          text: input.comment
-        }))
+        .mutation(({ input, ctx }) =>
+          disputesOperations.createADispute({
+            userId: ctx.session.user.id,
+            offerId: input.offerId,
+            text: input.comment
+          })
+        )
     }),
     milestone: router({
       addRendering: protectedprocedure

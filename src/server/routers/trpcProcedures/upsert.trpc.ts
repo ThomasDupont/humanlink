@@ -4,7 +4,8 @@ import {
   effectMessageOperations,
   effectOfferOperations,
   effectServiceOperations,
-  effectTransactionOperations
+  effectTransactionOperations,
+  effectUserOperations
 } from '../../databaseOperations/prisma.provider'
 import { effectLogger } from '@/server/logger'
 import { effectSync } from '../../databaseOperations/sync/sync'
@@ -19,6 +20,8 @@ import { effectStorageProviderFactory } from '../../storage/storage.provider'
 import { addRenderingEffect, AddRenderingEffectArgs } from './mutations/addRendering'
 import { acceptOfferRenderingsAndCreateMoneyTransfertEffect } from './mutations/acceptOfferRenderingsAndCreateMoneyTransfert'
 import { CloseMilestoneArgs, closeMilestoneEffect } from './mutations/closeMilestone'
+import { sendMessageEffect, SendMessageInput } from './mutations/sendMessage'
+import { effectMailProviderFactory } from '@/server/emailOperations/email.provider'
 
 export const upsertService = (args: UpsertServiceArgs) => ({
   run: () =>
@@ -42,6 +45,8 @@ export const acceptOffer = (args: AcceptOfferEffectArgs) => ({
       effectPaymentProviderFactory,
       effectTransactionOperations,
       effectOfferOperations,
+      effectUserOperations,
+      effectMailProviderFactory,
       T.runPromise
     )
 })
@@ -120,6 +125,17 @@ export const closeMilestone = (args: CloseMilestoneArgs) => ({
       effectLogger,
       effectOfferOperations,
       effectTransactionOperations,
+      T.runPromise
+    )
+})
+
+export const sendMessage = (args: SendMessageInput) => ({
+  run: () =>
+    sendMessageEffect(args).pipe(
+      effectLogger,
+      effectMessageOperations,
+      effectUserOperations,
+      effectMailProviderFactory,
       T.runPromise
     )
 })
