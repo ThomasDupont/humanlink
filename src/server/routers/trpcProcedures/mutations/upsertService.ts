@@ -10,10 +10,17 @@ const RETRY_DELAY = 100
 export type UpsertServiceArgs = {
   userId: number
   serviceId?: number
-  service: Omit<Service, 'id' | 'userId' | 'createdAt'>
+  service: Omit<Service, 'id' | 'userId' | 'createdAt' | 'images'>
   prices: Omit<Price, 'serviceId'>[]
+  files: string[]
 }
-export const upsertServiceEffect = ({ userId, serviceId, service, prices }: UpsertServiceArgs) =>
+export const upsertServiceEffect = ({
+  userId,
+  serviceId,
+  service,
+  prices,
+  files
+}: UpsertServiceArgs) =>
   T.gen(function* () {
     const logger = yield* Logger
     const serviceOperations = yield* ServiceOperations
@@ -28,7 +35,8 @@ export const upsertServiceEffect = ({ userId, serviceId, service, prices }: Upse
               {
                 ...service,
                 id: serviceId,
-                userId
+                userId,
+                images: files
               },
               prices.map(price => ({
                 ...price,
@@ -38,7 +46,8 @@ export const upsertServiceEffect = ({ userId, serviceId, service, prices }: Upse
           : serviceOperations.createService({
               ...service,
               userId,
-              prices: prices.map(({ id: _, ...raw }) => raw)
+              prices: prices.map(({ id: _, ...raw }) => raw),
+              images: []
             }),
       catch: error => {
         logger.error({

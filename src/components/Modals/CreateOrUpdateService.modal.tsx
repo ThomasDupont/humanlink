@@ -5,6 +5,7 @@ import {
   useCreateServiceFormValidation
 } from '@/hooks/forms/createService.form.hook'
 import { FormError } from '@/utils/effects/Errors'
+import InputFileUpload from '@/materials/InputFileUpload'
 import { categoryToArray, langsToArray } from '@/utils/retreatPrismaSchema'
 import {
   Alert,
@@ -55,14 +56,19 @@ export default function CreateOrUpdateServiceModal({
   handleClose: () => void
 }) {
   const [formValues, setFormValues] = useState<
-    Omit<CreateServiceFormSchema, 'category' | 'price'> & { category?: Category; price?: number }
+    Omit<CreateServiceFormSchema, 'category' | 'price'> & {
+      category?: Category
+      price?: number
+      files: File[]
+    }
   >({
     title: service ? service.title : '',
     shortDescription: service ? service.descriptionShort : '',
     description: service ? service.description : '',
     category: service ? service.category : undefined,
     langs: service ? service.langs : [],
-    price: service && service.prices ? (service.prices[0]?.number ?? 1) / 100 : undefined
+    price: service && service.prices ? (service.prices[0]?.number ?? 1) / 100 : undefined,
+    files: []
   })
   const [showSpinner, setShowSpinner] = useState(false)
   const [openSnackBar, setOpenSnackBar] = useState(false)
@@ -79,7 +85,7 @@ export default function CreateOrUpdateServiceModal({
 
   const ReactQuill = useMemo(() => dynamic(() => import('react-quill'), { ssr: false }), [])
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
 
     const errors = validate(formValues)
@@ -93,28 +99,76 @@ export default function CreateOrUpdateServiceModal({
     const { price, langs, category, ...raws } = formValues
 
     setShowSpinner(true)
-    upsertService({
-      ...raws,
-      category: category!,
-      langs: [...langs],
-      id: service?.id,
-      prices: [
-        {
-          number: price! * 100,
-          id: service?.prices[0]?.id
-        }
-      ]
-    })
-      .then(() => {
-        setOpenSnackBar(true)
-        setTimeout(() => handleClose(), 1000)
-      })
-      .catch(err => {
-        setFormErrors([err])
-        console.error(err)
-        setOpenSnackBar(true)
-      })
-      .finally(() => setShowSpinner(false))
+
+    const upload = async (
+      serviceId: number
+    ): Promise<{
+      files: {
+        originalFilename: string
+        hash: string
+      }[]
+    }> => {
+      const formData = new FormData()
+
+      formData.append('serviceId', serviceId.toString())
+      for (const file of formValues.files) {
+        formData.append('files', file)
+      }
+
+      if (formValues.files.length) {
+        return fetch('/api/upload/service', {
+          method: 'POST',
+          body: formData
+        }).then(response => response.json())
+      }
+
+      return { files: [] }
+    }
+
+    try {
+      const basePayload = {
+        ...raws,
+        category: category!,
+        langs: [...langs],
+        prices: [
+          {
+            number: price! * 100,
+            id: service?.prices[0]?.id
+          }
+        ]
+      }
+
+      if (service?.id) {
+        const files = await upload(service.id)
+        await upsertService({
+          ...basePayload,
+          id: service.id,
+          files: files.files.map(f => f.hash)
+        })
+      } else {
+        const result = await upsertService({
+          ...basePayload,
+          files: [] // create after
+        })
+        const files = await upload(result.id)
+
+        await upsertService({
+          ...basePayload,
+          id: result.id,
+          files: files.files.map(f => f.hash)
+        })
+      }
+
+      setOpenSnackBar(true)
+      setTimeout(() => handleClose(), 1000)
+    } catch (error) {
+      const err = error as Error
+      setFormErrors([new FormError(Tag.Server, err.message)])
+      console.error(error)
+      setOpenSnackBar(true)
+    } finally {
+      setShowSpinner(false)
+    }
   }
 
   const getErrorByTag = (tag: Tag): FormError | null => {

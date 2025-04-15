@@ -73,7 +73,7 @@ export const AddARendering = ({
       }[]
     }> => {
       if (formValues.files.length) {
-        return fetch('/api/upload', {
+        return fetch('/api/upload/offer', {
           method: 'POST',
           body: formData
         }).then(response => response.json())

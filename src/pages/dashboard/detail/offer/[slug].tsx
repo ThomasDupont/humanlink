@@ -142,6 +142,10 @@ const DisplayOfferDetail = ({
 
   const parsedOffer = parseOffer(offer, userId!)
 
+  const showDisplayDispute =
+    disputes === undefined ||
+    disputes.filter(dispute => dispute.decision === 'pending').length === 0
+
   if (parsedOffer.acceptedAt === null) {
     return (
       <Base>
@@ -351,13 +355,15 @@ const DisplayOfferDetail = ({
                   Validate offer renderings
                 </Button>
               )}
-            <Button
-              onClick={() => setOpenDeclareADisputeModal(true)}
-              variant="contained"
-              color="error"
-            >
-              Declare dispute
-            </Button>
+            {showDisplayDispute && (
+              <Button
+                onClick={() => setOpenDeclareADisputeModal(true)}
+                variant="contained"
+                color="error"
+              >
+                Declare dispute
+              </Button>
+            )}
           </Box>
         </Box>
 
