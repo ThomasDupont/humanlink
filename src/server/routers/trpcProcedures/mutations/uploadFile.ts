@@ -37,9 +37,10 @@ export const uploadFilesEffect = (files: formidable.File[], bucket: string, user
               localFilepath: file.filepath,
               filename,
               mimetype: file.mimetype ?? 'application/octet-stream'
-            }).then(() => ({
+            }).then(uri => ({
               ...file,
-              hash: filename
+              hash: filename,
+              uri
             }))
           },
           catch: error => {

@@ -188,6 +188,10 @@ export default function CreateOrUpdateServiceModal({
     return formErrors.find(error => error.tag === tag) ?? null
   }
 
+  const totalFile = formValues.files.length
+
+  const totalFileSize = formValues.files.reduce((acc, file) => (acc += file.size), 0)
+
   return showSpinner ? (
     <Spinner />
   ) : (
@@ -244,38 +248,7 @@ export default function CreateOrUpdateServiceModal({
                 ))}
               </Select>
             </FormControl>
-            <FormControl
-              sx={{
-                width: '20%'
-              }}
-            >
-              <InputFileUpload
-                accept={config.userInteraction.extFilesForService}
-                onChange={files => {
-                  if (files === null) return
-                  setFormValues(state => ({
-                    ...state,
-                    files: [...[...files], ...state.files]
-                  }))
-                }}
-              />
-            </FormControl>
-            <Box
-              display={'flex'}
-              flexDirection={'row'}
-              gap={1}
-              justifyContent={'space-around'}
-              flexWrap={'wrap'}
-              sx={{ mb: 2 }}
-            >
-              {formValues.files.map(file => (
-                <Chip
-                  key={file.name}
-                  label={file.name}
-                  onDelete={() => handleDeleteFromFileList(file.name)}
-                />
-              ))}
-            </Box>
+
             <FormControl
               sx={{
                 width: '20%'
@@ -408,7 +381,59 @@ export default function CreateOrUpdateServiceModal({
               )}
             </Box>
           </Box>
-          <Button disabled={openSnackBar} size="medium" type="submit" variant="contained">
+          <FormControl>
+            <Typography gutterBottom variant="body2">
+              Choose a file file for your service banner. This image will display at 1000 X 625 and
+              must be in webp format.
+            </Typography>
+            <Box display={'flex'} justifyContent={'center'}>
+              <InputFileUpload
+                accept={config.userInteraction.extFilesForService}
+                onChange={files => {
+                  if (files === null) return
+                  setFormValues(state => ({
+                    ...state,
+                    files: [...[...files], ...state.files]
+                  }))
+                }}
+              />
+            </Box>
+          </FormControl>
+          {totalFileSize > config.userInteraction.maxUploadFileSizeForService && (
+            <Typography variant="body2" color="error">
+              {`The total size of the files is too big (${totalFileSize / 1_000_000} Mb)`}
+            </Typography>
+          )}
+          {totalFile > config.userInteraction.maxUploadFilesForService && (
+            <Typography variant="body2" color="error">
+              {`The total file is over than ${config.userInteraction.maxUploadFilesForService}`}
+            </Typography>
+          )}
+          <Box
+            display={'flex'}
+            flexDirection={'row'}
+            gap={1}
+            justifyContent={'space-around'}
+            flexWrap={'wrap'}
+            sx={{ mb: 2 }}
+          >
+            {formValues.files.map(file => (
+              <Chip
+                key={file.name}
+                label={file.name}
+                onDelete={() => handleDeleteFromFileList(file.name)}
+              />
+            ))}
+          </Box>
+          <Button
+            disabled={
+              openSnackBar ||
+              formValues.files.length > config.userInteraction.maxUploadFilesForService
+            }
+            size="medium"
+            type="submit"
+            variant="contained"
+          >
             {commonT('save')}
           </Button>
         </Box>

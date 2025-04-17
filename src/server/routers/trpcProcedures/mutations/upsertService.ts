@@ -32,7 +32,9 @@ export const upsertServiceEffect = ({
 
     const storage = storageFactory[config.storageProvider]()
     const retryPolicy = Schedule.addDelay(Schedule.recurs(RETRY), () => `${RETRY_DELAY} millis`)
+    const removeFun = storage.removeAFileInTheBucket('ascend-service-banner')
 
+    const getImageHash = (url: string) => new URL(url).pathname.substring(1)
     const eraseActualFiles = (serviceId?: number) =>
       T.tryPromise({
         try: () =>
@@ -40,7 +42,7 @@ export const upsertServiceEffect = ({
             ? serviceOperations
                 .getServiceById(serviceId)
                 .then(service =>
-                  Promise.all(service?.images.map(storage.removeAFileInTheBucket) ?? [])
+                  Promise.all(service?.images.map(url => removeFun(getImageHash(url))) ?? [])
                 )
                 .then(() => true)
             : Promise.resolve(true),

@@ -7,12 +7,22 @@ import { ServiceOperations, serviceOperations } from '../../../databaseOperation
 import { Sync } from '../../../databaseOperations/sync/sync'
 import { Price, Service } from '@prisma/client'
 import { ServiceWithPrice } from '@/types/Services.type'
+import { storageProviderFactory, StorageProviderFactory } from '@/server/storage/storage.provider'
 
 describe('upsert service test', () => {
   const loggerErrorMock = vi.fn()
   const serviceOperationsMock = {
+    getServiceById: vi.fn(),
     createService: vi.fn(),
     updateService: vi.fn()
+  }
+
+  const removeAFileInTheBucketMock = vi.fn()
+  const tigrisMock = {
+    removeAFileInTheBucket: () => removeAFileInTheBucketMock
+  }
+  const storageProviderFactoryMock = {
+    tigris: () => tigrisMock
   }
 
   const syncMock = {
@@ -22,7 +32,7 @@ describe('upsert service test', () => {
   afterEach(() => {
     vi.resetAllMocks()
   })
-  it('Should return a ServiceWithPrice (creation)', () => {
+  it('Should return a ServiceWithPrice (creation)', async () => {
     const service: Omit<Service, 'id' | 'createdAt' | 'userId'> = {
       title: 'testTitle',
       description: 'testDescription',
@@ -58,6 +68,7 @@ describe('upsert service test', () => {
       ]
     }
 
+    serviceOperationsMock.getServiceById.mockResolvedValueOnce(null)
     serviceOperationsMock.createService.mockResolvedValueOnce(serviceWithPrice)
     syncMock.sync.mockResolvedValueOnce(serviceWithPrice)
 
@@ -65,10 +76,11 @@ describe('upsert service test', () => {
       userId: 1,
       service: service,
       serviceId: undefined,
-      prices: [price]
+      prices: [price],
+      files: []
     })
 
-    upsertService
+    await upsertService
       .pipe(
         T.provideService(Logger, { error: loggerErrorMock }),
         T.provideService(
@@ -76,6 +88,10 @@ describe('upsert service test', () => {
           serviceOperationsMock as unknown as typeof serviceOperations
         ),
         T.provideService(Sync, syncMock),
+        T.provideService(
+          StorageProviderFactory,
+          storageProviderFactoryMock as unknown as typeof storageProviderFactory
+        ),
         T.runPromise
       )
       .then(service => {
@@ -83,7 +99,7 @@ describe('upsert service test', () => {
         expect(service.prices[0]?.id).toEqual(2)
       })
   })
-  it('Should return a ServiceWithPrice (update)', () => {
+  it('Should return a ServiceWithPrice (update)', async () => {
     const service: Omit<Service, 'id' | 'createdAt' | 'userId'> = {
       title: 'testTitle',
       description: 'testDescription',
@@ -118,6 +134,7 @@ describe('upsert service test', () => {
       ]
     }
 
+    serviceOperationsMock.getServiceById.mockResolvedValueOnce(null)
     serviceOperationsMock.updateService.mockResolvedValueOnce(serviceWithPrice)
     syncMock.sync.mockResolvedValueOnce(serviceWithPrice)
 
@@ -125,10 +142,11 @@ describe('upsert service test', () => {
       userId: 1,
       service: service,
       serviceId: 1,
-      prices: [price]
+      prices: [price],
+      files: []
     })
 
-    upsertService
+    await upsertService
       .pipe(
         T.provideService(Logger, { error: loggerErrorMock }),
         T.provideService(
@@ -136,6 +154,10 @@ describe('upsert service test', () => {
           serviceOperationsMock as unknown as typeof serviceOperations
         ),
         T.provideService(Sync, syncMock),
+        T.provideService(
+          StorageProviderFactory,
+          storageProviderFactoryMock as unknown as typeof storageProviderFactory
+        ),
         T.runPromise
       )
       .then(service => {
@@ -143,6 +165,7 @@ describe('upsert service test', () => {
         expect(service.prices[0]?.id).toEqual(2)
       })
   })
+
   it('Should have an error (sync_error)', async () => {
     const service: Omit<Service, 'id' | 'createdAt' | 'userId'> = {
       title: 'testTitle',
@@ -178,6 +201,7 @@ describe('upsert service test', () => {
       ]
     }
 
+    serviceOperationsMock.getServiceById.mockResolvedValueOnce(null)
     serviceOperationsMock.updateService.mockResolvedValueOnce(serviceWithPrice)
     const error = new Error('error')
     syncMock.sync.mockRejectedValue(error)
@@ -186,7 +210,8 @@ describe('upsert service test', () => {
       userId: 1,
       service: service,
       serviceId: 1,
-      prices: [price]
+      prices: [price],
+      files: []
     })
 
     const time = Date.now()
@@ -199,13 +224,17 @@ describe('upsert service test', () => {
           serviceOperationsMock as unknown as typeof serviceOperations
         ),
         T.provideService(Sync, syncMock),
+        T.provideService(
+          StorageProviderFactory,
+          storageProviderFactoryMock as unknown as typeof storageProviderFactory
+        ),
         T.runPromise
       )
       .then(() => true)
       .catch(err => {
         expect(Date.now() - time).toBeGreaterThan(100)
         expect(err).toBeInstanceOf(Error)
-        expect(loggerErrorMock).toBeCalledTimes(2)
+        expect(loggerErrorMock).toBeCalledTimes(1)
         expect(loggerErrorMock).toBeCalledWith({
           cause: 'sync_error',
           message: `service 1 sync error`,
