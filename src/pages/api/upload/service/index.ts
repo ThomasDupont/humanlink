@@ -45,14 +45,20 @@ export default async function POST(req: NextApiRequest, res: NextApiResponse) {
       return res.status(403).json({ error: 'user_not_authorized' })
     }
 
-    if (files.files.length > appConfig.userInteraction.maxUploadFiles) {
+    if (files.files.length > appConfig.userInteraction.maxUploadFileSizeForService) {
       return res.status(400).json({ error: 'max_file_upload' })
     }
 
-    const computeTotalFile = files.files.reduce((acc, file) => acc + file.size, 0)
+    const computeTotalFileSize = files.files.reduce((acc, file) => acc + file.size, 0)
 
-    if (computeTotalFile > appConfig.userInteraction.maxUploadFileSize) {
+    if (computeTotalFileSize > appConfig.userInteraction.maxUploadFileSizeForService) {
       return res.status(400).json({ error: 'max_file_size' })
+    }
+
+    for (const file of files.files) {
+      if (!appConfig.userInteraction.extFilesForService.includes(file.mimetype ?? '')) {
+        return res.status(400).json({ error: 'ext_file_not-supported' })
+      }
     }
 
     const uploadResult = await uploadsFile(files.files, 'ascend-service-banner', userId).run()

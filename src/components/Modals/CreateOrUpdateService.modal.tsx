@@ -20,7 +20,8 @@ import {
   Select,
   Snackbar,
   TextField,
-  Typography
+  Typography,
+  Chip
 } from '@mui/material'
 import { NumericFormat } from 'react-number-format'
 import { Category, Lang } from '@prisma/client'
@@ -139,6 +140,7 @@ export default function CreateOrUpdateServiceModal({
       }
 
       if (service?.id) {
+        // update
         const files = await upload(service.id)
         await upsertService({
           ...basePayload,
@@ -146,6 +148,7 @@ export default function CreateOrUpdateServiceModal({
           files: files.files.map(f => f.hash)
         })
       } else {
+        // create
         const result = await upsertService({
           ...basePayload,
           files: [] // create after
@@ -169,6 +172,16 @@ export default function CreateOrUpdateServiceModal({
     } finally {
       setShowSpinner(false)
     }
+  }
+
+  const handleDeleteFromFileList = (name: string) => {
+    const fileIndex = formValues.files.findIndex(f => f.name === name)
+    const newFilesList = formValues.files.filter((_, i) => i !== fileIndex)
+
+    setFormValues(state => ({
+      ...state,
+      files: newFilesList
+    }))
   }
 
   const getErrorByTag = (tag: Tag): FormError | null => {
@@ -231,6 +244,38 @@ export default function CreateOrUpdateServiceModal({
                 ))}
               </Select>
             </FormControl>
+            <FormControl
+              sx={{
+                width: '20%'
+              }}
+            >
+              <InputFileUpload
+                accept={config.userInteraction.extFilesForService}
+                onChange={files => {
+                  if (files === null) return
+                  setFormValues(state => ({
+                    ...state,
+                    files: [...[...files], ...state.files]
+                  }))
+                }}
+              />
+            </FormControl>
+            <Box
+              display={'flex'}
+              flexDirection={'row'}
+              gap={1}
+              justifyContent={'space-around'}
+              flexWrap={'wrap'}
+              sx={{ mb: 2 }}
+            >
+              {formValues.files.map(file => (
+                <Chip
+                  key={file.name}
+                  label={file.name}
+                  onDelete={() => handleDeleteFromFileList(file.name)}
+                />
+              ))}
+            </Box>
             <FormControl
               sx={{
                 width: '20%'

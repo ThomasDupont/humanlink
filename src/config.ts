@@ -26,6 +26,9 @@ type Config = {
     fixedPriceMax: number
     maxUploadFileSize: number
     maxUploadFiles: number
+    maxUploadFilesForService: number
+    extFilesForService: string[]
+    maxUploadFileSizeForService: number
   }
   serviceTypeFromCategory: Record<Category, ServiceType>
 }
@@ -49,7 +52,10 @@ const config: Config = {
     messageMaxLen: 1000,
     fixedPriceMax: 50_000_00,
     maxUploadFileSize: 10_000_000,
-    maxUploadFiles: 5
+    maxUploadFiles: 5,
+    maxUploadFilesForService: 1,
+    maxUploadFileSizeForService: 500_000,
+    extFilesForService: ['image/webp']
   },
   serviceTypeFromCategory: {
     ...(Object.fromEntries(Object.keys(Category).map(key => [key, 'digital'])) as Record<

@@ -21,7 +21,7 @@ export default function InputFileUpload({
 }: {
   onChange: (files: FileList | null) => void
   disabled?: boolean
-  accept?: string
+  accept?: string[]
 }) {
   return (
     <Button
@@ -36,7 +36,7 @@ export default function InputFileUpload({
       <VisuallyHiddenInput
         multiple
         type="file"
-        accept={accept}
+        accept={accept?.join(',')}
         onChange={event => onChange(event.target.files)}
       />
     </Button>

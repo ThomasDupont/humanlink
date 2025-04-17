@@ -25,7 +25,13 @@ import { effectMailProviderFactory } from '@/server/emailOperations/email.provid
 
 export const upsertService = (args: UpsertServiceArgs) => ({
   run: () =>
-    upsertServiceEffect(args).pipe(effectLogger, effectServiceOperations, effectSync, T.runPromise)
+    upsertServiceEffect(args).pipe(
+      effectLogger,
+      effectServiceOperations,
+      effectSync,
+      effectStorageProviderFactory,
+      T.runPromise
+    )
 })
 
 export const createOfferWithMessage = (offer: CreateOffer) => ({
