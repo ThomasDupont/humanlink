@@ -32,7 +32,7 @@ const itemMatcher: PatternMatching<{
 }> = {
   orders: (locale: SupportedLocale) => <OrdersItem locale={locale} />,
   services: () => <ServicesItem />,
-  wallet: () => <WalletItem />
+  wallet: (locale: SupportedLocale) => <WalletItem locale={locale} />
 }
 
 const MenuItem = ({ title, selected }: { title: string; selected: boolean }) => {

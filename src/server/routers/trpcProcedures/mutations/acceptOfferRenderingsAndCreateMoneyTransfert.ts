@@ -66,11 +66,11 @@ export const acceptOfferRenderingsAndCreateMoneyTransfertEffect = ({
       }),
       T.flatMap(offer =>
         T.tryPromise({
-          try: () => balanceOperations.getUserBalance(userId),
+          try: () => balanceOperations.getUserBalance(offer.userId),
           catch: error => {
             logger.error({
               cause: 'database_error',
-              message: `get userBalance for ${userId} db error`,
+              message: `get userBalance for ${offer.userId} db error`,
               detailedError: error
             })
 

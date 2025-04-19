@@ -3,6 +3,7 @@ import DOMPurify from 'dompurify'
 import { JSDOM } from 'jsdom'
 import { z } from 'zod'
 import {
+  balanceOperations,
   disputesOperations,
   messageOperations,
   serviceOperations,
@@ -36,6 +37,7 @@ import {
   userWithServiceToDisplayUserForOther
 } from '../dto/user.dto'
 import { TRPCError } from '@trpc/server'
+import { getTransactions } from './trpcProcedures/queries/getUserTransactions'
 
 export const appRouter = router({
   get: router({
@@ -103,7 +105,11 @@ export const appRouter = router({
       )
       .query(({ input, ctx }) =>
         disputesOperations.getConcernedDisputesForOneOffer(input.offerId, ctx.session.user.id)
-      )
+      ),
+    getUserBalance: protectedprocedure.query(({ ctx }) =>
+      balanceOperations.getUserBalance(ctx.session.user.id)
+    ),
+    getUserTransactions: protectedprocedure.query(({ ctx }) => getTransactions(ctx.session.user.id))
   }),
   protectedMutation: router({
     sendMessage: protectedprocedure

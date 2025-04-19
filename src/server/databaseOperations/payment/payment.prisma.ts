@@ -7,5 +7,16 @@ export const userBalanceCrud = (prisma: PrismaClient) => {
     })
   }
 
-  return { getUserBalance }
+  const getUserTransactions = (userId: number) => {
+    return prisma.transaction.findMany({
+      where: {
+        OR: [{ sellerId: userId }, { buyerId: userId }]
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    })
+  }
+
+  return { getUserBalance, getUserTransactions }
 }
