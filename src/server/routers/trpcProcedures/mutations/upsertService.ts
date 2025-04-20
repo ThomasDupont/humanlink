@@ -7,6 +7,7 @@ import { Sync } from '../../../databaseOperations/sync/sync'
 import { StorageProviderFactory } from '@/server/storage/storage.provider'
 import config from '@/config'
 import { CustomError } from '../error'
+import { CreateAccountIfNotExistsInPaymentProvider } from './createAccountInPaymentProvider'
 
 const RETRY = 1
 const RETRY_DELAY = 100
@@ -28,6 +29,7 @@ export const upsertServiceEffect = ({
     const logger = yield* Logger
     const serviceOperations = yield* ServiceOperations
     const storageFactory = yield* StorageProviderFactory
+    const createAccountInPaymentProvider = yield* CreateAccountIfNotExistsInPaymentProvider
     const sync = yield* Sync
 
     const storage = storageFactory[config.storageProvider]()
@@ -38,7 +40,7 @@ export const upsertServiceEffect = ({
     const eraseActualFiles = (serviceId?: number) =>
       T.tryPromise({
         try: () =>
-          serviceId
+          serviceId && files.length
             ? serviceOperations
                 .getServiceById(serviceId)
                 .then(service =>
@@ -57,7 +59,8 @@ export const upsertServiceEffect = ({
       })
 
     return pipe(
-      eraseActualFiles(serviceId),
+      createAccountInPaymentProvider(userId),
+      T.flatMap(() => eraseActualFiles(serviceId)),
       T.flatMap(() =>
         T.tryPromise({
           try: () =>

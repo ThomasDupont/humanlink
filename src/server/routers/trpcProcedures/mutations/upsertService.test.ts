@@ -8,6 +8,7 @@ import { Sync } from '../../../databaseOperations/sync/sync'
 import { Price, Service } from '@prisma/client'
 import { ServiceWithPrice } from '@/types/Services.type'
 import { storageProviderFactory, StorageProviderFactory } from '@/server/storage/storage.provider'
+import { CreateAccountIfNotExistsInPaymentProvider } from './createAccountInPaymentProvider'
 
 describe('upsert service test', () => {
   const loggerErrorMock = vi.fn()
@@ -16,6 +17,8 @@ describe('upsert service test', () => {
     createService: vi.fn(),
     updateService: vi.fn()
   }
+
+  const createAccountInPaymentProviderMock = vi.fn()
 
   const removeAFileInTheBucketMock = vi.fn()
   const tigrisMock = {
@@ -68,6 +71,7 @@ describe('upsert service test', () => {
       ]
     }
 
+    createAccountInPaymentProviderMock.mockImplementationOnce(() => T.void)
     serviceOperationsMock.getServiceById.mockResolvedValueOnce(null)
     serviceOperationsMock.createService.mockResolvedValueOnce(serviceWithPrice)
     syncMock.sync.mockResolvedValueOnce(serviceWithPrice)
@@ -91,6 +95,10 @@ describe('upsert service test', () => {
         T.provideService(
           StorageProviderFactory,
           storageProviderFactoryMock as unknown as typeof storageProviderFactory
+        ),
+        T.provideService(
+          CreateAccountIfNotExistsInPaymentProvider,
+          createAccountInPaymentProviderMock as unknown as typeof createAccountInPaymentProviderMock
         ),
         T.runPromise
       )
@@ -134,6 +142,7 @@ describe('upsert service test', () => {
       ]
     }
 
+    createAccountInPaymentProviderMock.mockImplementationOnce(() => T.void)
     serviceOperationsMock.getServiceById.mockResolvedValueOnce(null)
     serviceOperationsMock.updateService.mockResolvedValueOnce(serviceWithPrice)
     syncMock.sync.mockResolvedValueOnce(serviceWithPrice)
@@ -157,6 +166,10 @@ describe('upsert service test', () => {
         T.provideService(
           StorageProviderFactory,
           storageProviderFactoryMock as unknown as typeof storageProviderFactory
+        ),
+        T.provideService(
+          CreateAccountIfNotExistsInPaymentProvider,
+          createAccountInPaymentProviderMock as unknown as typeof createAccountInPaymentProviderMock
         ),
         T.runPromise
       )
@@ -201,6 +214,7 @@ describe('upsert service test', () => {
       ]
     }
 
+    createAccountInPaymentProviderMock.mockImplementationOnce(() => T.void)
     serviceOperationsMock.getServiceById.mockResolvedValueOnce(null)
     serviceOperationsMock.updateService.mockResolvedValueOnce(serviceWithPrice)
     const error = new Error('error')
@@ -227,6 +241,10 @@ describe('upsert service test', () => {
         T.provideService(
           StorageProviderFactory,
           storageProviderFactoryMock as unknown as typeof storageProviderFactory
+        ),
+        T.provideService(
+          CreateAccountIfNotExistsInPaymentProvider,
+          createAccountInPaymentProviderMock as unknown as typeof createAccountInPaymentProviderMock
         ),
         T.runPromise
       )

@@ -1,5 +1,5 @@
 import { UserWithServicesWithPrices } from '@/types/User.type'
-import { PrismaClient, User } from '@prisma/client'
+import { PaymentProvider, PrismaClient, User } from '@prisma/client'
 
 export const userCrud = (prisma: PrismaClient) => {
   const createUser = (user: Omit<User, 'id' | 'createdAt' | 'userBalanceId'>): Promise<User> => {
@@ -84,6 +84,26 @@ export const userCrud = (prisma: PrismaClient) => {
     })
   }
 
+  const setPaymentProviderAccount = (
+    userId: number,
+    provider: PaymentProvider,
+    idInProvider: string
+  ) => {
+    return prisma.connectedAccount.create({
+      data: {
+        userId,
+        idInProvider,
+        provider
+      }
+    })
+  }
+
+  const getPaymentProviderAccount = (userId: number) => {
+    return prisma.connectedAccount.findFirst({
+      where: { userId }
+    })
+  }
+
   return {
     createUser,
     updateUser,
@@ -91,6 +111,8 @@ export const userCrud = (prisma: PrismaClient) => {
     getUserById,
     getUserByIds,
     verifyIfUserExistsByEmail,
-    selectUserById
+    selectUserById,
+    setPaymentProviderAccount,
+    getPaymentProviderAccount
   }
 }
