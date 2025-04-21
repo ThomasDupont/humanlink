@@ -8,9 +8,11 @@ export const useOfferHook = (locale: SupportedLocale, actualDate: Date) => {
     const deadline = new Date(offer.deadline)
 
     return {
-      acceptedAt: offer.acceptedAt && format(new Date(offer.acceptedAt), 'PPP', {
-        locale: localeToDateFnsLocale(locale)
-      }),
+      acceptedAt:
+        offer.acceptedAt &&
+        format(new Date(offer.acceptedAt), 'PPP', {
+          locale: localeToDateFnsLocale(locale)
+        }),
       offerFrom: offer.userId === userId ? 'me' : 'other',
       isExpired: actualDate > deadline,
       deadline:
@@ -22,7 +24,8 @@ export const useOfferHook = (locale: SupportedLocale, actualDate: Date) => {
               }),
               {
                 delimiter: ', ',
-                locale: localeToDateFnsLocale(locale)
+                locale: localeToDateFnsLocale(locale),
+                format: ['days', 'hours', 'minutes']
               }
             )
           : 'expired',

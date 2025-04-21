@@ -8,8 +8,14 @@ a {
   text-decoration: none;
 }
 
+ul {
+  list-style: square;
+  padding-left: 20px;
+}
+
 #preview-desc p,
-li {
+li,
+p {
   font-family: roboto;
 }
 

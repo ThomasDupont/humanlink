@@ -29,6 +29,8 @@ import { Spinner } from '../../components/Spinner'
 import { useManagePrice } from '../../hooks/managePrice.hook'
 import { useRouter } from 'next/router'
 import { useUserState } from '@/state/user.state'
+import { convertHtmlToMarkdown } from '@/utils/convertHtmlToMarkdown'
+import Markdown from 'react-markdown'
 
 const Base = ({ children }: { children: ReactElement }) => {
   return (
@@ -142,6 +144,8 @@ export default function Service({ userId, serviceId }: Props) {
     }
   }
 
+  const mdDescription = convertHtmlToMarkdown(service.description)
+
   return (
     <Container maxWidth="lg">
       <Grid
@@ -202,23 +206,27 @@ export default function Service({ userId, serviceId }: Props) {
             </Typography>
             <Typography variant="body2">#{service.category}</Typography>
           </Stack>
-          <CardMedia
-            component="img"
-            image={`https://picsum.photos/1000/625?random=${service.id}`}
-            alt="service"
-            sx={t => ({
-              mt: 4,
-              borderRadius: `calc(${t.shape.borderRadius}px + 8px)`
-            })}
-          />
-          <Typography
-            variant="body1"
+          <Box display={'flex'} flexDirection={'row'} justifyContent={'center'} sx={{ m: 2 }}>
+            <CardMedia
+              component="img"
+              image={service.images[0]}
+              alt="service"
+              sx={t => ({
+                mt: 4,
+                borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
+                height: 300,
+                width: 448
+              })}
+            />
+          </Box>
+          <Box
             sx={{
-              mt: 4
+              m: 4,
+              p: 2
             }}
           >
-            {service.description}
-          </Typography>
+            <Markdown>{mdDescription}</Markdown>
+          </Box>
           <Divider
             sx={{
               m: 4
