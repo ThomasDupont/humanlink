@@ -43,7 +43,8 @@ export enum Tag {
   Description = 'description',
   Category = 'category',
   Langs = 'langs',
-  Price = 'price'
+  Price = 'price',
+  Server = 'server'
 }
 
 const validateCategoryEffect = (input: unknown) =>

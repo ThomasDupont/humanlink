@@ -22,10 +22,18 @@ import { acceptOfferRenderingsAndCreateMoneyTransfertEffect } from './mutations/
 import { CloseMilestoneArgs, closeMilestoneEffect } from './mutations/closeMilestone'
 import { sendMessageEffect, SendMessageInput } from './mutations/sendMessage'
 import { effectMailProviderFactory } from '@/server/emailOperations/email.provider'
+import { effectCreateAccountIfNotExistsInPaymentProvider } from './mutations/createAccountInPaymentProvider'
 
 export const upsertService = (args: UpsertServiceArgs) => ({
   run: () =>
-    upsertServiceEffect(args).pipe(effectLogger, effectServiceOperations, effectSync, T.runPromise)
+    upsertServiceEffect(args).pipe(
+      effectLogger,
+      effectServiceOperations,
+      effectSync,
+      effectStorageProviderFactory,
+      effectCreateAccountIfNotExistsInPaymentProvider,
+      T.runPromise
+    )
 })
 
 export const createOfferWithMessage = (offer: CreateOffer) => ({

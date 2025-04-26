@@ -22,7 +22,12 @@ export const crudFileTigris = (s3Fun: () => S3Client): GenericStorageProvider =>
       })
 
       await s3.send(command)
-      return ''
+
+      const { env } = await import('@/server/env')
+
+      const tigrisBaseUrl = new URL(env.AWS_ENDPOINT_URL_S3)
+
+      return `https://${bucket}.${tigrisBaseUrl.hostname}/${filename}`
     }
 
   const removeAFileInTheBucket =

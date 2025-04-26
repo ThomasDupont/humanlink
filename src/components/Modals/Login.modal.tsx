@@ -39,6 +39,19 @@ export default function LoginModal({ callbackUrl }: { callbackUrl?: string }) {
           </StyledButton>
         </ListItem>
         <ListItem>
+          <StyledButton onClick={() => signIn('github', callbackUrl ? { callbackUrl } : undefined)}>
+            <Avatar
+              src="/icons/github-48.png"
+              sx={{
+                width: 24,
+                height: 24
+              }}
+            />{' '}
+            &nbsp;&nbsp;{t('withGithub')}
+          </StyledButton>
+        </ListItem>
+        {/* Uncomment when Google auth is available */}
+        {/* <ListItem>
           <StyledButton onClick={() => signIn('google', callbackUrl ? { callbackUrl } : undefined)}>
             <Avatar
               src="/icons/google-48.png"
@@ -49,7 +62,7 @@ export default function LoginModal({ callbackUrl }: { callbackUrl?: string }) {
             />{' '}
             &nbsp;&nbsp;{t('withGoogle')}
           </StyledButton>
-        </ListItem>
+        </ListItem> */}
       </List>
     </Box>
   )

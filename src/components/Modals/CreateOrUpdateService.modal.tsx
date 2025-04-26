@@ -5,6 +5,7 @@ import {
   useCreateServiceFormValidation
 } from '@/hooks/forms/createService.form.hook'
 import { FormError } from '@/utils/effects/Errors'
+import InputFileUpload from '@/materials/InputFileUpload'
 import { categoryToArray, langsToArray } from '@/utils/retreatPrismaSchema'
 import {
   Alert,
@@ -19,7 +20,8 @@ import {
   Select,
   Snackbar,
   TextField,
-  Typography
+  Typography,
+  Chip
 } from '@mui/material'
 import { NumericFormat } from 'react-number-format'
 import { Category, Lang } from '@prisma/client'
@@ -55,14 +57,19 @@ export default function CreateOrUpdateServiceModal({
   handleClose: () => void
 }) {
   const [formValues, setFormValues] = useState<
-    Omit<CreateServiceFormSchema, 'category' | 'price'> & { category?: Category; price?: number }
+    Omit<CreateServiceFormSchema, 'category' | 'price'> & {
+      category?: Category
+      price?: number
+      files: File[]
+    }
   >({
     title: service ? service.title : '',
     shortDescription: service ? service.descriptionShort : '',
     description: service ? service.description : '',
     category: service ? service.category : undefined,
     langs: service ? service.langs : [],
-    price: service && service.prices ? (service.prices[0]?.number ?? 1) / 100 : undefined
+    price: service && service.prices ? (service.prices[0]?.number ?? 1) / 100 : undefined,
+    files: []
   })
   const [showSpinner, setShowSpinner] = useState(false)
   const [openSnackBar, setOpenSnackBar] = useState(false)
@@ -79,7 +86,7 @@ export default function CreateOrUpdateServiceModal({
 
   const ReactQuill = useMemo(() => dynamic(() => import('react-quill'), { ssr: false }), [])
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
 
     const errors = validate(formValues)
@@ -93,33 +100,97 @@ export default function CreateOrUpdateServiceModal({
     const { price, langs, category, ...raws } = formValues
 
     setShowSpinner(true)
-    upsertService({
-      ...raws,
-      category: category!,
-      langs: [...langs],
-      id: service?.id,
-      prices: [
-        {
-          number: price! * 100,
-          id: service?.prices[0]?.id
-        }
-      ]
-    })
-      .then(() => {
-        setOpenSnackBar(true)
-        setTimeout(() => handleClose(), 1000)
-      })
-      .catch(err => {
-        setFormErrors([err])
-        console.error(err)
-        setOpenSnackBar(true)
-      })
-      .finally(() => setShowSpinner(false))
+
+    const upload = async (
+      serviceId: number
+    ): Promise<{
+      files: {
+        originalFilename: string
+        hash: string
+      }[]
+    }> => {
+      const formData = new FormData()
+
+      formData.append('serviceId', serviceId.toString())
+      for (const file of formValues.files) {
+        formData.append('files', file)
+      }
+
+      if (formValues.files.length) {
+        return fetch('/api/upload/service', {
+          method: 'POST',
+          body: formData
+        }).then(response => response.json())
+      }
+
+      return { files: [] }
+    }
+
+    try {
+      const basePayload = {
+        ...raws,
+        category: category!,
+        langs: [...langs],
+        prices: [
+          {
+            number: price! * 100,
+            id: service?.prices[0]?.id
+          }
+        ]
+      }
+
+      if (service?.id) {
+        // update
+        const files = await upload(service.id)
+        await upsertService({
+          ...basePayload,
+          id: service.id,
+          files: files.files.map(f => f.hash)
+        })
+      } else {
+        // create
+        const result = await upsertService({
+          ...basePayload,
+          files: [] // create after
+        })
+        const files = await upload(result.id)
+
+        await upsertService({
+          ...basePayload,
+          id: result.id,
+          files: files.files.map(f => f.hash)
+        })
+      }
+
+      setOpenSnackBar(true)
+      setTimeout(() => handleClose(), 1000)
+    } catch (error) {
+      const err = error as Error
+      setFormErrors([new FormError(Tag.Server, err.message)])
+      console.error(error)
+      setOpenSnackBar(true)
+    } finally {
+      setShowSpinner(false)
+    }
+  }
+
+  const handleDeleteFromFileList = (name: string) => {
+    const fileIndex = formValues.files.findIndex(f => f.name === name)
+    const newFilesList = formValues.files.filter((_, i) => i !== fileIndex)
+
+    setFormValues(state => ({
+      ...state,
+      files: newFilesList
+    }))
   }
 
   const getErrorByTag = (tag: Tag): FormError | null => {
     return formErrors.find(error => error.tag === tag) ?? null
   }
+
+  const totalFile = formValues.files.length
+
+  const totalFileSize = formValues.files.reduce((acc, file) => (acc += file.size), 0)
 
   return showSpinner ? (
     <Spinner />
@@ -177,6 +248,7 @@ export default function CreateOrUpdateServiceModal({
                 ))}
               </Select>
             </FormControl>
+
             <FormControl
               sx={{
                 width: '20%'
@@ -309,7 +381,59 @@ export default function CreateOrUpdateServiceModal({
               )}
             </Box>
           </Box>
-          <Button disabled={openSnackBar} size="medium" type="submit" variant="contained">
+          <FormControl>
+            <Typography gutterBottom variant="body2">
+              Choose a file file for your service banner. This image will display at 1000 X 625 and
+              must be in webp format.
+            </Typography>
+            <Box display={'flex'} justifyContent={'center'}>
+              <InputFileUpload
+                accept={config.userInteraction.extFilesForService}
+                onChange={files => {
+                  if (files === null) return
+                  setFormValues(state => ({
+                    ...state,
+                    files: [...[...files], ...state.files]
+                  }))
+                }}
+              />
+            </Box>
+          </FormControl>
+          {totalFileSize > config.userInteraction.maxUploadFileSizeForService && (
+            <Typography variant="body2" color="error">
+              {`The total size of the files is too big (${totalFileSize / 1_000_000} Mb)`}
+            </Typography>
+          )}
+          {totalFile > config.userInteraction.maxUploadFilesForService && (
+            <Typography variant="body2" color="error">
+              {`The total file is over than ${config.userInteraction.maxUploadFilesForService}`}
+            </Typography>
+          )}
+          <Box
+            display={'flex'}
+            flexDirection={'row'}
+            gap={1}
+            justifyContent={'space-around'}
+            flexWrap={'wrap'}
+            sx={{ mb: 2 }}
+          >
+            {formValues.files.map(file => (
+              <Chip
+                key={file.name}
+                label={file.name}
+                onDelete={() => handleDeleteFromFileList(file.name)}
+              />
+            ))}
+          </Box>
+          <Button
+            disabled={
+              openSnackBar ||
+              formValues.files.length > config.userInteraction.maxUploadFilesForService
+            }
+            size="medium"
+            type="submit"
+            variant="contained"
+          >
             {commonT('save')}
           </Button>
         </Box>

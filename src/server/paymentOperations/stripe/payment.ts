@@ -43,10 +43,14 @@ export const stripeProvider = (stripeFun: () => Stripe): GenericPaymentProvider 
       paid: paymentIntent.status === 'succeeded'
     }))
 
-  const refundFullTransaction = (id: string) => 
-    stripe.refunds.create({
-      payment_intent: id
-    }).then(() => true)
+  const refundFullTransaction = (id: string) =>
+    stripe.refunds
+      .create({
+        payment_intent: id
+      })
+      .then(() => true)
 
-  return { createPayment, getPaymentById, refundFullTransaction }
+  const createAccount = (email: string) => stripe.accounts.create({ email }).then(acc => acc.id)
+
+  return { createPayment, getPaymentById, refundFullTransaction, createAccount }
 }

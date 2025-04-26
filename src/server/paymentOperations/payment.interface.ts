@@ -16,4 +16,5 @@ export type GenericPaymentProvider = {
   }) => Promise<PaymentData>
   getPaymentById: (id: string) => Promise<PaymentData>
   refundFullTransaction: (id: string) => Promise<boolean>
+  createAccount: (email: string) => Promise<string>
 }

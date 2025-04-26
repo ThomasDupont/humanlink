@@ -53,6 +53,15 @@ model User {
   UserBalanceEventsLog UserBalanceEventsLog[]
   Transaction1         Transaction[]          @relation("seller")
   Transaction2         Transaction[]          @relation("buyer")
+  ConnectedAccount     ConnectedAccount[]
+}
+
+model ConnectedAccount {
+  id           Int             @id @default(autoincrement())
+  provider     PaymentProvider
+  idInProvider String          @unique
+  user         User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId       Int?
 }
 
 // SERVICE

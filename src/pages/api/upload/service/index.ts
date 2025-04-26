@@ -1,10 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { Formidable } from 'formidable'
 import { getServerSession } from 'next-auth/next'
-import { authOptions } from '../auth/[...nextauth]'
+import { authOptions } from '../../auth/[...nextauth]'
 import appConfig from '@/config'
 import { uploadsFile } from '@/server/routers/trpcProcedures/upsert.trpc'
-import { filesOperations, offerOperations } from '@/server/databaseOperations/prisma.provider'
+import { serviceOperations } from '@/server/databaseOperations/prisma.provider'
 
 export const config = {
   api: {
@@ -31,42 +31,42 @@ export default async function POST(req: NextApiRequest, res: NextApiResponse) {
       return res.status(400).json({ error: 'No files received.' })
     }
 
-    if (!fields['offerId'] || !fields['offerId'][0]) {
+    if (!fields['serviceId'] || !fields['serviceId'][0]) {
       return res.status(400).json({ error: 'No offerId received.' })
     }
 
-    const offer = await offerOperations.getAnOfferByCreatorId(
-      parseInt(fields['offerId'][0] ?? '0'),
-      userId
-    )
+    const service = await serviceOperations.getServiceById(parseInt(fields['serviceId'][0] ?? '0'))
 
-    if (!offer) {
-      return res.status(404).json({ error: 'Offer not found.' })
+    if (!service) {
+      return res.status(404).json({ error: 'Service not found.' })
     }
 
-    const fileAlreadySent = await filesOperations.getFilesByHashAndRelatedUser(
-      userId,
-      offer.milestone.map(milestone => milestone.renderingFiles).flat()
-    )
+    if (service.userId !== userId) {
+      return res.status(403).json({ error: 'user_not_authorized' })
+    }
 
-    if (fileAlreadySent.length + files.files.length > appConfig.userInteraction.maxUploadFiles) {
+    if (files.files.length > appConfig.userInteraction.maxUploadFileSizeForService) {
       return res.status(400).json({ error: 'max_file_upload' })
     }
 
-    const computeTotalFile =
-      fileAlreadySent.reduce((acc, file) => acc + file.size, 0) +
-      files.files.reduce((acc, file) => acc + file.size, 0)
+    const computeTotalFileSize = files.files.reduce((acc, file) => acc + file.size, 0)
 
-    if (computeTotalFile > appConfig.userInteraction.maxUploadFileSize) {
+    if (computeTotalFileSize > appConfig.userInteraction.maxUploadFileSizeForService) {
       return res.status(400).json({ error: 'max_file_size' })
     }
 
-    const uploadResult = await uploadsFile(files.files, 'ascend-rendering-offer', userId).run()
+    for (const file of files.files) {
+      if (!appConfig.userInteraction.extFilesForService.includes(file.mimetype ?? '')) {
+        return res.status(400).json({ error: 'ext_file_not-supported' })
+      }
+    }
+
+    const uploadResult = await uploadsFile(files.files, 'ascend-service-banner', userId).run()
 
     return res.json({
       files: uploadResult.map(file => ({
         originalFilename: file.originalFilename,
-        hash: file.hash
+        hash: file.uri
       }))
     })
   } catch (error) {

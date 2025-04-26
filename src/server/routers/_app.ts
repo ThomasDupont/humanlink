@@ -3,6 +3,7 @@ import DOMPurify from 'dompurify'
 import { JSDOM } from 'jsdom'
 import { z } from 'zod'
 import {
+  balanceOperations,
   disputesOperations,
   messageOperations,
   serviceOperations,
@@ -36,6 +37,7 @@ import {
   userWithServiceToDisplayUserForOther
 } from '../dto/user.dto'
 import { TRPCError } from '@trpc/server'
+import { getTransactions } from './trpcProcedures/queries/getUserTransactions'
 
 export const appRouter = router({
   get: router({
@@ -103,7 +105,11 @@ export const appRouter = router({
       )
       .query(({ input, ctx }) =>
         disputesOperations.getConcernedDisputesForOneOffer(input.offerId, ctx.session.user.id)
-      )
+      ),
+    getUserBalance: protectedprocedure.query(({ ctx }) =>
+      balanceOperations.getUserBalance(ctx.session.user.id)
+    ),
+    getUserTransactions: protectedprocedure.query(({ ctx }) => getTransactions(ctx.session.user.id))
   }),
   protectedMutation: router({
     sendMessage: protectedprocedure
@@ -122,7 +128,6 @@ export const appRouter = router({
           offerId: input.offerId
         }).run()
       ),
-
     user: router({
       profile: protectedprocedure
         .input(
@@ -161,11 +166,12 @@ export const appRouter = router({
                 number: z.number().min(100).max(config.userInteraction.fixedPriceMax),
                 id: z.number().optional()
               })
-            )
+            ),
+            files: z.array(z.string()).min(0).max(config.userInteraction.maxUploadFileSize)
           })
         )
-        .mutation(({ input, ctx }) => {
-          return upsertService({
+        .mutation(({ input, ctx }) =>
+          upsertService({
             userId: ctx.session.user.id,
             serviceId: input.id,
             service: {
@@ -176,10 +182,10 @@ export const appRouter = router({
               langs: input.langs,
               type: config.serviceTypeFromCategory[input.category],
               // ---- MVP default
-              images: ['https://picsum.photos/1000/625'],
               localisation: '',
               renewable: false
             },
+            files: input.files,
             prices: input.prices.map(price => ({
               id: price.id ?? 0,
               number: price.number,
@@ -188,7 +194,7 @@ export const appRouter = router({
               currency: 'EUR'
             }))
           }).run()
-        }),
+        ),
       delete: protectedprocedure
         .input(z.number())
         .mutation(({ input, ctx }) => deleteAService(input, ctx.session.user.id).run())

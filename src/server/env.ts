@@ -20,7 +20,9 @@ const envSchema = z.object({
   AWS_SECRET_ACCESS_KEY: z.string(),
   AWS_ACCESS_KEY_ID: z.string(),
   MAILJET_API_KEY: z.string(),
-  MAILJET_API_SECRET: z.string()
+  MAILJET_API_SECRET: z.string(),
+  GITHUB_CLIENT_ID: z.string(),
+  GITHUB_CLIENT_SECRET: z.string()
 })
 
 const _env = envSchema.safeParse(process.env)
