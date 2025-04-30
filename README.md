@@ -1,28 +1,18 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# HUMANLINK
 
-## Getting Started
+This project is a MVP of a freelancing PF
 
-First, run the development server:
+## Main technos
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Next.js
+- tRPC : **[link](https://trpc.io/)**
+- TypeScript (v5)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Other technos
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
-
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
-
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
-
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- @mui/material : **[link](https://mui.com/)** , Component library
+- prisma : **[link](https://www.prisma.io/)** , An ORM
+- effect : **[link](https://effect.website/)** , A functionnal programming library
 
 ## Learn More
 
