@@ -13,18 +13,34 @@ This project is a MVP of a freelancing PF
 - @mui/material : **[link](https://mui.com/)** , Component library
 - prisma : **[link](https://www.prisma.io/)** , An ORM
 - effect : **[link](https://effect.website/)** , A functionnal programming library
+- valtio : **[link](https://valtio.dev/)** , state management
+- @tanstack/react-query
+- elasticsearch
 
-## Learn More
+## Principles
 
-To learn more about Next.js, take a look at the following resources:
+### hexagonal architecture
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+#### backend
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The core of the application is on routers/trpcProcedures, useCase is an Effect programme who respect the SOLID principle.
+The useCase are :
 
-## Deploy on Vercel
+- Pure
+- use Dependency Injection pattern
+- with a single responsability
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The dependencies are manage with ports interface (providers) and adapters.
+Example with emailing :
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+- The port is the mailer interface, it implements the sendEmail method
+- The useCase who need to send an email inject the mail provider
+- The adapter used is managed by the configuration (here Mailjet)
+- So the sendEmail call with send the email through MailJet.
+
+This process is respecting the SOLID principle.
+
+#### frontend
+
+The unique purpose of the frontend is to display data with a best UX and a nice UI.
+The front could have a hexagonal architecture for example with the payment management. Each payment platform is an adapter (with component and hook), for example use Stripe and Lemonway
