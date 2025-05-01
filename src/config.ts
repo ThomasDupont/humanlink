@@ -16,6 +16,7 @@ type Config = {
   storageProvider: 'tigris'
   emailProvider: 'mailjet'
   fees: number
+  frontUrl: string
   userInteraction: {
     descriptionMaxLen: number
     jobTitleMaxLen: number
@@ -43,6 +44,7 @@ const config: Config = {
   storageProvider: 'tigris',
   emailProvider: 'mailjet',
   fees: 0.08,
+  frontUrl: 'https://humanlink.vercel.app',
   userInteraction: {
     descriptionMaxLen: 2000,
     jobTitleMaxLen: 100,

@@ -77,13 +77,15 @@ const Item = ({ locale, offer }: { locale: SupportedLocale; offer: ConcernedOffe
                 : `I have accepted this offer the ${parsedOffer.acceptedAt}`}
             </Typography>
           </Box>
-          <Box display={'flex'} flexDirection={'row'} gap={1} alignItems={'center'}>
-            <Typography variant="body1" color={parsedOffer.isExpired ? 'error' : 'success'}>
-              {parsedOffer.isExpired
-                ? `deadline expired`
-                : `Must be completed in ${parsedOffer.deadline}`}
-            </Typography>
-          </Box>
+          {parsedOffer.couldAddRendering && (
+            <Box display={'flex'} flexDirection={'row'} gap={1} alignItems={'center'}>
+              <Typography variant="body1" color={parsedOffer.isExpired ? 'error' : 'success'}>
+                {parsedOffer.isExpired
+                  ? `deadline expired`
+                  : `Must be completed in ${parsedOffer.deadline}`}
+              </Typography>
+            </Box>
+          )}
           <Box
             sx={{
               minWidth: 48

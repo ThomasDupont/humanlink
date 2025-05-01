@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client'
 import { withAccelerate } from '@prisma/extension-accelerate'
 import { userCrud } from './users/users.prisma'
 import { servicesCrud } from './services/services.prisma'
-import { logger } from '@/server/logger'
+// import { logger } from '@/server/logger'
 import { Context, Effect } from 'effect'
 import { messageCrud } from './messages/messages.prisma'
 import { offersCrud } from './offers/offers.prisma'
@@ -34,6 +34,7 @@ const prisma = new PrismaClient({
 })
 
 // event log
+/*
 prisma.$on('query', e => {
   logger.info({
     prismaQuery: e.query,
@@ -48,6 +49,7 @@ prisma.$on('error', e => {
     message: e.message
   })
 })
+  */
 
 const extendedPrisma = prisma.$extends(withAccelerate())
 

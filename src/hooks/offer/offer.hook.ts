@@ -30,7 +30,7 @@ export const useOfferHook = (locale: SupportedLocale, actualDate: Date) => {
             )
           : 'expired',
       status: offer.isPaid ? 'terminated' : 'active',
-      couldAddRendering: !offer.isPaid,
+      couldAddRendering: !offer.isPaid && !offer.isTerminated,
       computedPrice: offer.milestone.reduce(
         (acc, milestone) => acc + milestone.priceMilestone.number,
         0

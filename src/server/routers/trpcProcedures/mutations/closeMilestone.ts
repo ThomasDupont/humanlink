@@ -83,11 +83,12 @@ export const closeMilestoneEffect = ({ offerId, userId, milestoneId }: CloseMile
       T.flatten,
       T.flatMap(({ hasDoneAllMilestone }) =>
         T.tryPromise({
-          try: () => transactionOperations.closeMilestoneAndOfferTransaction({
-            milestoneId,
-            offerId,
-            hasDoneAllMilestone
-          }),
+          try: () =>
+            transactionOperations.closeMilestoneAndOfferTransaction({
+              milestoneId,
+              offerId,
+              hasDoneAllMilestone
+            }),
           catch: error => {
             logger.error({
               cause: 'database_error',

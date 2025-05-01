@@ -15,6 +15,13 @@ const CheckoutForm = ({
   const elements = useElements()
   const { mutateAsync } = trpc.protectedMutation.payment.stripe.createPaymentIntent.useMutation()
 
+  const getAppUrl = () => {
+    if (typeof window !== 'undefined') {
+      return window.location.origin
+    }
+    return ''
+  }
+
   const [paymentError, setPaymentError] = useState<StripeError>()
 
   const handleSubmit = async (event: FormEvent) => {
@@ -36,7 +43,7 @@ const CheckoutForm = ({
           clientSecret: data.secret,
           elements,
           confirmParams: {
-            return_url: 'http://localhost:3000/stripe'
+            return_url: `${getAppUrl()}/redirect/stripe?paymentId=${data.id}&offerId=${offer.id}`
           },
           redirect: 'if_required'
         })

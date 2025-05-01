@@ -9,6 +9,7 @@ import { TRPCError } from '@trpc/server'
 import { Effect as T } from 'effect'
 import { CustomError } from '../error'
 import { buildNotificationEmail } from '@/server/emailOperations/buildEmail'
+import config from '@/config'
 
 export type SendMessageInput = {
   receiverId: number
@@ -54,7 +55,7 @@ const sendNotification =
       detail
     })
 
-    const mail = emailFactory.mailjet()
+    const mail = emailFactory[config.emailProvider]()
     await mail.sendEmail({
       to: {
         email: receiver.email,
@@ -64,6 +65,8 @@ const sendNotification =
       text: detail,
       html
     })
+
+    // send notification to the buyer
   }
 
 export const sendMessageEffect = ({ offerId, senderId, receiverId, message }: SendMessageInput) =>

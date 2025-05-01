@@ -186,7 +186,7 @@ const Conversation = ({
                         padding: 1
                       })}
                     >
-                      {message.message}{' '}
+                      {message.message}
                     </Typography>
                   )}
                 </Box>
@@ -230,7 +230,9 @@ const Conversation = ({
                           mr: 1
                         }}
                       >
-                        <IconButton onClick={() => refetch()} edge="end"><Refresh /></IconButton>
+                        <IconButton onClick={() => refetch()} edge="end">
+                          <Refresh />
+                        </IconButton>
                         <IconButton type="submit" edge="end">
                           <Send
                             fontSize="medium"

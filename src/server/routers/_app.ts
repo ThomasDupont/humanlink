@@ -359,7 +359,7 @@ export const appRouter = router({
             milestoneId,
             userId: ctx.session.user.id,
             offerId
-          })
+          }).run()
         )
     })
   })
