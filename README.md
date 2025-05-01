@@ -19,15 +19,25 @@ This project is a MVP of a freelancing PF
 
 ## Principles
 
+### TypeScript
+
+This project implement TypeScript with a strict configuration.
+
+### Lint & Prettier
+
+This project use the typescript strandard linter rules and a prettier.
+
+It's not possible to push a commit with an error build, a lint error and a unit test failed.
+
 ### hexagonal architecture
 
 #### backend
 
 The core of the application is on routers/trpcProcedures, useCase is an Effect programme who respect the SOLID principle.
-The useCase are :
+The useCases are :
 
-- Pure
-- use Dependency Injection pattern
+- pure
+- used Dependency Injection pattern
 - with a single responsability
 
 The dependencies are manage with ports interface (providers) and adapters.

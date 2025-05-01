@@ -7,10 +7,10 @@ This project respect the principle of hexagonal architecture.
 ### backend
 
 The core of the application is on routers/trpcProcedures, useCase is an Effect programme who respect the SOLID principle.
-The useCase are :
+The useCases are :
 
-- Pure
-- use Dependency Injection pattern
+- pure
+- used Dependency Injection pattern
 - with a single responsability
 
 The dependencies are manage with ports interface (providers) and adapters.
