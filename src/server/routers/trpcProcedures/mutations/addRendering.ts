@@ -1,11 +1,67 @@
 import { Logger } from '@/server/logger'
 import { Effect as T } from 'effect'
-import { OfferOperations, TransactionOperations } from '../../../databaseOperations/prisma.provider'
+import {
+  OfferOperations,
+  TransactionOperations,
+  userOperations
+} from '../../../databaseOperations/prisma.provider'
 import { StorageProviderFactory } from '../../../storage/storage.provider'
 import config from '@/config'
 import { TRPCError } from '@trpc/server'
 import { Prisma } from '@prisma/client'
 import { rebuildPathForSecurity } from '@/utils/rebuildPathForSecurity'
+import { mailProviderFactory } from '@/server/emailOperations/email.provider'
+import { buildNotificationEmail } from '@/server/emailOperations/buildEmail'
+
+const _sendNotification =
+  ({
+    userOps,
+    emailFactory
+  }: {
+    userOps: typeof userOperations
+    emailFactory: typeof mailProviderFactory
+  }) =>
+  async ({
+    senderId,
+    receiverId,
+    offer
+  }: {
+    senderId: number
+    receiverId: number
+    offer: {
+      id: number
+      title: string
+    }
+  }) => {
+    const sender = await userOps.selectUserById(senderId, { firstname: true })
+    const receiver = await userOps.selectUserById(receiverId, { firstname: true, email: true })
+
+    if (!receiver) {
+      throw new Error(`Receiver with ID ${receiverId} not found`)
+    }
+
+    if (!sender) {
+      throw new Error(`Sender with ID ${senderId} not found`)
+    }
+
+    const detail = `${sender.firstname} add a rendering to the offer ${offer.title}, you could consult the detail here <a href="${config.frontUrl}/dashboard/detail/offer/${offer.id}">here</a>`
+    const html = buildNotificationEmail({
+      firstname: receiver.firstname,
+      notificationType: 'RENDERING_ADDED',
+      detail
+    })
+
+    const mail = emailFactory[config.emailProvider]()
+    await mail.sendEmail({
+      to: {
+        email: receiver.email,
+        name: receiver.firstname
+      },
+      subject: 'Offer accepted',
+      text: detail,
+      html
+    })
+  }
 
 export type AddRenderingEffectArgs = {
   milestoneId: number

@@ -3,7 +3,8 @@ import path from 'path'
 
 const NotificationType = {
   OFFER_ACCEPTED: `You're offer has been accepted`,
-  NEW_MESSAGE: 'You have a new message'
+  NEW_MESSAGE: 'You have a new message',
+  RENDERING_ADDED: 'A new rendering has been added'
 } as const
 
 export type NotificationEmail = {

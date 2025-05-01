@@ -222,13 +222,15 @@ const DisplayOfferDetail = ({
                   : `I have accepted this offer the ${parsedOffer.acceptedAt}`}
               </Typography>
             </Box>
-            <Box display={'flex'} flexDirection={'row'} gap={1} alignItems={'center'}>
-              <Typography variant="body1" color={parsedOffer.isExpired ? 'error' : 'success'}>
-                {parsedOffer.isExpired
-                  ? `deadline expired`
-                  : `Must be completed in ${parsedOffer.deadline}`}
-              </Typography>
-            </Box>
+            {parsedOffer.couldAddRendering && (
+              <Box display={'flex'} flexDirection={'row'} gap={1} alignItems={'center'}>
+                <Typography variant="body1" color={parsedOffer.isExpired ? 'error' : 'success'}>
+                  {parsedOffer.isExpired
+                    ? `deadline expired`
+                    : `Must be completed in ${parsedOffer.deadline}`}
+                </Typography>
+              </Box>
+            )}
           </Box>
           <Grid container rowSpacing={4}>
             <Grid size={2}>
@@ -285,6 +287,15 @@ const DisplayOfferDetail = ({
                   <Button onClick={() => setRenderingBox(true)} variant="contained" color="primary">
                     Add a rendering
                   </Button>
+                </Box>
+              </Grid>
+            )}
+            {!parsedOffer.couldAddRendering && (
+              <Grid size={12}>
+                <Box display={'flex'} flexDirection={'row'} gap={1} justifyContent={'center'}>
+                  <Typography variant="body1" color="secondary">
+                    {`${parsedOffer.offerFrom === 'me' ? 'You' : offer.userReceiver?.firstname} terminated this offer`}
+                  </Typography>
                 </Box>
               </Grid>
             )}

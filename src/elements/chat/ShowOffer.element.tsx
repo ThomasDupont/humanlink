@@ -3,12 +3,14 @@ import AcceptOfferModal from '@/components/Modals/AcceptOffer.modal'
 import PayOfferModal from '@/components/Modals/PayOffer.modal'
 import { SupportedLocale } from '@/config'
 import { useManagePrice } from '@/hooks/managePrice.hook'
+import { useUserState } from '@/state/user.state'
 import { OfferWithMileStonesAndMilestonePrice } from '@/types/Offers.type'
 import { localeToDateFnsLocale } from '@/utils/localeToDateFnsLocale'
 import { Box, Button, Typography } from '@mui/material'
 import { User } from '@prisma/client'
 import { format } from 'date-fns'
 import { useTranslation } from 'next-i18next'
+import Link from 'next/link'
 import { useState } from 'react'
 
 export default function ShowOffer({
@@ -24,6 +26,7 @@ export default function ShowOffer({
   userIdFromAuth: number | null
   onAcceptEvent: () => void
 }) {
+  const { userSnapshot: me } = useUserState()
   const parsedCreatedDate = format(offer.createdAt, 'PPP', {
     locale: localeToDateFnsLocale(locale)
   })
@@ -55,7 +58,7 @@ export default function ShowOffer({
           mb: 1
         }}
       >
-        Offer from {user.firstname} of {parsedCreatedDate}
+        {me.userId !== user.id ? '' : `Offer from ${user.firstname}`} of {parsedCreatedDate}
       </Typography>
       <Typography
         gutterBottom
@@ -82,7 +85,11 @@ export default function ShowOffer({
             {chatT('acceptOffer')}
           </Button>
         )}
-        {offer.isAccepted && <Typography color="primary">{commonT('offerAccepted')}</Typography>}
+        {offer.isAccepted && (
+          <Link href={`${locale ?? 'en'}/dashboard/detail/offer/${offer.id}`} target="_blank">
+            <Typography color="primary">{commonT('offerAccepted')}</Typography>
+          </Link>
+        )}
       </Box>
       <BaseModal open={openAcceptModal} handleClose={() => setOpenAcceptModal(false)}>
         <AcceptOfferModal

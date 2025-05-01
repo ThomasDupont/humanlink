@@ -12,6 +12,7 @@ import { Logger } from '@/server/logger'
 import { MailProviderFactory, mailProviderFactory } from '@/server/emailOperations/email.provider'
 import { buildNotificationEmail } from '@/server/emailOperations/buildEmail'
 import { CustomError } from '../error'
+import config from '@/config'
 
 const sendNotification =
   ({
@@ -40,7 +41,7 @@ const sendNotification =
       detail
     })
 
-    const mail = emailFactory.mailjet()
+    const mail = emailFactory[config.emailProvider]()
     await mail.sendEmail({
       to: {
         email: receiver.email,
