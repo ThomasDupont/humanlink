@@ -2,8 +2,9 @@ import { Effect as T } from 'effect'
 import { OfferWithMileStonesAndMilestonePriceWithoutIdsAndCreatedAt } from '@/types/Offers.type'
 import { Prisma } from '@prisma/client'
 import { TRPCError } from '@trpc/server'
-import { OfferOperations, MessageOperations } from '../../../databaseOperations/prisma.provider'
+import { OfferOperations } from '../../../databaseOperations/prisma.provider'
 import { Logger } from '@/server/logger'
+import { SendMessageProvider } from '../effectAsService'
 
 export type CreateOffer = OfferWithMileStonesAndMilestonePriceWithoutIdsAndCreatedAt & {
   userId: number
@@ -13,7 +14,7 @@ export const createOfferWithMessageEffect = (offer: CreateOffer) =>
   T.gen(function* () {
     const logger = yield* Logger
     const offerOperations = yield* OfferOperations
-    const messageOperations = yield* MessageOperations
+    const sendMessage = yield* SendMessageProvider
 
     return T.tryPromise({
       try: () => offerOperations.createAnOffer(offer),
@@ -35,32 +36,12 @@ export const createOfferWithMessageEffect = (offer: CreateOffer) =>
       }
     }).pipe(
       T.flatMap(createdOffer =>
-        T.tryPromise({
-          try: () =>
-            messageOperations
-              .sendMessageWithOffer({
-                senderId: offer.userId,
-                receiverId: offer.userIdReceiver,
-                offerId: createdOffer.id
-              })
-              .then(() => createdOffer),
-          catch: error => {
-            logger.error({
-              cause: 'database_error',
-              message: `message with offer ${createdOffer.id} db create error`,
-              detailedError: error
-            })
-
-            if (error instanceof Prisma.PrismaClientKnownRequestError) {
-              return new TRPCError({
-                code: 'NOT_FOUND'
-              })
-            }
-            return new TRPCError({
-              code: 'INTERNAL_SERVER_ERROR'
-            })
-          }
-        })
+        sendMessage({
+          senderId: offer.userId,
+          receiverId: offer.userIdReceiver,
+          offerId: createdOffer.id,
+          message: ''
+        }).pipe(T.map(() => createdOffer))
       )
     )
   }).pipe(T.flatten)

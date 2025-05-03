@@ -65,8 +65,6 @@ const sendNotification =
       text: detail,
       html
     })
-
-    // send notification to the buyer
   }
 
 export const sendMessageEffect = ({ offerId, senderId, receiverId, message }: SendMessageInput) =>
@@ -97,23 +95,22 @@ export const sendMessageEffect = ({ offerId, senderId, receiverId, message }: Se
           detailedError: error
         })
     }).pipe(
-      T.map(message => {
-        return sendNotification({
+      T.map(async message => {
+        await sendNotification({
           userOps: userOperations,
           emailFactory
         })({
           senderId,
           receiverId,
           offerId
-        })
-          .catch(error => {
-            logger.error({
-              cause: 'send_notification_error',
-              message: `send notification to ${receiverId} error`,
-              detailedError: error
-            })
+        }).catch(error => {
+          logger.error({
+            cause: 'send_notification_error',
+            message: `send notification to ${receiverId} error`,
+            detailedError: error
           })
-          .then(() => message)
+        })
+        return message
       }),
       T.match({
         onFailure: error => {

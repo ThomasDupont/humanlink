@@ -23,6 +23,7 @@ import { CloseMilestoneArgs, closeMilestoneEffect } from './mutations/closeMiles
 import { sendMessageEffect, SendMessageInput } from './mutations/sendMessage'
 import { effectMailProviderFactory } from '@/server/emailOperations/email.provider'
 import { effectCreateAccountIfNotExistsInPaymentProvider } from './mutations/createAccountInPaymentProvider'
+import { effectSendMessageProvider } from './effectAsService'
 
 export const upsertService = (args: UpsertServiceArgs) => ({
   run: () =>
@@ -41,7 +42,7 @@ export const createOfferWithMessage = (offer: CreateOffer) => ({
     createOfferWithMessageEffect(offer).pipe(
       effectLogger,
       effectOfferOperations,
-      effectMessageOperations,
+      effectSendMessageProvider,
       T.runPromise
     )
 })
