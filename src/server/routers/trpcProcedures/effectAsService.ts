@@ -1,18 +1,14 @@
 import { Context, Effect as T } from 'effect'
-import {
-  effectMessageOperations,
-  effectUserOperations
-} from '../../databaseOperations/prisma.provider'
+import { effectMessageOperations } from '../../databaseOperations/prisma.provider'
 import { effectLogger } from '@/server/logger'
-import { effectMailProviderFactory } from '@/server/emailOperations/email.provider'
 import { sendMessageEffect, SendMessageInput } from './mutations/sendMessage'
+import { effectSendNotificationNewMessageProvider } from './utils/sendEmail'
 
 export const sendMessageProvider = (args: SendMessageInput) =>
   sendMessageEffect(args).pipe(
     effectLogger,
     effectMessageOperations,
-    effectUserOperations,
-    effectMailProviderFactory
+    effectSendNotificationNewMessageProvider
   )
 
 export class SendMessageProvider extends Context.Tag('sendMessageProvider')<

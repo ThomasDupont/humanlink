@@ -1,57 +1,11 @@
 import { PaymentProvider, Prisma } from '@prisma/client'
 import { Exit, Effect as T } from 'effect'
 import { TRPCError } from '@trpc/server'
-import {
-  OfferOperations,
-  TransactionOperations,
-  UserOperations,
-  userOperations
-} from '@/server/databaseOperations/prisma.provider'
+import { OfferOperations, TransactionOperations } from '@/server/databaseOperations/prisma.provider'
 import { PaymentProviderFactory } from '@/server/paymentOperations/payment.provider'
 import { Logger } from '@/server/logger'
-import { MailProviderFactory, mailProviderFactory } from '@/server/emailOperations/email.provider'
-import { buildNotificationEmail } from '@/server/emailOperations/buildEmail'
 import { CustomError } from '../error'
-import config from '@/config'
-
-const sendNotification =
-  ({
-    userOps,
-    emailFactory
-  }: {
-    userOps: typeof userOperations
-    emailFactory: typeof mailProviderFactory
-  }) =>
-  async ({ senderId, receiverId }: { senderId: number; receiverId: number }) => {
-    const sender = await userOps.selectUserById(senderId, { firstname: true })
-    const receiver = await userOps.selectUserById(receiverId, { firstname: true, email: true })
-
-    if (!receiver) {
-      throw new Error(`Receiver with ID ${receiverId} not found`)
-    }
-
-    if (!sender) {
-      throw new Error(`Sender with ID ${senderId} not found`)
-    }
-
-    const detail = `${sender.firstname} accepted your offer`
-    const html = buildNotificationEmail({
-      firstname: receiver.firstname,
-      notificationType: 'OFFER_ACCEPTED',
-      detail
-    })
-
-    const mail = emailFactory[config.emailProvider]()
-    await mail.sendEmail({
-      to: {
-        email: receiver.email,
-        name: receiver.firstname
-      },
-      subject: 'Offer accepted',
-      text: detail,
-      html
-    })
-  }
+import { SendNotificationAcceptOfferProvider } from '../utils/sendEmail'
 
 export type AcceptOfferEffectArgs = {
   offerId: number
@@ -65,8 +19,7 @@ export const acceptOfferEffect = (args: AcceptOfferEffectArgs) =>
     const transactionOperations = yield* TransactionOperations
     const paymentProviderFactory = yield* PaymentProviderFactory
     const offerOperations = yield* OfferOperations
-    const userOperations = yield* UserOperations
-    const emailFactory = yield* MailProviderFactory
+    const sendEmail = yield* SendNotificationAcceptOfferProvider
 
     const paymentProvider = paymentProviderFactory[args.paymentProvider]()
 
@@ -174,6 +127,12 @@ export const acceptOfferEffect = (args: AcceptOfferEffectArgs) =>
                   detailedError: error
                 })
             })
+          ),
+          T.flatMap(offer =>
+            sendEmail({
+              senderId: args.userId,
+              receiverId: offer.userId
+            })
           )
         )
       ),
@@ -190,23 +149,7 @@ export const acceptOfferEffect = (args: AcceptOfferEffectArgs) =>
             message: error.clientMessage
           })
         },
-        onSuccess: offer => {
-          sendNotification({
-            userOps: userOperations,
-            emailFactory
-          })({
-            senderId: args.userId,
-            receiverId: offer.userId ?? 0
-          }).catch(error => {
-            logger.error({
-              cause: 'send_notification_error',
-              message: `send notification to ${offer.userId} error`,
-              detailedError: error
-            })
-          })
-
-          return true
-        }
+        onSuccess: () => true
       })
     )
   }).pipe(T.flatten, T.scoped)

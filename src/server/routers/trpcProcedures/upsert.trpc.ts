@@ -4,8 +4,7 @@ import {
   effectMessageOperations,
   effectOfferOperations,
   effectServiceOperations,
-  effectTransactionOperations,
-  effectUserOperations
+  effectTransactionOperations
 } from '../../databaseOperations/prisma.provider'
 import { effectLogger } from '@/server/logger'
 import { effectSync } from '../../databaseOperations/sync/sync'
@@ -21,9 +20,12 @@ import { addRenderingEffect, AddRenderingEffectArgs } from './mutations/addRende
 import { acceptOfferRenderingsAndCreateMoneyTransfertEffect } from './mutations/acceptOfferRenderingsAndCreateMoneyTransfert'
 import { CloseMilestoneArgs, closeMilestoneEffect } from './mutations/closeMilestone'
 import { sendMessageEffect, SendMessageInput } from './mutations/sendMessage'
-import { effectMailProviderFactory } from '@/server/emailOperations/email.provider'
 import { effectCreateAccountIfNotExistsInPaymentProvider } from './mutations/createAccountInPaymentProvider'
 import { effectSendMessageProvider } from './effectAsService'
+import {
+  effectSendNotificationAcceptOfferProvider,
+  effectSendNotificationNewMessageProvider
+} from './utils/sendEmail'
 
 export const upsertService = (args: UpsertServiceArgs) => ({
   run: () =>
@@ -54,8 +56,7 @@ export const acceptOffer = (args: AcceptOfferEffectArgs) => ({
       effectPaymentProviderFactory,
       effectTransactionOperations,
       effectOfferOperations,
-      effectUserOperations,
-      effectMailProviderFactory,
+      effectSendNotificationAcceptOfferProvider,
       T.runPromise
     )
 })
@@ -143,8 +144,7 @@ export const sendMessage = (args: SendMessageInput) => ({
     sendMessageEffect(args).pipe(
       effectLogger,
       effectMessageOperations,
-      effectUserOperations,
-      effectMailProviderFactory,
+      effectSendNotificationNewMessageProvider,
       T.runPromise
     )
 })

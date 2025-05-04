@@ -1,15 +1,9 @@
-import {
-  MessageOperations,
-  userOperations,
-  UserOperations
-} from '@/server/databaseOperations/prisma.provider'
-import { mailProviderFactory, MailProviderFactory } from '@/server/emailOperations/email.provider'
+import { MessageOperations } from '@/server/databaseOperations/prisma.provider'
 import { Logger } from '@/server/logger'
 import { TRPCError } from '@trpc/server'
 import { Effect as T } from 'effect'
 import { CustomError } from '../error'
-import { buildNotificationEmail } from '@/server/emailOperations/buildEmail'
-import config from '@/config'
+import { SendNotificationNewMessageProvider } from '../utils/sendEmail'
 
 export type SendMessageInput = {
   receiverId: number
@@ -18,61 +12,11 @@ export type SendMessageInput = {
   senderId: number
 }
 
-const sendNotification =
-  ({
-    userOps,
-    emailFactory
-  }: {
-    userOps: typeof userOperations
-    emailFactory: typeof mailProviderFactory
-  }) =>
-  async ({
-    senderId,
-    receiverId,
-    offerId
-  }: {
-    senderId: number
-    receiverId: number
-    offerId?: number
-  }) => {
-    const sender = await userOps.selectUserById(senderId, { firstname: true })
-    const receiver = await userOps.selectUserById(receiverId, { firstname: true, email: true })
-
-    if (!receiver) {
-      throw new Error(`Receiver with ID ${receiverId} not found`)
-    }
-
-    if (!sender) {
-      throw new Error(`Sender with ID ${senderId} not found`)
-    }
-
-    const detail = offerId
-      ? `You have a new message from ${sender.firstname} an offer, respond to this message in the chat part in the platform`
-      : `You have a new message from ${sender.firstname}, respond to this message in the chat part in the platform`
-    const html = buildNotificationEmail({
-      firstname: receiver.firstname,
-      notificationType: 'NEW_MESSAGE',
-      detail
-    })
-
-    const mail = emailFactory[config.emailProvider]()
-    await mail.sendEmail({
-      to: {
-        email: receiver.email,
-        name: receiver.firstname
-      },
-      subject: 'New message from',
-      text: detail,
-      html
-    })
-  }
-
 export const sendMessageEffect = ({ offerId, senderId, receiverId, message }: SendMessageInput) =>
   T.gen(function* () {
     const logger = yield* Logger
     const messageOperations = yield* MessageOperations
-    const emailFactory = yield* MailProviderFactory
-    const userOperations = yield* UserOperations
+    const sendNotif = yield* SendNotificationNewMessageProvider
 
     return T.tryPromise({
       try: () =>
@@ -95,23 +39,13 @@ export const sendMessageEffect = ({ offerId, senderId, receiverId, message }: Se
           detailedError: error
         })
     }).pipe(
-      T.map(async message => {
-        await sendNotification({
-          userOps: userOperations,
-          emailFactory
-        })({
+      T.flatMap(message =>
+        sendNotif({
           senderId,
           receiverId,
           offerId
-        }).catch(error => {
-          logger.error({
-            cause: 'send_notification_error',
-            message: `send notification to ${receiverId} error`,
-            detailedError: error
-          })
-        })
-        return message
-      }),
+        }).pipe(T.map(() => message))
+      ),
       T.match({
         onFailure: error => {
           logger.error({
