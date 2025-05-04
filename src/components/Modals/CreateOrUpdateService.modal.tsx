@@ -158,7 +158,8 @@ export default function CreateOrUpdateServiceModal({
         await upsertService({
           ...basePayload,
           id: result.id,
-          files: files.files.map(f => f.hash)
+          files: files.files.map(f => f.hash),
+          prices: result.prices
         })
       }
 

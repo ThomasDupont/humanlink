@@ -151,24 +151,39 @@ export const appRouter = router({
     service: router({
       upsert: protectedprocedure
         .input(
-          z.object({
-            id: z.number().optional(),
-            title: z.string().min(1).max(config.userInteraction.serviceTitleMaxLen),
-            shortDescription: z
-              .string()
-              .min(1)
-              .max(config.userInteraction.serviceShortDescriptionMaxLen),
-            description: z.string().min(1).max(config.userInteraction.descriptionMaxLen),
-            category: z.nativeEnum(Category),
-            langs: z.array(z.nativeEnum(Lang)),
-            prices: z.array(
-              z.object({
-                number: z.number().min(100).max(config.userInteraction.fixedPriceMax),
-                id: z.number().optional()
-              })
-            ),
-            files: z.array(z.string()).min(0).max(config.userInteraction.maxUploadFileSize)
-          })
+          z
+            .object({
+              id: z.number().optional(),
+              title: z.string().min(1).max(config.userInteraction.serviceTitleMaxLen),
+              shortDescription: z
+                .string()
+                .min(1)
+                .max(config.userInteraction.serviceShortDescriptionMaxLen),
+              description: z.string().min(1).max(config.userInteraction.descriptionMaxLen),
+              category: z.nativeEnum(Category),
+              langs: z.array(z.nativeEnum(Lang)),
+              prices: z.array(
+                z.object({
+                  number: z.number().min(100).max(config.userInteraction.fixedPriceMax),
+                  id: z.number().optional()
+                })
+              ),
+              files: z.array(z.string()).min(0).max(config.userInteraction.maxUploadFileSize)
+            })
+            .refine(
+              data => {
+                if (data.id) {
+                  const pricesIdsLength = data.prices.filter(price => price.id).length
+                  if (pricesIdsLength !== data.prices.length) {
+                    return false
+                  }
+                }
+                return true
+              },
+              {
+                message: 'All prices must have an id if one of them has an id'
+              }
+            )
         )
         .mutation(({ input, ctx }) =>
           upsertService({

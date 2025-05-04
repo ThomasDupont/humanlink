@@ -17,7 +17,7 @@ const createAccountIfNotExistsInPaymentProviderEffect = (userId: number) =>
 
     const paymentProvider = paymentProviderFactory[config.paymentProvider]()
 
-    const main = T.tryPromise({
+    const createAccount = T.tryPromise({
       try: () => userOperations.getUserById(userId),
       catch: detailedError =>
         new CustomError({
@@ -80,7 +80,7 @@ const createAccountIfNotExistsInPaymentProviderEffect = (userId: number) =>
     }).pipe(
       T.flatMap(account =>
         T.if(account === null, {
-          onTrue: () => main,
+          onTrue: () => createAccount,
           onFalse: () => T.succeed(false)
         })
       ),

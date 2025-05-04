@@ -170,24 +170,35 @@ export default function ServicesItem() {
           </TableBody>
         </Table>
       </Box>
-      <BaseModal open={openAddServiceModal} handleClose={() => setOpenAddServiceModal(false)}>
+      <BaseModal
+        open={openAddServiceModal}
+        handleClose={() => {
+          setOpenAddServiceModal(false)
+          setCurrentService(undefined)
+        }}
+      >
         <CreateOrUpdateServiceModal
           service={currentService}
           handleClose={() => {
             refetchUserServices()
             setOpenAddServiceModal(false)
+            setCurrentService(undefined)
           }}
         />
       </BaseModal>
       {currentService && (
         <BaseModal
           open={openRemoveServiceModal}
-          handleClose={() => setOpenRemoveServiceModal(false)}
+          handleClose={() => {
+            setOpenRemoveServiceModal(false)
+            setCurrentService(undefined)
+          }}
         >
           <DeleteAService
             id={currentService.id}
             handleClose={type => {
               if (type === 'yes') refetchUserServices()
+              setCurrentService(undefined)
               setOpenRemoveServiceModal(false)
             }}
           />

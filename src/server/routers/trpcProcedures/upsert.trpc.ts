@@ -20,7 +20,7 @@ import { addRenderingEffect, AddRenderingEffectArgs } from './mutations/addRende
 import { acceptOfferRenderingsAndCreateMoneyTransfertEffect } from './mutations/acceptOfferRenderingsAndCreateMoneyTransfert'
 import { CloseMilestoneArgs, closeMilestoneEffect } from './mutations/closeMilestone'
 import { sendMessageEffect, SendMessageInput } from './mutations/sendMessage'
-import { effectCreateAccountIfNotExistsInPaymentProvider } from './mutations/createAccountInPaymentProvider'
+import { effectCreateAccountIfNotExistsInPaymentProvider } from './utils/createAccountInPaymentProvider'
 import { effectSendMessageProvider } from './effectAsService'
 import {
   effectSendNotificationAcceptOfferProvider,

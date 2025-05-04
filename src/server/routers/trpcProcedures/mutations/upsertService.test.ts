@@ -8,7 +8,7 @@ import { Sync } from '../../../databaseOperations/sync/sync'
 import { Price, Service } from '@prisma/client'
 import { ServiceWithPrice } from '@/types/Services.type'
 import { storageProviderFactory, StorageProviderFactory } from '@/server/storage/storage.provider'
-import { CreateAccountIfNotExistsInPaymentProvider } from './createAccountInPaymentProvider'
+import { CreateAccountIfNotExistsInPaymentProvider } from '../utils/createAccountInPaymentProvider'
 
 describe('upsert service test', () => {
   const loggerErrorMock = vi.fn()
