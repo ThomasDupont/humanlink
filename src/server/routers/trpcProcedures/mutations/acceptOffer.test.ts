@@ -1,32 +1,24 @@
 import { it, describe, afterEach, vi, expect } from 'vitest'
-import { Effect as T } from 'effect'
+import { Effect, Effect as T } from 'effect'
 import { acceptOfferEffect, AcceptOfferEffectArgs } from './acceptOffer'
 import { Logger } from '@/server/logger'
 import {
   offerOperations,
   OfferOperations,
   transactionOperations,
-  TransactionOperations,
-  userOperations,
-  UserOperations
+  TransactionOperations
 } from '../../../databaseOperations/prisma.provider'
 import {
   paymentProviderFactory,
   PaymentProviderFactory
 } from '../../../paymentOperations/payment.provider'
-import { MailProviderFactory, mailProviderFactory } from '@/server/emailOperations/email.provider'
+import {
+  sendNotificationAcceptOfferProvider,
+  SendNotificationAcceptOfferProvider
+} from '../utils/sendEmail'
 
 describe('upsert service test', () => {
   const sendEmailMock = vi.fn()
-  const mailProviderFactoryMock = {
-    mailjet: () => ({
-      sendEmail: sendEmailMock
-    })
-  }
-
-  const userOperationsMock = {
-    selectUserById: vi.fn()
-  }
 
   const loggerErrorMock = vi.fn()
   const transactionOperationsMock = {
@@ -64,9 +56,7 @@ describe('upsert service test', () => {
       userId: 3
     })
 
-    userOperationsMock.selectUserById.mockResolvedValueOnce({ firstname: 'John' })
-    userOperationsMock.selectUserById.mockResolvedValueOnce({ firstname: 'Josh' })
-    sendEmailMock.mockResolvedValueOnce({})
+    sendEmailMock.mockReturnValueOnce(Effect.succeed(true))
 
     const acceptOffer = acceptOfferEffect(payload)
 
@@ -83,10 +73,9 @@ describe('upsert service test', () => {
           paymentProviderFactoryMock as unknown as typeof paymentProviderFactory
         ),
         T.provideService(
-          MailProviderFactory,
-          mailProviderFactoryMock as unknown as typeof mailProviderFactory
+          SendNotificationAcceptOfferProvider,
+          sendEmailMock as unknown as typeof sendNotificationAcceptOfferProvider
         ),
-        T.provideService(UserOperations, userOperationsMock as unknown as typeof userOperations),
         T.runPromise
       )
       .then(result => {
@@ -130,10 +119,9 @@ describe('upsert service test', () => {
           paymentProviderFactoryMock as unknown as typeof paymentProviderFactory
         ),
         T.provideService(
-          MailProviderFactory,
-          mailProviderFactoryMock as unknown as typeof mailProviderFactory
+          SendNotificationAcceptOfferProvider,
+          sendEmailMock as unknown as typeof sendNotificationAcceptOfferProvider
         ),
-        T.provideService(UserOperations, userOperationsMock as unknown as typeof userOperations),
         T.runPromise
       )
       .then(() => true)
@@ -182,10 +170,9 @@ describe('upsert service test', () => {
           paymentProviderFactoryMock as unknown as typeof paymentProviderFactory
         ),
         T.provideService(
-          MailProviderFactory,
-          mailProviderFactoryMock as unknown as typeof mailProviderFactory
+          SendNotificationAcceptOfferProvider,
+          sendEmailMock as unknown as typeof sendNotificationAcceptOfferProvider
         ),
-        T.provideService(UserOperations, userOperationsMock as unknown as typeof userOperations),
         T.runPromise
       )
       .then(() => {

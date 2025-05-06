@@ -7,7 +7,7 @@ import { Sync } from '../../../databaseOperations/sync/sync'
 import { StorageProviderFactory } from '@/server/storage/storage.provider'
 import config from '@/config'
 import { CustomError } from '../error'
-import { CreateAccountIfNotExistsInPaymentProvider } from './createAccountInPaymentProvider'
+import { CreateAccountIfNotExistsInPaymentProvider } from '../utils/createAccountInPaymentProvider'
 
 const RETRY = 1
 const RETRY_DELAY = 100
