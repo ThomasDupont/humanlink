@@ -17,7 +17,7 @@ import {
 import { useState, FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
-export const AddARendering = ({
+export const AddARenderingModal = ({
   offer,
   handleClose,
   renderings
