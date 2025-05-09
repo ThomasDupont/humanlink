@@ -3,7 +3,6 @@ import DeclareADisputeModal from '@/components/Modals/DeclareADisputeOnOffer'
 import ValidateOfferRenderingsModal from '@/components/Modals/ValidateOfferRenderings.modal'
 import { Spinner } from '@/components/Spinner'
 import { SupportedLocale } from '@/config'
-import { AddARendering } from '@/elements/offer/AddARendering'
 import { DisplayDisputes } from '@/elements/offer/DisplayDisputes'
 import { DisplayRendering } from '@/elements/offer/DisplayRendering'
 import { useOfferHook } from '@/hooks/offer/offer.hook'
@@ -25,6 +24,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import { ReactElement, useEffect, useState } from 'react'
 import type { QueryObserverResult } from '@tanstack/react-query'
 import { z } from 'zod'
+import { AddARenderingModal } from '@/components/Modals/AddArendering.modal'
 
 const Base = ({ children }: { children: ReactElement }) => {
   return (
@@ -309,8 +309,8 @@ const DisplayOfferDetail = ({
             refetchOffer()
           }}
         />
-        {renderingBox && (
-          <AddARendering
+        <BaseModal open={renderingBox} handleClose={() => setRenderingBox(false)}>
+          <AddARenderingModal
             renderings={renderings}
             offer={offer}
             handleClose={() => {
@@ -318,8 +318,7 @@ const DisplayOfferDetail = ({
               setRenderingBox(false)
             }}
           />
-        )}
-
+        </BaseModal>
         <Box
           sx={t => ({
             borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
