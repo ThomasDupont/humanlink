@@ -55,6 +55,7 @@ export default function ShowOffer({
         variant="h4"
         component={'p'}
         sx={{
+          textAlign: 'center',
           mb: 1
         }}
       >
@@ -76,7 +77,7 @@ export default function ShowOffer({
             mb: 1
           }}
         >
-          {formatPriceCurrency(price)}
+          {'Price: ' + formatPriceCurrency(price)}
         </Typography>
       )}
       <Box display={'flex'} flexDirection={'row'} justifyContent={'center'}>
