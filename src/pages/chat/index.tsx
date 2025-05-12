@@ -176,9 +176,10 @@ const Conversation = ({
                     <Typography
                       variant="body1"
                       sx={t => ({
+                        whiteSpace: 'pre-line',
                         borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
                         boxShadow: t.shadows[1],
-                        textAlign: 'center',
+                        textAlign: 'left',
                         backgroundColor:
                           message.receiverId === conversationWithUserId
                             ? t.palette.primary[100]
