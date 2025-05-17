@@ -110,7 +110,7 @@ export default function Dashboard({ locale }: { locale: SupportedLocale }) {
           sx={t => ({
             borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
             boxShadow: t.shadows[1],
-            backgroundColor: 'white',
+            backgroundColor: t.palette.background.paper,
             minHeight: 620,
             width: '100%',
             display: 'flex',

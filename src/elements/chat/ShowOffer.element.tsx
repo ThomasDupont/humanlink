@@ -59,7 +59,7 @@ export default function ShowOffer({
           mb: 1
         }}
       >
-        {me.userId !== user.id ? '' : `Offer from ${user.firstname}`} of {parsedCreatedDate}
+        {me.userId !== user.id ? 'Offer' : `Offer from ${user.firstname}`} of {parsedCreatedDate}
       </Typography>
       <Typography
         gutterBottom

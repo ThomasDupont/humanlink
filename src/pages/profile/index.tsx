@@ -266,10 +266,10 @@ export default function Profile({ locale }: { locale: SupportedLocale }) {
                         dangerouslySetInnerHTML={{
                           __html: description.slice(0, config.userInteraction.descriptionMaxLen)
                         }}
-                        sx={{
-                          backgroundColor: 'white',
+                        sx={t => ({
+                          backgroundColor: t.palette.background.paper,
                           p: 1
-                        }}
+                        })}
                       ></Box>
                     </Box>
                   )}

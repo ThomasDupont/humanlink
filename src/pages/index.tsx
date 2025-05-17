@@ -166,8 +166,8 @@ export default function Home() {
               },
               htmlInput: { maxLength: 1000 }
             }}
-            sx={() => ({
-              backgroundColor: 'white'
+            sx={theme => ({
+              backgroundColor: theme.palette.background.paper
             })}
           />
         </form>

@@ -111,7 +111,7 @@ const Conversation = ({
         sx={t => ({
           borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
           boxShadow: t.shadows[1],
-          backgroundColor: 'white',
+          backgroundColor: t.palette.background.paper,
           height: 620,
           width: '85%',
           display: 'flex',
@@ -180,10 +180,7 @@ const Conversation = ({
                         borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
                         boxShadow: t.shadows[1],
                         textAlign: 'left',
-                        backgroundColor:
-                          message.receiverId === conversationWithUserId
-                            ? t.palette.primary[100]
-                            : 'white',
+                        backgroundColor: t.palette.secondary[100],
                         padding: 1
                       })}
                     >
@@ -289,7 +286,7 @@ const Contacts = ({
         height: 620,
         borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
         boxShadow: t.shadows[1],
-        backgroundColor: 'white',
+        backgroundColor: t.palette.background.paper,
         pt: 1,
         overflow: 'scroll'
       })}
@@ -309,7 +306,8 @@ const Contacts = ({
                 alignItems="flex-start"
                 key={contact.id}
                 sx={t => ({
-                  backgroundColor: selected === contact.id ? t.palette.secondary[50] : 'white'
+                  backgroundColor:
+                    selected === contact.id ? t.palette.secondary[50] : t.palette.background.paper
                 })}
               >
                 <ListItemAvatar>

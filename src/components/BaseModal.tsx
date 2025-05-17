@@ -26,7 +26,7 @@ export default function BaseModal({ children, open, handleClose }: BaseModalProp
             transform: 'translate(-50%, -50%)',
             borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
             textAlign: 'center',
-            backgroundColor: 'white',
+            backgroundColor: t.palette.background.paper,
             color: 'secondary',
             display: 'flex',
             flexDirection: 'column',

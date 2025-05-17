@@ -92,7 +92,7 @@ export default function Concept() {
           mb: 5,
           borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
           boxShadow: t.shadows[1],
-          backgroundColor: 'white'
+          backgroundColor: t.palette.background.paper
         })}
       >
         <Typography
@@ -169,7 +169,7 @@ export default function Concept() {
           mb: 10,
           borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
           boxShadow: t.shadows[1],
-          backgroundColor: 'white'
+          backgroundColor: t.palette.background.paper
         })}
       >
         <Typography
@@ -224,7 +224,7 @@ export default function Concept() {
           mb: 10,
           borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
           boxShadow: t.shadows[1],
-          backgroundColor: 'white'
+          backgroundColor: t.palette.background.paper
         })}
       >
         <Typography
@@ -272,7 +272,7 @@ export default function Concept() {
           mb: 10,
           borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
           boxShadow: t.shadows[1],
-          backgroundColor: 'white'
+          backgroundColor: t.palette.background.paper
         })}
       >
         <Typography
@@ -320,7 +320,7 @@ export default function Concept() {
           mb: 10,
           borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
           boxShadow: t.shadows[1],
-          backgroundColor: 'white'
+          backgroundColor: t.palette.background.paper
         })}
       >
         <Typography
