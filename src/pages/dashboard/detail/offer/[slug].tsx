@@ -167,7 +167,7 @@ const DisplayOfferDetail = ({
           sx={t => ({
             borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
             boxShadow: t.shadows[1],
-            backgroundColor: 'white',
+            backgroundColor: t.palette.background.paper,
             p: 2
           })}
         >
@@ -323,7 +323,7 @@ const DisplayOfferDetail = ({
           sx={t => ({
             borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
             boxShadow: t.shadows[1],
-            backgroundColor: 'white',
+            backgroundColor: t.palette.background.paper,
             mt: 2,
             p: 2
           })}

@@ -2,7 +2,6 @@ import { Avatar, Box, ButtonBase, List, ListItem, styled, Typography } from '@mu
 import { signOut } from 'next-auth/react'
 import { useTranslation } from 'next-i18next'
 import { Email } from '@mui/icons-material'
-import Link from 'next/link'
 import { User } from '@prisma/client'
 import { useRouter } from 'next/router'
 
@@ -60,15 +59,14 @@ export default function AccountModal({
       </Box>
       <List>
         <ListItem>
-          <Link
-            href={'/profile'}
-            target="_blank"
-            style={{
-              color: 'black' // overrride, no other solution
+          <StyledButton
+            onClick={() => {
+              handleClose()
+              router.push(`/${router.locale}/profile`)
             }}
           >
-            <StyledButton>{t('profilePageTitle')}</StyledButton>
-          </Link>
+            {t('profilePageTitle')}
+          </StyledButton>
         </ListItem>
         <ListItem>
           <StyledButton

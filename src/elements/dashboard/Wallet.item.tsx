@@ -1,11 +1,22 @@
 import { trpc } from '@/utils/trpc'
-import { Box, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material'
+import {
+  Box,
+  IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Tooltip,
+  Typography
+} from '@mui/material'
 import { useTranslation } from 'next-i18next'
 import { format } from 'date-fns'
 import { localeToDateFnsLocale } from '@/utils/localeToDateFnsLocale'
 import { SupportedLocale } from '@/config'
 import { TransactionType } from '@prisma/client'
 import Link from 'next/link'
+import { Visibility } from '@mui/icons-material'
 
 const rules: Record<TransactionType, '+' | '-'> = {
   [TransactionType.acceptOffer]: '-',
@@ -42,7 +53,7 @@ const Transactions = ({ locale }: { locale: SupportedLocale }) => {
         justifyContent={'center'}
         alignItems={'center'}
         sx={t => ({
-          backgroundColor: t.palette.primary[50],
+          backgroundColor: t.palette.secondary[50],
           borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
           width: '80%',
           p: 1
@@ -58,10 +69,34 @@ const Transactions = ({ locale }: { locale: SupportedLocale }) => {
         >
           <TableHead>
             <TableRow>
-              <TableCell>Date</TableCell>
-              <TableCell>Type</TableCell>
-              <TableCell>Offer</TableCell>
-              <TableCell>Amount</TableCell>
+              <TableCell
+                sx={t => ({
+                  borderBottomColor: t.palette.secondary.main
+                })}
+              >
+                Date
+              </TableCell>
+              <TableCell
+                sx={t => ({
+                  borderBottomColor: t.palette.secondary.main
+                })}
+              >
+                Type
+              </TableCell>
+              <TableCell
+                sx={t => ({
+                  borderBottomColor: t.palette.secondary.main
+                })}
+              >
+                Offer
+              </TableCell>
+              <TableCell
+                sx={t => ({
+                  borderBottomColor: t.palette.secondary.main
+                })}
+              >
+                Amount
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -70,12 +105,22 @@ const Transactions = ({ locale }: { locale: SupportedLocale }) => {
                 <TableCell>{parsedCreatedDate(transaction.createdAt)}</TableCell>
                 <TableCell>{transaction.type}</TableCell>
                 <TableCell>
-                  <Link
-                    target="_blank"
-                    href={`/${locale}/dashboard/detail/offer/${transaction.offerId}`}
+                  <Box
+                    sx={{
+                      textDecoration: 'none'
+                    }}
                   >
-                    Show offer
-                  </Link>
+                    <Link
+                      target="_blank"
+                      href={`/${locale}/dashboard/detail/offer/${transaction.offerId}`}
+                    >
+                      <Tooltip title="Show offer" arrow>
+                        <IconButton>
+                          <Visibility />
+                        </IconButton>
+                      </Tooltip>
+                    </Link>
+                  </Box>
                 </TableCell>
                 <TableCell>{parseAmount(transaction.type, transaction.amount)}</TableCell>
               </TableRow>
@@ -133,7 +178,7 @@ export default function WalletItem({ locale }: { locale: SupportedLocale }) {
           alignContent={'center'}
           alignItems={'center'}
           sx={t => ({
-            backgroundColor: t.palette.primary[50],
+            backgroundColor: t.palette.secondary[50],
             borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
             width: '80%',
             height: 80,

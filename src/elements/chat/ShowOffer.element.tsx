@@ -55,10 +55,11 @@ export default function ShowOffer({
         variant="h4"
         component={'p'}
         sx={{
+          textAlign: 'center',
           mb: 1
         }}
       >
-        {me.userId !== user.id ? '' : `Offer from ${user.firstname}`} of {parsedCreatedDate}
+        {me.userId !== user.id ? 'Offer' : `Offer from ${user.firstname}`} of {parsedCreatedDate}
       </Typography>
       <Typography
         gutterBottom
@@ -76,7 +77,7 @@ export default function ShowOffer({
             mb: 1
           }}
         >
-          {formatPriceCurrency(price)}
+          {'Price: ' + formatPriceCurrency(price)}
         </Typography>
       )}
       <Box display={'flex'} flexDirection={'row'} justifyContent={'center'}>
