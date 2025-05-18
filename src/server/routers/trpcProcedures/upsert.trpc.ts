@@ -26,6 +26,7 @@ import {
   effectSendNotificationAcceptOfferProvider,
   effectSendNotificationNewMessageProvider
 } from './utils/sendEmail'
+import { markReadMessageEffect } from './mutations/markReadMessage'
 
 export const upsertService = (args: UpsertServiceArgs) => ({
   run: () =>
@@ -147,4 +148,12 @@ export const sendMessage = (args: SendMessageInput) => ({
       effectSendNotificationNewMessageProvider,
       T.runPromise
     )
+})
+
+export const markMessageIsRead = (messageIds: number[], userId: number) => ({
+  run: () =>
+    markReadMessageEffect({
+      messageIds,
+      userId
+    }).pipe(effectLogger, effectMessageOperations, T.runPromise)
 })

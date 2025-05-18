@@ -78,6 +78,19 @@ export const messageCrud = (prisma: PrismaClient) => {
     })
   }
 
+  const getUnreadMessageIdsForAReceiver = (receiverId: number, ids: number[]) => {
+    return prisma.message.findMany({
+      where: {
+        id: { in: ids },
+        receiverId,
+        readAt: null
+      },
+      select: {
+        id: true
+      }
+    })
+  }
+
   const setMessageIsRead = ({ id, timestamp }: { id: number; timestamp: number }) => {
     return prisma.message.update({
       where: { id },
@@ -87,9 +100,24 @@ export const messageCrud = (prisma: PrismaClient) => {
     })
   }
 
+  const hasUnreadMessages = ({ userId, contactId }: { userId: number; contactId?: number }) => {
+    return prisma.message
+      .findMany({
+        where: {
+          receiverId: userId,
+          senderId: contactId,
+          readAt: null
+        },
+        select: {
+          id: true
+        }
+      })
+      .then(messages => messages.length > 0)
+  }
+
   const getContactList = (userId: number) => {
     return prisma.message.groupBy({
-      by: ['senderId', 'receiverId', 'readAt'],
+      by: ['senderId', 'receiverId'],
       where: { OR: [{ receiverId: userId }, { senderId: userId }] },
       _max: {
         createdAt: true
@@ -107,6 +135,8 @@ export const messageCrud = (prisma: PrismaClient) => {
     getConversation,
     setMessageIsRead,
     sendMessageWithOffer,
-    getContactList
+    getContactList,
+    getUnreadMessageIdsForAReceiver,
+    hasUnreadMessages
   }
 }

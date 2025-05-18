@@ -28,6 +28,7 @@ import {
   closeMilestone,
   createOfferWithMessage,
   createStripePaymentIntent,
+  markMessageIsRead,
   sendMessage,
   upsertService
 } from './trpcProcedures/upsert.trpc'
@@ -128,6 +129,13 @@ export const appRouter = router({
           offerId: input.offerId
         }).run()
       ),
+    setMessageRead: protectedprocedure
+      .input(
+        z.object({
+          messageIds: z.array(z.number())
+        })
+      )
+      .mutation(({ input, ctx }) => markMessageIsRead(input.messageIds, ctx.session.user.id).run()),
     user: router({
       profile: protectedprocedure
         .input(
