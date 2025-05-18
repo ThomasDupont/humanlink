@@ -24,7 +24,8 @@ import { effectCreateAccountIfNotExistsInPaymentProvider } from './utils/createA
 import { effectSendMessageProvider } from './effectAsService'
 import {
   effectSendNotificationAcceptOfferProvider,
-  effectSendNotificationNewMessageProvider
+  effectSendNotificationNewMessageProvider,
+  effectSendNotificationNewRenderingProvider
 } from './utils/sendEmail'
 import { markReadMessageEffect } from './mutations/markReadMessage'
 
@@ -112,6 +113,7 @@ export const addRendering = (args: AddRenderingEffectArgs) => ({
       effectOfferOperations,
       effectTransactionOperations,
       effectStorageProviderFactory,
+      effectSendNotificationNewRenderingProvider,
       T.runPromise
     )
 })
