@@ -1,0 +1,51 @@
+flowchart TD
+  %% --- Hexagon : core -----------------
+  subgraph Core["Application Core (Use-case)"]
+    A["addRenderingEffect\n(Use case)"]
+  end
+
+  %% --- Ports -------------------------------------
+  subgraph Ports["Domain Ports (Interfaces)"]
+    P1["Logger"]
+    P2["TransactionOperations"]
+    P3["OfferOperations"]
+    P4["StorageProvider"]
+    P5["NotificationProvider"]
+  end
+
+  %% --- Adapters / Implementations ----------------
+  subgraph Adapters["Infrastructure Adapters"]
+    I1["Pino"]
+    I2["Prisma"]
+    I3["Tigris"]
+    I4["MailJet"]
+    DB["PostgreSQL"]
+  end
+
+  %% --- Factories ----
+  F1["StorageProviderFactory\nconfig.storageProvider"]
+  F2["mailProviderFactory"]
+
+  %% --- Couplages core → ports ---------------------
+  A --> P1
+  A --> P2
+  A --> P3
+  A --> P4
+  A --> P5
+
+  %% --- Injection : ports → factories --------------
+  P4 -.- F1
+  P5 -.- F2
+
+  %% --- Factories → implems ----------------
+  F1 -.- I3
+  F2 -.- I4
+
+  %% --- Autres ports → implems -------------
+  P1 -.- I1
+  P2 -.- I2
+  P3 -.- I2
+
+  %% --- DB ---------
+  I2 --> DB
+  
