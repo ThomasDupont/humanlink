@@ -3,7 +3,7 @@ import { env } from '@/server/env'
 import NextAuth, { NextAuthOptions } from 'next-auth'
 import LinkedinProvider, { LinkedInProfile } from 'next-auth/providers/linkedin'
 import GitHubProvider from 'next-auth/providers/github'
-// import GoogleProvider from 'next-auth/providers/google'
+import GoogleProvider from 'next-auth/providers/google'
 import { User } from '@prisma/client'
 import { userOperations } from '@/server/databaseOperations/prisma.provider'
 import { logger } from '@/server/logger'
@@ -32,13 +32,11 @@ export const authOptions: NextAuthOptions = {
     GitHubProvider({
       clientId: env.GITHUB_CLIENT_ID,
       clientSecret: env.GITHUB_CLIENT_SECRET
-    })
-    /*
+    }),
     GoogleProvider({
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET
     })
-      */
   ],
   callbacks: {
     async signIn({ user, account, profile }: any) {
