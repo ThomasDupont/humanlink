@@ -324,7 +324,7 @@ const Contacts = ({
                       variant="body2"
                       sx={{ color: 'text.primary', display: 'inline' }}
                     >
-                      {contact.isUnread ? 'unread message' : ''}
+                      {contact.hasUnreadMessage ? 'unread message' : ''}
                     </Typography>
                   }
                 />

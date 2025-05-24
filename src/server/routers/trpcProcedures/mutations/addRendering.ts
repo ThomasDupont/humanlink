@@ -1,67 +1,13 @@
 import { Logger } from '@/server/logger'
 import { Effect as T } from 'effect'
-import {
-  OfferOperations,
-  TransactionOperations,
-  userOperations
-} from '../../../databaseOperations/prisma.provider'
+import { OfferOperations, TransactionOperations } from '../../../databaseOperations/prisma.provider'
 import { StorageProviderFactory } from '../../../storage/storage.provider'
 import config from '@/config'
 import { TRPCError } from '@trpc/server'
 import { Prisma } from '@prisma/client'
 import { rebuildPathForSecurity } from '@/utils/rebuildPathForSecurity'
-import { mailProviderFactory } from '@/server/emailOperations/email.provider'
-import { buildNotificationEmail } from '@/server/emailOperations/buildEmail'
-
-const _sendNotification =
-  ({
-    userOps,
-    emailFactory
-  }: {
-    userOps: typeof userOperations
-    emailFactory: typeof mailProviderFactory
-  }) =>
-  async ({
-    senderId,
-    receiverId,
-    offer
-  }: {
-    senderId: number
-    receiverId: number
-    offer: {
-      id: number
-      title: string
-    }
-  }) => {
-    const sender = await userOps.selectUserById(senderId, { firstname: true })
-    const receiver = await userOps.selectUserById(receiverId, { firstname: true, email: true })
-
-    if (!receiver) {
-      throw new Error(`Receiver with ID ${receiverId} not found`)
-    }
-
-    if (!sender) {
-      throw new Error(`Sender with ID ${senderId} not found`)
-    }
-
-    const detail = `${sender.firstname} add a rendering to the offer ${offer.title}, you could consult the detail here <a href="${config.frontUrl}/dashboard/detail/offer/${offer.id}">here</a>`
-    const html = buildNotificationEmail({
-      firstname: receiver.firstname,
-      notificationType: 'RENDERING_ADDED',
-      detail
-    })
-
-    const mail = emailFactory[config.emailProvider]()
-    await mail.sendEmail({
-      to: {
-        email: receiver.email,
-        name: receiver.firstname
-      },
-      subject: 'Offer accepted',
-      text: detail,
-      html
-    })
-  }
+import { CustomError } from '../error'
+import { SendNotificationNewRenderingProvider } from '../utils/sendEmail'
 
 export type AddRenderingEffectArgs = {
   milestoneId: number
@@ -87,6 +33,7 @@ export const addRenderingEffect = ({
     const transactionOperations = yield* TransactionOperations
     const offerOperations = yield* OfferOperations
     const storageFactory = yield* StorageProviderFactory
+    const sendNotification = yield* SendNotificationNewRenderingProvider
 
     const storage = storageFactory[config.storageProvider]()
 
@@ -100,42 +47,34 @@ export const addRenderingEffect = ({
                 ...info,
                 ...file
               })),
-          catch: error => {
-            logger.error({
+          catch: error =>
+            new CustomError({
+              code: 'INTERNAL_SERVER_ERROR',
               cause: 'storage_provider_error',
               message: `add ${file.path} error`,
+              clientMessage: `${file.path}_not_found_in_storage_provider`,
               detailedError: error
             })
-
-            return new TRPCError({
-              code: 'INTERNAL_SERVER_ERROR',
-              message: `${file.path}_not_found_in_storage_provider`
-            })
-          }
         })
       )
     ).pipe(
-      T.flatMap(fileinfo =>
+      T.flatMap(filesInfo =>
         T.tryPromise({
           try: () => offerOperations.getAnOfferByCreatorId(offerId, userId),
-          catch: error => {
-            logger.error({
+          catch: error =>
+            new CustomError({
+              code:
+                error instanceof Prisma.PrismaClientKnownRequestError
+                  ? 'NOT_FOUND'
+                  : 'INTERNAL_SERVER_ERROR',
               cause: 'database_error',
               message: `get offer ${offerId} db error`,
-              detailedError: error
+              detailedError: error,
+              clientMessage:
+                error instanceof Prisma.PrismaClientKnownRequestError
+                  ? 'offer_not_found_for_user'
+                  : 'offer_not_found_for_user'
             })
-
-            if (error instanceof Prisma.PrismaClientKnownRequestError) {
-              return new TRPCError({
-                code: 'NOT_FOUND',
-                message: 'offer_not_found_for_user'
-              })
-            }
-            return new TRPCError({
-              code: 'INTERNAL_SERVER_ERROR',
-              message: 'offer_not_found_for_user'
-            })
-          }
         }).pipe(
           T.flatMap(offer => {
             if (
@@ -154,59 +93,75 @@ export const addRenderingEffect = ({
               })
             }
 
-            logger.error({
-              cause: 'offer_or_milestone_not_found',
-              message: `offer ${offerId} or milestone ${milestoneId} not found on db`,
-              detailedError: {}
-            })
             return T.fail(
-              new TRPCError({
+              new CustomError({
                 code: 'NOT_FOUND',
-                message: 'offer_or_milestone_not_found_for_user'
+                cause: 'offer_or_milestone_not_found',
+                message: `offer ${offerId} or milestone ${milestoneId} not found on db`,
+                detailedError: {},
+                clientMessage: 'offer_or_milestone_not_found_for_user'
               })
             )
           }),
-          T.map(offer =>
-            fileinfo.map(file => ({
+          T.map(offer => ({
+            filesInfo: filesInfo.map(file => ({
               ...file,
               relatedUsers: [offer.userId, offer.userIdReceiver]
-            }))
-          )
+            })),
+            receiverId: offer.userIdReceiver
+          }))
         )
       ),
-      T.flatMap(fileInfo =>
+      T.flatMap(({ filesInfo, receiverId }) =>
         T.tryPromise({
           try: () =>
-            transactionOperations.addMilestoneRenderingTransaction({
-              files: fileInfo.map(info => ({
-                hash: info.path,
-                size: info.size ?? 0,
-                mimetype: info.mimetype ?? 'octet/stream',
-                originalFilename: info.originalFilename,
-                relatedUsers: info.relatedUsers
-              })),
-              milestoneId,
-              text
-            }),
-          catch: error => {
-            logger.error({
+            transactionOperations
+              .addMilestoneRenderingTransaction({
+                files: filesInfo.map(info => ({
+                  hash: info.path,
+                  size: info.size ?? 0,
+                  mimetype: info.mimetype ?? 'octet/stream',
+                  originalFilename: info.originalFilename,
+                  relatedUsers: info.relatedUsers
+                })),
+                milestoneId,
+                text
+              })
+              .then(() => receiverId),
+          catch: error =>
+            new CustomError({
+              code:
+                error instanceof Prisma.PrismaClientKnownRequestError
+                  ? 'NOT_FOUND'
+                  : 'INTERNAL_SERVER_ERROR',
               cause: 'database_error',
               message: `transactionOperations addMilestoneRendering ${milestoneId} db accept error`,
-              detailedError: error
+              detailedError: error,
+              clientMessage:
+                error instanceof Prisma.PrismaClientKnownRequestError
+                  ? 'milestone_not_found_for_user'
+                  : 'milestone_not_found_for_user'
             })
-
-            if (error instanceof Prisma.PrismaClientKnownRequestError) {
-              return new TRPCError({
-                code: 'NOT_FOUND',
-                message: `milestone_not_found_for_user`
-              })
-            }
-            return new TRPCError({
-              code: 'INTERNAL_SERVER_ERROR',
-              message: 'milestone_not_found_for_user'
-            })
-          }
         })
-      )
+      ),
+      T.match({
+        onFailure: error => {
+          logger.error({
+            cause: error.cause,
+            message: error.message,
+            detailedError: error.detailedError
+          })
+          throw new TRPCError({
+            code: error.code,
+            message: error.clientMessage ?? error.message
+          })
+        },
+        onSuccess: receiverId =>
+          sendNotification({
+            senderId: userId,
+            receiverId,
+            offerId
+          })
+      })
     )
   }).pipe(T.flatten)

@@ -221,3 +221,96 @@ export const effectSendNotificationAcceptOfferProvider = T.provideService(
   SendNotificationAcceptOfferProvider,
   sendNotificationAcceptOfferProvider
 )
+
+type SendNotificationNewRenderingInput = {
+  senderId: number
+  receiverId: number
+  offerId: number
+}
+
+const sendNotificationNewRenderingEffect = ({
+  senderId,
+  receiverId,
+  offerId
+}: SendNotificationNewRenderingInput) =>
+  T.gen(function* () {
+    const logger = yield* Logger
+    const userOperations = yield* UserOperations
+    const mailProviderFactory = yield* MailProviderFactory
+
+    const getUserTupleFun = getUserTuple({ userOps: userOperations })
+    const sendEmailFun = sendEmail({ emailFactory: mailProviderFactory })
+
+    return T.tryPromise({
+      try: () => getUserTupleFun({ senderId, receiverId }),
+      catch: error =>
+        new CustomError({
+          cause: 'users_not_found',
+          message: `getUserTuple ${senderId} or ${receiverId} not found on db`,
+          detailedError: error,
+          code: 'NOT_FOUND',
+          clientMessage: 'users_not_found'
+        })
+    }).pipe(
+      T.flatMap(({ sender, receiver }) => {
+        const detail = `You have a new rendering from ${sender.firstname}, you could consult the detail here  <a href="${config.frontUrl}/dashboard/detail/offer/${offerId}">here</a>`
+        const html = buildNotificationEmail({
+          firstname: receiver.firstname,
+          notificationType: 'RENDERING_ADDED',
+          detail
+        })
+
+        return T.tryPromise({
+          try: () =>
+            sendEmailFun({
+              to: {
+                email: receiver.email,
+                name: receiver.firstname
+              },
+              subject: 'New rendering from',
+              text: detail,
+              html
+            }),
+          catch: error =>
+            new CustomError({
+              cause: 'send_email_error',
+              message: `sendEmail ${senderId} or ${receiverId} 'New rendering from' error`,
+              detailedError: error,
+              code: 'INTERNAL_SERVER_ERROR',
+              clientMessage: 'send_email_error'
+            })
+        })
+      }),
+      T.match({
+        onFailure: error => {
+          logger.error({
+            cause: error.cause,
+            message: error.message,
+            detailedError: error.detailedError
+          })
+
+          return false
+        },
+        onSuccess: () => true
+      })
+    )
+  }).pipe(T.flatten)
+
+export const sendNotificationNewRenderingProvider = ({
+  senderId,
+  receiverId,
+  offerId
+}: SendNotificationNewRenderingInput) =>
+  sendNotificationNewRenderingEffect({
+    senderId,
+    receiverId,
+    offerId
+  }).pipe(effectLogger, effectUserOperations, effectMailProviderFactory)
+
+export class SendNotificationNewRenderingProvider extends Context.Tag(
+  'sendNotificationNewRenderingProvider'
+)<SendNotificationNewRenderingProvider, typeof sendNotificationNewRenderingProvider>() {}
+export const effectSendNotificationNewRenderingProvider = T.provideService(
+  SendNotificationNewRenderingProvider,
+  sendNotificationNewRenderingProvider
+)

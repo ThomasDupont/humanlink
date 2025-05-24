@@ -9,6 +9,10 @@ import {
   transactionOperations,
   TransactionOperations
 } from '../../../databaseOperations/prisma.provider'
+import {
+  sendNotificationNewRenderingProvider,
+  SendNotificationNewRenderingProvider
+} from '../utils/sendEmail'
 
 describe('Test addRendering', () => {
   const loggerErrorMock = vi.fn()
@@ -22,6 +26,8 @@ describe('Test addRendering', () => {
   }
 
   const getFileInfoMock = vi.fn()
+
+  const sendMessageMock = vi.fn()
 
   const tigrisMock = {
     getFileInfo: () => getFileInfoMock
@@ -48,6 +54,8 @@ describe('Test addRendering', () => {
 
     transactionOperationsMock.addMilestoneRenderingTransaction.mockResolvedValueOnce({})
 
+    sendMessageMock.mockResolvedValueOnce(true)
+
     addRenderingEffect({
       userId: 1,
       offerId: 2,
@@ -72,6 +80,10 @@ describe('Test addRendering', () => {
           transactionOperationsMock as unknown as typeof transactionOperations
         ),
         T.provideService(OfferOperations, offerOperationsMock as unknown as typeof offerOperations),
+        T.provideService(
+          SendNotificationNewRenderingProvider,
+          sendMessageMock as unknown as typeof sendNotificationNewRenderingProvider
+        ),
         T.runPromise
       )
       .catch(v => {
@@ -137,8 +149,13 @@ describe('Test addRendering', () => {
           transactionOperationsMock as unknown as typeof transactionOperations
         ),
         T.provideService(OfferOperations, offerOperationsMock as unknown as typeof offerOperations),
+        T.provideService(
+          SendNotificationNewRenderingProvider,
+          sendMessageMock as unknown as typeof sendNotificationNewRenderingProvider
+        ),
         T.runPromise
-      ).then(() => true)
+      )
+      .then(() => true)
       .catch(error => {
         expect(error.message).equals('offer_or_milestone_not_found_for_user')
         return false
@@ -146,6 +163,5 @@ describe('Test addRendering', () => {
       .then(v => {
         expect(v).toBe(false)
       })
-
   })
 })

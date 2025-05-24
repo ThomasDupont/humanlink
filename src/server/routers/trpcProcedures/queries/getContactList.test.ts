@@ -12,16 +12,17 @@ import { afterEach } from 'node:test'
 
 describe('test getContactList test', () => {
   afterEach(() => {
-    vi.resetAllMocks()
+    vi.restoreAllMocks()
   })
 
-  it('Should return a list of contact', () => {
+  it('Should return a list of contact', async () => {
     const loggerErrorMock = vi.fn()
     const userOperationsMock = {
-      getUserById: vi.fn()
+      getUserByIds: vi.fn()
     }
     const messageOperationsMock = {
-      getContactList: vi.fn()
+      getContactList: vi.fn(),
+      hasUnreadMessages: vi.fn()
     }
     const contactList = [
       {
@@ -58,54 +59,56 @@ describe('test getContactList test', () => {
       }
     ]
     messageOperationsMock.getContactList.mockResolvedValueOnce(contactList)
-    userOperationsMock.getUserById.mockResolvedValueOnce({
-      id: 2,
-      firstname: 'branda',
-      lastname: 'doe',
-      image: ''
-    })
+    userOperationsMock.getUserByIds.mockResolvedValueOnce([
+      {
+        id: 2,
+        firstname: 'branda',
+        lastname: 'doe',
+        image: ''
+      },
+      {
+        id: 3,
+        firstname: 'brandon',
+        lastname: 'doe',
+        image: ''
+      },
+      {
+        id: 22,
+        firstname: 'brandy',
+        lastname: 'doe',
+        image: ''
+      }
+    ])
+    messageOperationsMock.hasUnreadMessages.mockResolvedValueOnce(false)
+    messageOperationsMock.hasUnreadMessages.mockResolvedValueOnce(false)
+    messageOperationsMock.hasUnreadMessages.mockResolvedValueOnce(false)
 
-    userOperationsMock.getUserById.mockResolvedValueOnce({
-      id: 3,
-      firstname: 'brandon',
-      lastname: 'doe',
-      image: ''
-    })
+    const list = await getContactListEffect(21).pipe(
+      T.provideService(Logger, { error: loggerErrorMock }),
+      T.provideService(UserOperations, userOperationsMock as unknown as typeof userOperations),
+      T.provideService(
+        MessageOperations,
+        messageOperationsMock as unknown as typeof messageOperations
+      ),
+      T.runPromise
+    )
 
-    userOperationsMock.getUserById.mockResolvedValueOnce({
-      id: 22,
-      firstname: 'brandy',
-      lastname: 'doe',
-      image: ''
-    })
-
-    getContactListEffect(21)
-      .pipe(
-        T.provideService(Logger, { error: loggerErrorMock }),
-        T.provideService(UserOperations, userOperationsMock as unknown as typeof userOperations),
-        T.provideService(
-          MessageOperations,
-          messageOperationsMock as unknown as typeof messageOperations
-        ),
-        T.runPromise
-      )
-      .then(list => {
-        expect(list.length).toBe(3)
-        expect(list[0]?.id).toBe(2)
-        expect(list[1]?.id).toBe(3)
-        expect(list[2]?.id).toBe(22)
-        expect(messageOperationsMock.getContactList).toHaveBeenCalledWith(21)
-        expect(userOperationsMock.getUserById).toHaveBeenCalledTimes(3)
-      })
+    expect(list.length).toBe(3)
+    expect(list[0]?.id).toBe(2)
+    expect(list[1]?.id).toBe(3)
+    expect(list[2]?.id).toBe(22)
+    expect(messageOperationsMock.getContactList).toHaveBeenCalledWith(21)
+    expect(userOperationsMock.getUserByIds).toHaveBeenCalledTimes(1)
   })
 
-  it('Should return a list of contact with one user not found', () => {
+  it('Should return a list of contact with one user not found', async () => {
     const loggerErrorMock = vi.fn()
     const userOperationsMock = {
-      getUserById: vi.fn()
+      getUserByIds: vi.fn()
     }
     const messageOperationsMock = {
-      getContactList: vi.fn()
+      getContactList: vi.fn(),
+      hasUnreadMessages: vi.fn()
     }
     const contactList = [
       {
@@ -134,37 +137,36 @@ describe('test getContactList test', () => {
       }
     ]
     messageOperationsMock.getContactList.mockResolvedValueOnce(contactList)
-    userOperationsMock.getUserById.mockResolvedValueOnce({
-      id: 2,
-      firstname: 'branda',
-      lastname: 'doe',
-      image: ''
-    })
+    userOperationsMock.getUserByIds.mockResolvedValueOnce([
+      {
+        id: 2,
+        firstname: 'branda',
+        lastname: 'doe',
+        image: ''
+      },
+      {
+        id: 22,
+        firstname: 'brandy',
+        lastname: 'doe',
+        image: ''
+      }
+    ])
+    messageOperationsMock.hasUnreadMessages.mockResolvedValueOnce(false)
+    messageOperationsMock.hasUnreadMessages.mockResolvedValueOnce(false)
 
-    userOperationsMock.getUserById.mockResolvedValueOnce(null)
+    const list = await getContactListEffect(21).pipe(
+      T.provideService(Logger, { error: loggerErrorMock }),
+      T.provideService(UserOperations, userOperationsMock as unknown as typeof userOperations),
+      T.provideService(
+        MessageOperations,
+        messageOperationsMock as unknown as typeof messageOperations
+      ),
+      T.runPromise
+    )
 
-    userOperationsMock.getUserById.mockResolvedValueOnce({
-      id: 22,
-      firstname: 'brandy',
-      lastname: 'doe',
-      image: ''
-    })
-
-    getContactListEffect(21)
-      .pipe(
-        T.provideService(Logger, { error: loggerErrorMock }),
-        T.provideService(UserOperations, userOperationsMock as unknown as typeof userOperations),
-        T.provideService(
-          MessageOperations,
-          messageOperationsMock as unknown as typeof messageOperations
-        ),
-        T.runPromise
-      )
-      .then(list => {
-        expect(list[0]?.id).toBe(2)
-        expect(list[1]?.id).toBe(22)
-        expect(messageOperationsMock.getContactList).toHaveBeenCalledWith(21)
-        expect(userOperationsMock.getUserById).toHaveBeenCalledTimes(3)
-      })
+    expect(list[0]?.id).toBe(2)
+    expect(list[1]?.id).toBe(22)
+    expect(messageOperationsMock.getContactList).toHaveBeenCalledWith(21)
+    expect(userOperationsMock.getUserByIds).toHaveBeenCalledTimes(1)
   })
 })
