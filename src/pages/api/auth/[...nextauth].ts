@@ -1,17 +1,19 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { env } from '@/server/env'
 import NextAuth, { NextAuthOptions } from 'next-auth'
 import LinkedinProvider, { LinkedInProfile } from 'next-auth/providers/linkedin'
 import GitHubProvider from 'next-auth/providers/github'
 import GoogleProvider from 'next-auth/providers/google'
-import { User } from '@prisma/client'
-import { userOperations } from '@/server/databaseOperations/prisma.provider'
-import { logger } from '@/server/logger'
+import EmailProvider from 'next-auth/providers/email'
+import { extendedPrisma } from '@/server/databaseOperations/prisma.provider'
+import { PrismaAdapter } from '@/server/authAdapter.ts/prisma'
 
 export const authOptions: NextAuthOptions = {
   secret: env.AUTH_SECRET,
   providers: [
     LinkedinProvider({
+      allowDangerousEmailAccountLinking: true,
       clientId: env.LINKEDIN_ID,
       clientSecret: env.LINKEDIN_SECRET,
       client: { token_endpoint_auth_method: 'client_secret_post' },
@@ -30,22 +32,33 @@ export const authOptions: NextAuthOptions = {
       }
     }),
     GitHubProvider({
+      allowDangerousEmailAccountLinking: true,
       clientId: env.GITHUB_CLIENT_ID,
       clientSecret: env.GITHUB_CLIENT_SECRET
     }),
+    EmailProvider({
+      server: process.env.EMAIL_SERVER,
+      from: process.env.EMAIL_FROM,
+      sendVerificationRequest({ identifier: email, url, provider: { server, from } }) {
+        /* your function */
+      }
+    }),
     GoogleProvider({
+      allowDangerousEmailAccountLinking: true,
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET
     })
   ],
+  adapter: PrismaAdapter(extendedPrisma),
   callbacks: {
+    /*
     async signIn({ user, account, profile }: any) {
       const dbUser: Omit<User, 'id' | 'createdAt' | 'userBalanceId'> = {
         firstname: profile.given_name,
         lastname: profile.family_name,
         image: user.image,
         email: user.email,
-        oauthProvider: account.provider,
+        emailVerified: user.emailVerified ? new Date(user.emailVerified) : null,
         isCertified: false,
         description: '',
         jobTitle: '',
@@ -85,10 +98,11 @@ export const authOptions: NextAuthOptions = {
         token.locale = profile.locale
       }
       return token
-    },
-    async session({ session, token }: any) {
+    }*/
+    async session({ session, user }) {
+      console.log(session)
       return {
-        user: { email: session.user.email, id: token.id },
+        user: { email: user.email, id: parseInt(user.id, 10) },
         expires: session.expires
       }
     }
