@@ -6,8 +6,10 @@ import LinkedinProvider, { LinkedInProfile } from 'next-auth/providers/linkedin'
 import GitHubProvider from 'next-auth/providers/github'
 import GoogleProvider from 'next-auth/providers/google'
 import EmailProvider from 'next-auth/providers/email'
-import { extendedPrisma } from '@/server/databaseOperations/prisma.provider'
+import { extendedPrisma, userOperations } from '@/server/databaseOperations/prisma.provider'
 import { PrismaAdapter } from '@/server/authAdapter.ts/prisma'
+import { mailProviderFactory } from '@/server/emailOperations/email.provider'
+import { buildMagicLinkEmail } from '@/server/emailOperations/buildEmail'
 
 export const authOptions: NextAuthOptions = {
   secret: env.AUTH_SECRET,
@@ -39,8 +41,21 @@ export const authOptions: NextAuthOptions = {
     EmailProvider({
       server: process.env.EMAIL_SERVER,
       from: process.env.EMAIL_FROM,
-      sendVerificationRequest({ identifier: email, url, provider: { server, from } }) {
-        /* your function */
+      sendVerificationRequest({ identifier: email, url: link, provider: { server, from } }) {
+        console.log('Sending verification email to:', email)
+        const provider = mailProviderFactory.mailjet()
+
+        const builtEmail = buildMagicLinkEmail({ link })
+
+        return provider.sendEmail({
+          to: {
+            email,
+            name: ''
+          },
+          subject: 'Connect to Humanlink',
+          text: `Click the link to sign in: ${link}`,
+          html: builtEmail
+        })
       }
     }),
     GoogleProvider({
@@ -51,61 +66,18 @@ export const authOptions: NextAuthOptions = {
   ],
   adapter: PrismaAdapter(extendedPrisma),
   callbacks: {
-    /*
-    async signIn({ user, account, profile }: any) {
-      const dbUser: Omit<User, 'id' | 'createdAt' | 'userBalanceId'> = {
-        firstname: profile.given_name,
-        lastname: profile.family_name,
-        image: user.image,
-        email: user.email,
-        emailVerified: user.emailVerified ? new Date(user.emailVerified) : null,
-        isCertified: false,
-        description: '',
-        jobTitle: '',
-        certifiedDate: null,
-        roles: ['USER'],
-        country: 'USA'
+    async signIn({ user, account, email }) {
+      const userExists = await userOperations.verifyIfUserExistsByEmail(user.email ?? '')
+      if (userExists) {
+        return true //if the email exists in the User collection, email them a magic login link
+      } else {
+        return '/register'
       }
-
-      try {
-        const userExists = await userOperations.verifyIfUserExistsByEmail(dbUser.email)
-
-        if (!userExists) {
-          const createdUser = await userOperations.createUser(dbUser)
-
-          account.id = createdUser.id
-        } else {
-          account.id = userExists.id
-        }
-      } catch (e: unknown) {
-        logger.error({
-          error: 'database_error',
-          message: (e as Error).message,
-          errorDetail: e
-        })
-
-        return false
-      }
-
-      return true
     },
-    jwt({ token, account, profile }: any) {
-      if (account) {
-        token.provider = account.provider
-        token.firstname = profile.given_name
-        token.lastname = profile.family_name
-        token.id = account.id
-        token.locale = profile.locale
-      }
-      return token
-    }*/
-    async session({ session, user }) {
-      console.log(session)
-      return {
-        user: { email: user.email, id: parseInt(user.id, 10) },
-        expires: session.expires
-      }
-    }
+    session: ({ session, user }) => ({
+      user: { email: user.email, id: parseInt(user.id, 10) },
+      expires: session.expires
+    })
   }
 }
 

@@ -68,10 +68,7 @@ export const appRouter = router({
       .query(options => serviceOperations.getServiceById(options.input))
   }),
   protectedGet: router({
-    me: protectedprocedure.query(({ ctx }) => {
-      console.log('------ get user me', ctx)
-      return userMe(ctx.session.user.id).run()
-    }),
+    me: protectedprocedure.query(({ ctx }) => userMe(ctx.session.user.id).run()),
     conversation: protectedprocedure
       .input(
         z.object({

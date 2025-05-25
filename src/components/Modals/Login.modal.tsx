@@ -1,8 +1,11 @@
+import { Email } from '@mui/icons-material'
 import { Avatar, Box, ButtonBase, List, ListItem, styled, Typography } from '@mui/material'
 import { signIn } from 'next-auth/react'
 import { useTranslation } from 'next-i18next'
+import Link from 'next/link'
 
 const StyledButton = styled(ButtonBase)(({ theme }) => ({
+  color: theme.palette.text.primary,
   border: 'solid 1px',
   borderRadius: `calc(${theme.shape.borderRadius}px)`,
   minWidth: '200px',
@@ -61,6 +64,14 @@ export default function LoginModal({ callbackUrl }: { callbackUrl?: string }) {
             />{' '}
             &nbsp;&nbsp;{t('withGoogle')}
           </StyledButton>
+        </ListItem>
+
+        <ListItem>
+          <Link href="/api/auth/signin">
+            <StyledButton>
+              <Email /> &nbsp;&nbsp;{t('withEmail')}
+            </StyledButton>
+          </Link>
         </ListItem>
       </List>
     </Box>
