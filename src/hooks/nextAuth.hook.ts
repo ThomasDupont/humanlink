@@ -51,6 +51,7 @@ export const useAuthSession = (): UserAuthSessionReturn & Base => {
   return {
     user: {
       ...query.data,
+      emailVerified: query.data.emailVerified ? new Date(query.data.emailVerified) : null,
       createdAt: new Date(query.data.createdAt),
       certifiedDate: query.data.certifiedDate ? new Date(query.data.certifiedDate) : null,
       services: query.data.services.map(service => ({

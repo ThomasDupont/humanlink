@@ -6,8 +6,8 @@ const users: (Omit<User, 'id' | 'userBalanceId'> & {
   {
     email: 'louane.morel@example.com',
     firstname: 'Louane',
+    emailVerified: null,
     lastname: 'Morel',
-    oauthProvider: 'google',
     createdAt: new Date('2012-06-21T17:08:59.929Z'),
     userBalance: {
       createdAt: new Date(),
@@ -25,8 +25,8 @@ const users: (Omit<User, 'id' | 'userBalanceId'> & {
   {
     email: 'sandro.garcia@example.com',
     firstname: 'Sandro',
+    emailVerified: null,
     lastname: 'Garcia',
-    oauthProvider: 'linkedin',
     createdAt: new Date('2003-09-29T07:09:56.482Z'),
     userBalance: {
       createdAt: new Date(),
@@ -45,7 +45,7 @@ const users: (Omit<User, 'id' | 'userBalanceId'> & {
     email: 'sara.colin@example.com',
     firstname: 'Sara',
     lastname: 'Colin',
-    oauthProvider: 'google',
+    emailVerified: null,
     createdAt: new Date('2004-11-16T03:46:56.329Z'),
     userBalance: {
       createdAt: new Date(),
@@ -64,7 +64,7 @@ const users: (Omit<User, 'id' | 'userBalanceId'> & {
     email: 'alois.hubert@example.com',
     firstname: 'Aloïs',
     lastname: 'Hubert',
-    oauthProvider: 'linkedin',
+    emailVerified: null,
     createdAt: new Date('2003-02-24T10:04:44.124Z'),
     userBalance: {
       createdAt: new Date(),
@@ -83,7 +83,7 @@ const users: (Omit<User, 'id' | 'userBalanceId'> & {
     email: 'gaetan.leroy@example.com',
     firstname: 'Gaëtan',
     lastname: 'Leroy',
-    oauthProvider: 'google',
+    emailVerified: null,
     createdAt: new Date('2020-05-28T00:42:25.335Z'),
     userBalance: {
       createdAt: new Date(),
@@ -102,7 +102,7 @@ const users: (Omit<User, 'id' | 'userBalanceId'> & {
     email: 'amaury.fernandez@example.com',
     firstname: 'Amaury',
     lastname: 'Fernandez',
-    oauthProvider: 'linkedin',
+    emailVerified: null,
     createdAt: new Date('2006-02-25T17:57:39.452Z'),
     userBalance: {
       createdAt: new Date(),
@@ -121,7 +121,7 @@ const users: (Omit<User, 'id' | 'userBalanceId'> & {
     email: 'ugo.duval@example.com',
     firstname: 'Ugo',
     lastname: 'Duval',
-    oauthProvider: 'google',
+    emailVerified: null,
     createdAt: new Date('2016-05-01T01:04:27.722Z'),
     userBalance: {
       createdAt: new Date(),
@@ -140,7 +140,7 @@ const users: (Omit<User, 'id' | 'userBalanceId'> & {
     email: 'lino.marchand@example.com',
     firstname: 'Lino',
     lastname: 'Marchand',
-    oauthProvider: 'linkedin',
+    emailVerified: null,
     createdAt: new Date('2006-01-27T14:02:59.094Z'),
     userBalance: {
       createdAt: new Date(),
@@ -159,7 +159,7 @@ const users: (Omit<User, 'id' | 'userBalanceId'> & {
     email: 'berenice.francois@example.com',
     firstname: 'Bérénice',
     lastname: 'François',
-    oauthProvider: 'google',
+    emailVerified: null,
     createdAt: new Date('2010-08-09T09:10:04.797Z'),
     userBalance: {
       createdAt: new Date(),
@@ -179,7 +179,7 @@ const users: (Omit<User, 'id' | 'userBalanceId'> & {
     email: 'eleonore.berger@example.com',
     firstname: 'Éléonore',
     lastname: 'Berger',
-    oauthProvider: 'linkedin',
+    emailVerified: null,
     createdAt: new Date('2004-09-29T15:36:26.293Z'),
     userBalance: {
       createdAt: new Date(),
@@ -199,7 +199,7 @@ const users: (Omit<User, 'id' | 'userBalanceId'> & {
     email: 'adele.schmitt@example.com',
     firstname: 'Adèle',
     lastname: 'Schmitt',
-    oauthProvider: 'google',
+    emailVerified: null,
     createdAt: new Date('2012-03-31T01:19:01.146Z'),
     userBalance: {
       createdAt: new Date(),
@@ -218,7 +218,7 @@ const users: (Omit<User, 'id' | 'userBalanceId'> & {
     email: 'meline.fontai@example.com',
     firstname: 'Méline',
     lastname: 'Fontai',
-    oauthProvider: 'linkedin',
+    emailVerified: null,
     createdAt: new Date('2002-04-15T19:52:02.121Z'),
     userBalance: {
       createdAt: new Date(),
@@ -237,7 +237,7 @@ const users: (Omit<User, 'id' | 'userBalanceId'> & {
     email: 'leandro.laurent@example.com',
     firstname: 'Léandro',
     lastname: 'Laurent',
-    oauthProvider: 'google',
+    emailVerified: null,
     createdAt: new Date('2008-07-13T11:24:39.049Z'),
     userBalance: {
       createdAt: new Date(),
@@ -256,7 +256,7 @@ const users: (Omit<User, 'id' | 'userBalanceId'> & {
     email: 'naomi.vincent@example.com',
     firstname: 'Naomi',
     lastname: 'Vincent',
-    oauthProvider: 'linkedin',
+    emailVerified: null,
     createdAt: new Date('2002-12-12T11:39:09.718Z'),
     userBalance: {
       createdAt: new Date(),
@@ -275,7 +275,7 @@ const users: (Omit<User, 'id' | 'userBalanceId'> & {
     email: 'ines.dumas@example.com',
     firstname: 'Inès',
     lastname: 'Dumas',
-    oauthProvider: 'google',
+    emailVerified: null,
     createdAt: new Date('2005-09-09T03:09:47.378Z'),
     userBalance: {
       createdAt: new Date(),
@@ -294,7 +294,7 @@ const users: (Omit<User, 'id' | 'userBalanceId'> & {
     email: 'sasha.boyer@example.com',
     firstname: 'Sasha',
     lastname: 'Boyer',
-    oauthProvider: 'linkedin',
+    emailVerified: null,
     createdAt: new Date('2017-09-15T12:52:53.792Z'),
     userBalance: {
       createdAt: new Date(),
@@ -312,8 +312,8 @@ const users: (Omit<User, 'id' | 'userBalanceId'> & {
   {
     email: 'elio.chevalier@example.com',
     firstname: 'Elio',
+    emailVerified: null,
     lastname: 'Chevalier',
-    oauthProvider: 'google',
     createdAt: new Date('2004-06-29T04:37:59.753Z'),
     userBalance: {
       createdAt: new Date(),
@@ -332,7 +332,7 @@ const users: (Omit<User, 'id' | 'userBalanceId'> & {
     email: 'martin.bertrand@example.com',
     firstname: 'Martin',
     lastname: 'Bertrand',
-    oauthProvider: 'linkedin',
+    emailVerified: null,
     createdAt: new Date('2019-07-30T05:39:27.631Z'),
     userBalance: {
       createdAt: new Date(),
@@ -351,7 +351,7 @@ const users: (Omit<User, 'id' | 'userBalanceId'> & {
     email: 'laura.dasilva@example.com',
     firstname: 'Laura',
     lastname: 'Da Silva',
-    oauthProvider: 'google',
+    emailVerified: null,
     createdAt: new Date('2003-03-06T02:29:59.166Z'),
     userBalance: {
       createdAt: new Date(),
@@ -370,7 +370,7 @@ const users: (Omit<User, 'id' | 'userBalanceId'> & {
     email: 'erwan.leroux@example.com',
     firstname: 'Erwan',
     lastname: 'Leroux',
-    oauthProvider: 'linkedin',
+    emailVerified: null,
     createdAt: new Date('2015-07-19T15:47:11.467Z'),
     userBalance: {
       createdAt: new Date(),

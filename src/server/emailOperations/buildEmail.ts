@@ -27,4 +27,16 @@ export const buildNotificationEmail = ({
     .replace(/{{firstname}}/g, firstname)
     .replace(/{{notificationType}}/g, NotificationType[notificationType])
     .replace(/{{detail}}/g, detail)
+    .replace(/{{year}}/g, new Date().getFullYear().toString())
+}
+
+export const buildMagicLinkEmail = ({ link }: { link: string }) => {
+  const template = fs.readFileSync(
+    path.join(process.cwd(), 'src/server/emailOperations/template/magicLink.template.html'),
+    'utf-8'
+  )
+
+  return template
+    .replace(/{{magic_link}}/g, link)
+    .replace(/{{year}}/g, new Date().getFullYear().toString())
 }

@@ -187,15 +187,6 @@ export default function Profile({ locale }: { locale: SupportedLocale }) {
 
                 <Grid size={6}>
                   <Typography variant="h4" component={'p'}>
-                    {t('oauthProvider')}
-                  </Typography>
-                </Grid>
-                <Grid size={6}>
-                  <Typography variant="body1">{user.oauthProvider}</Typography>
-                </Grid>
-
-                <Grid size={6}>
-                  <Typography variant="h4" component={'p'}>
                     {t('creationDate')}
                   </Typography>
                 </Grid>
