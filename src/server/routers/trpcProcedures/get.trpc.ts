@@ -1,5 +1,7 @@
 import { effectLogger } from '@/server/logger'
 import { Effect as T } from 'effect'
+import { NodeSdk } from '@effect/opentelemetry'
+import { ConsoleSpanExporter, BatchSpanProcessor } from '@opentelemetry/sdk-trace-base'
 import {
   effectFilesOperations,
   effectMessageOperations,
@@ -14,8 +16,14 @@ import { getOfferDetailEffect } from './queries/getOfferDetail'
 import { getProtectedFilesEffect } from './queries/getProtectedFiles'
 import { effectStorageProviderFactory } from '../../storage/storage.provider'
 
+const NodeSdkLive = NodeSdk.layer(() => ({
+  resource: { serviceName: 'get-procedure' },
+  spanProcessor: new BatchSpanProcessor(new ConsoleSpanExporter())
+}))
+
 export const userMe = (id: number) => ({
-  run: () => userMeEffect(id).pipe(effectLogger, effectUserOperations, T.runPromise)
+  run: () =>
+    userMeEffect(id).pipe(effectLogger, effectUserOperations, T.provide(NodeSdkLive), T.runPromise)
 })
 
 export const getContactList = (id: number) => ({

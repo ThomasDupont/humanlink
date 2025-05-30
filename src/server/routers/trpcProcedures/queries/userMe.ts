@@ -35,4 +35,4 @@ export const userMeEffect = (id: number) =>
         }
       )
     )
-  }).pipe(T.flatten)
+  }).pipe(T.flatten, T.withSpan('get-user-me'))

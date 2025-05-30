@@ -317,6 +317,7 @@ model Account {
 }
 
 model Session {
+  id           Int      @id @default(autoincrement())
   sessionToken String   @unique
   userId       Int
   expires      DateTime
