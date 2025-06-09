@@ -11,6 +11,7 @@ import { transaction } from './transactionBuilder'
 import { filesCrud } from './files/files.operation'
 import { milestoneCrud } from './offers/milestone.prisma'
 import { disputesCrud } from './disputes/disputes.prisma'
+import { userEmailCrud } from './messages/userEmail.prisma'
 
 export const prisma = new PrismaClient({
   log: [
@@ -62,6 +63,16 @@ export const filesOperations = filesCrud(extendedPrisma as unknown as PrismaClie
 export const milestoneOperations = milestoneCrud(extendedPrisma as unknown as PrismaClient)
 export const transactionOperations = transaction(extendedPrisma as unknown as PrismaClient)
 export const disputesOperations = disputesCrud(extendedPrisma as unknown as PrismaClient)
+export const userEmailOperations = userEmailCrud(extendedPrisma as unknown as PrismaClient)
+
+export class UserEmailOperation extends Context.Tag('userEmailOperations')<
+  UserEmailOperation,
+  typeof userEmailOperations
+>() {}
+export const effectUserEmailOperations = Effect.provideService(
+  UserEmailOperation,
+  userEmailOperations
+)
 
 export class UserOperations extends Context.Tag('userOperations')<
   UserOperations,

@@ -12,13 +12,8 @@ import {
 import config from '@/config'
 import searchFactory from '../searchService/search.factory'
 import { protectedprocedure } from './middlewares'
-import {
-  getContactList,
-  getOfferDetail,
-  getProtectedFiles,
-  listOffer
-} from './trpcProcedures/get.trpc'
-import { userMe } from './trpcProcedures/get.trpc'
+import { getContactList, getOfferDetail, getProtectedFiles, listOffer } from './domain/get.trpc'
+import { userMe } from './domain/get.trpc'
 import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
 import { Category, Lang, PaymentProvider } from '@prisma/client'
 import {
@@ -31,14 +26,14 @@ import {
   markMessageIsRead,
   sendMessage,
   upsertService
-} from './trpcProcedures/upsert.trpc'
-import { deleteAMilestoneFile, deleteAService } from './trpcProcedures/delete.trpc'
+} from './domain/upsert.trpc'
+import { deleteAMilestoneFile, deleteAService } from './domain/delete.trpc'
 import {
   singleUserToDisplayUserForOther,
   userWithServiceToDisplayUserForOther
 } from '../dto/user.dto'
 import { TRPCError } from '@trpc/server'
-import { getTransactions } from './trpcProcedures/queries/getUserTransactions'
+import { getTransactions } from './domain/queries/getUserTransactions'
 
 export const appRouter = router({
   get: router({

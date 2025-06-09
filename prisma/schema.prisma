@@ -52,6 +52,7 @@ model User {
   Session              Session[]
   Account              Account[]
   Authenticator        Authenticator[]
+  UserEmail            UserEmail[]
 }
 
 model ConnectedAccount {
@@ -147,16 +148,34 @@ model Price {
 }
 
 model Message {
-  id         Int       @id @default(autoincrement())
-  createdAt  DateTime  @default(now())
-  user1      User?     @relation("sender", fields: [senderId], references: [id], onDelete: SetNull)
+  id         Int         @id @default(autoincrement())
+  createdAt  DateTime    @default(now())
+  user1      User?       @relation("sender", fields: [senderId], references: [id], onDelete: SetNull)
   senderId   Int?
-  user2      User?     @relation("receiver", fields: [receiverId], references: [id], onDelete: SetNull)
+  user2      User?       @relation("receiver", fields: [receiverId], references: [id], onDelete: SetNull)
   receiverId Int?
   message    String
   readAt     DateTime?
-  offer      Offer?    @relation(fields: [offerId], references: [id], onDelete: SetNull)
-  offerId    Int?      @unique
+  offer      Offer?      @relation(fields: [offerId], references: [id], onDelete: SetNull)
+  offerId    Int?        @unique
+  UserEmail  UserEmail[]
+}
+
+enum UserEmailType {
+  new_message
+  new_offer
+  new_rendering
+  offer_accepted
+}
+
+model UserEmail {
+  id        Int           @id @default(autoincrement())
+  createdAt DateTime      @default(now())
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  type      UserEmailType
+  messageId Int?
+  message   Message?      @relation(fields: [messageId], references: [id], onDelete: SetNull)
 }
 
 // OFFER

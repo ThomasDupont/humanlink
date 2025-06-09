@@ -3,7 +3,7 @@ import { Formidable } from 'formidable'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../auth/[...nextauth]'
 import appConfig from '@/config'
-import { uploadsFile } from '@/server/routers/trpcProcedures/upsert.trpc'
+import { uploadsFile } from '@/server/routers/domain/upsert.trpc'
 import { serviceOperations } from '@/server/databaseOperations/prisma.provider'
 
 export const config = {
