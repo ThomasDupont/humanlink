@@ -19,7 +19,7 @@ enum Country {
   USA
 }
 
-enum Role {
+enum RoleBasic {
   USER
   ADMIN
 }
@@ -37,7 +37,7 @@ model User {
   certifiedDate        DateTime?
   image                String?
   country              Country
-  roles                Role[]
+  roles                RoleBasic[]
   services             Service[]
   messages1            Message[]              @relation("sender")
   messages2            Message[]              @relation("receiver")
@@ -53,6 +53,15 @@ model User {
   Account              Account[]
   Authenticator        Authenticator[]
   UserEmail            UserEmail[]
+  roleId               Int?
+  Role                 Role[]
+}
+
+model Role {
+  id     Int    @id @default(autoincrement())
+  name   String
+  userId Int
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ConnectedAccount {

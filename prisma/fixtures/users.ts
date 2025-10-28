@@ -1,6 +1,6 @@
 import { User, UserBalance } from '@prisma/client'
 
-const users: (Omit<User, 'id' | 'userBalanceId'> & {
+const users: (Omit<User, 'id' | 'userBalanceId' | 'roleId'> & {
   userBalance: Omit<UserBalance, 'id' | 'userId'>
 })[] = [
   {
