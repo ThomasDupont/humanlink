@@ -10,7 +10,7 @@ describe('Test validate effect', () => {
       const date = new Date('10/10/2020')
       const validate = validator(date.toDateString()).pipe(Effect.runSync)
 
-      expect(validate).toEqual(date)
+      expect(validate.value).toEqual(date)
     })
 
     it('Date in future with allow past', () => {
@@ -19,7 +19,7 @@ describe('Test validate effect', () => {
       const date = '10/10/2999'
       const validate = validator(date).pipe(Effect.runSync)
 
-      expect(validate).toEqual(new Date(date))
+      expect(validate.value).toEqual(new Date(date))
     })
 
     it('Date with disallow past (error)', () => {

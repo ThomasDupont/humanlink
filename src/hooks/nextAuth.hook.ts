@@ -1,3 +1,4 @@
+import { useUserState } from '@/state/user.state'
 import { NextAuthJsUserError, UserWithServicesWithPrices } from '@/types/User.type'
 import { trpc } from '@/utils/trpc'
 
@@ -20,6 +21,7 @@ type UserAuthSessionReturn =
     }
 export const useAuthSession = (): UserAuthSessionReturn & Base => {
   const query = trpc.protectedGet.me.useQuery()
+  const { setUser } = useUserState()
 
   const refetch = () => {
     query.refetch()
@@ -44,9 +46,12 @@ export const useAuthSession = (): UserAuthSessionReturn & Base => {
     }
   }
 
+  setUser(query.data)
+
   return {
     user: {
       ...query.data,
+      emailVerified: query.data.emailVerified ? new Date(query.data.emailVerified) : null,
       createdAt: new Date(query.data.createdAt),
       certifiedDate: query.data.certifiedDate ? new Date(query.data.certifiedDate) : null,
       services: query.data.services.map(service => ({

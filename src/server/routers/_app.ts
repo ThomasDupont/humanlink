@@ -3,18 +3,42 @@ import DOMPurify from 'dompurify'
 import { JSDOM } from 'jsdom'
 import { z } from 'zod'
 import {
+  balanceOperations,
+  disputesOperations,
   messageOperations,
   serviceOperations,
   userOperations
-} from './databaseOperations/prisma.provider'
+} from '../databaseOperations/prisma.provider'
 import config from '@/config'
-import searchFactory from './searchService/search.factory'
+import searchFactory from '../searchService/search.factory'
 import { protectedprocedure } from './middlewares'
+import {
+  getContactList,
+  getOfferDetail,
+  getProtectedFiles,
+  listOffer
+} from './trpcProcedures/get.trpc'
 import { userMe } from './trpcProcedures/get.trpc'
 import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
-import { Category, Lang } from '@prisma/client'
-import { createOffer, upsertService } from './trpcProcedures/upsert.trpc'
-import { deleteAService } from './trpcProcedures/delete.trpc'
+import { Category, Lang, PaymentProvider } from '@prisma/client'
+import {
+  acceptOffer,
+  acceptOfferRenderingsAndCreateMoneyTransfert,
+  addRendering,
+  closeMilestone,
+  createOfferWithMessage,
+  createStripePaymentIntent,
+  markMessageIsRead,
+  sendMessage,
+  upsertService
+} from './trpcProcedures/upsert.trpc'
+import { deleteAMilestoneFile, deleteAService } from './trpcProcedures/delete.trpc'
+import {
+  singleUserToDisplayUserForOther,
+  userWithServiceToDisplayUserForOther
+} from '../dto/user.dto'
+import { TRPCError } from '@trpc/server'
+import { getTransactions } from './trpcProcedures/queries/getUserTransactions'
 
 export const appRouter = router({
   get: router({
@@ -23,33 +47,70 @@ export const appRouter = router({
       .query(options =>
         searchFactory[config.backendSearchProvider]({ query: options.input.query })
       ),
-    userById: publicProcedure
-      .input(z.number())
-      .query(options => userOperations.getUserById(options.input)),
+    userById: publicProcedure.input(z.number()).query(options =>
+      userOperations.getUserById(options.input).then(u => {
+        if (!u) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'user_not_found'
+          })
+        }
+        return userWithServiceToDisplayUserForOther(u)
+      })
+    ),
     userByIds: publicProcedure
       .input(z.array(z.number()))
-      .query(options => userOperations.getUserByIds(options.input)),
+      .query(options =>
+        userOperations.getUserByIds(options.input).then(u => u.map(singleUserToDisplayUserForOther))
+      ),
     serviceById: publicProcedure
       .input(z.number())
       .query(options => serviceOperations.getServiceById(options.input))
   }),
   protectedGet: router({
-    me: protectedprocedure.query(({ ctx }) => userMe(ctx.session.user.email).run()),
+    me: protectedprocedure.query(({ ctx }) => userMe(ctx.session.user.id).run()),
     conversation: protectedprocedure
       .input(
         z.object({
           receiverId: z.number()
         })
       )
-      .query(options =>
+      .query(({ input, ctx }) =>
         messageOperations.getConversation({
-          receiverId: options.input.receiverId,
-          senderId: options.ctx.session.user.id
+          receiverId: input.receiverId,
+          senderId: ctx.session.user.id
         })
       ),
+    getContacts: protectedprocedure.query(({ ctx }) => getContactList(ctx.session.user.id).run()),
     userServices: protectedprocedure.query(({ ctx }) =>
       serviceOperations.getuserServices(ctx.session.user.id)
-    )
+    ),
+    listOffers: protectedprocedure.query(({ ctx }) => listOffer(ctx.session.user.id).run()),
+    offerDetail: protectedprocedure
+      .input(z.number())
+      .query(({ input, ctx }) => getOfferDetail(ctx.session.user.id, input).run()),
+    getProtectedFiles: protectedprocedure
+      .input(
+        z.object({
+          files: z.array(z.string())
+        })
+      )
+      .query(({ input, ctx }) =>
+        getProtectedFiles(ctx.session.user.id, input.files, 'ascend-rendering-offer').run()
+      ),
+    getConcernedDisputeForAnOffer: protectedprocedure
+      .input(
+        z.object({
+          offerId: z.number()
+        })
+      )
+      .query(({ input, ctx }) =>
+        disputesOperations.getConcernedDisputesForOneOffer(input.offerId, ctx.session.user.id)
+      ),
+    getUserBalance: protectedprocedure.query(({ ctx }) =>
+      balanceOperations.getUserBalance(ctx.session.user.id)
+    ),
+    getUserTransactions: protectedprocedure.query(({ ctx }) => getTransactions(ctx.session.user.id))
   }),
   protectedMutation: router({
     sendMessage: protectedprocedure
@@ -61,12 +122,20 @@ export const appRouter = router({
         })
       )
       .mutation(({ input, ctx }) =>
-        messageOperations.sendMessage({
+        sendMessage({
           senderId: ctx.session.user.id,
           receiverId: input.receiverId,
-          message: input.message
-        })
+          message: input.message,
+          offerId: input.offerId
+        }).run()
       ),
+    setMessageRead: protectedprocedure
+      .input(
+        z.object({
+          messageIds: z.array(z.number())
+        })
+      )
+      .mutation(({ input, ctx }) => markMessageIsRead(input.messageIds, ctx.session.user.id).run()),
     user: router({
       profile: protectedprocedure
         .input(
@@ -90,26 +159,42 @@ export const appRouter = router({
     service: router({
       upsert: protectedprocedure
         .input(
-          z.object({
-            id: z.number().optional(),
-            title: z.string().min(1).max(config.userInteraction.serviceTitleMaxLen),
-            shortDescription: z
-              .string()
-              .min(1)
-              .max(config.userInteraction.serviceShortDescriptionMaxLen),
-            description: z.string().min(1).max(config.userInteraction.descriptionMaxLen),
-            category: z.nativeEnum(Category),
-            langs: z.array(z.nativeEnum(Lang)),
-            prices: z.array(
-              z.object({
-                number: z.number().min(100).max(config.userInteraction.fixedPriceMax),
-                id: z.number().optional()
-              })
+          z
+            .object({
+              id: z.number().optional(),
+              title: z.string().min(1).max(config.userInteraction.serviceTitleMaxLen),
+              shortDescription: z
+                .string()
+                .min(1)
+                .max(config.userInteraction.serviceShortDescriptionMaxLen),
+              description: z.string().min(1).max(config.userInteraction.descriptionMaxLen),
+              category: z.nativeEnum(Category),
+              langs: z.array(z.nativeEnum(Lang)),
+              prices: z.array(
+                z.object({
+                  number: z.number().min(100).max(config.userInteraction.fixedPriceMax),
+                  id: z.number().optional()
+                })
+              ),
+              files: z.array(z.string()).min(0).max(config.userInteraction.maxUploadFileSize)
+            })
+            .refine(
+              data => {
+                if (data.id) {
+                  const pricesIdsLength = data.prices.filter(price => price.id).length
+                  if (pricesIdsLength !== data.prices.length) {
+                    return false
+                  }
+                }
+                return true
+              },
+              {
+                message: 'All prices must have an id if one of them has an id'
+              }
             )
-          })
         )
-        .mutation(({ input, ctx }) => {
-          return upsertService({
+        .mutation(({ input, ctx }) =>
+          upsertService({
             userId: ctx.session.user.id,
             serviceId: input.id,
             service: {
@@ -120,10 +205,10 @@ export const appRouter = router({
               langs: input.langs,
               type: config.serviceTypeFromCategory[input.category],
               // ---- MVP default
-              images: ['https://picsum.photos/1000/625'],
               localisation: '',
               renewable: false
             },
+            files: input.files,
             prices: input.prices.map(price => ({
               id: price.id ?? 0,
               number: price.number,
@@ -132,10 +217,32 @@ export const appRouter = router({
               currency: 'EUR'
             }))
           }).run()
-        }),
+        ),
       delete: protectedprocedure
         .input(z.number())
         .mutation(({ input, ctx }) => deleteAService(input, ctx.session.user.id).run())
+    }),
+    payment: router({
+      stripe: router({
+        createPaymentIntent: protectedprocedure
+          .input(
+            z.discriminatedUnion('type', [
+              z.object({
+                type: z.literal('offer'),
+                offerId: z.number(),
+                idempotencyKey: z.string(),
+                voucherCode: z.string().optional()
+              }),
+              z.object({
+                type: z.literal('milestone'),
+                milestoneId: z.number(),
+                idempotencyKey: z.string(),
+                voucherCode: z.string().optional()
+              })
+            ])
+          )
+          .mutation(({ input, ctx }) => createStripePaymentIntent(input).run(ctx.session.user.id))
+      })
     }),
     offer: router({
       create: protectedprocedure
@@ -144,13 +251,14 @@ export const appRouter = router({
             serviceId: z.number(),
             description: z.string().min(1).max(config.userInteraction.serviceDescriptionMaxLen),
             price: z.number().min(100).max(config.userInteraction.fixedPriceMax),
+            receiverId: z.number(),
             deadline: z.coerce
               .date()
-              .refine(data => data > new Date(), { message: 'The deadline must be in the future' })
+              .refine(date => date > new Date(), { message: 'date_in_the_past' })
           })
         )
-        .mutation(({ input, ctx }) => {
-          return createOffer({
+        .mutation(({ input, ctx }) =>
+          createOfferWithMessage({
             description: input.description,
             deadline: input.deadline,
             serviceId: input.serviceId,
@@ -159,13 +267,18 @@ export const appRouter = router({
             isPaid: false,
             isTerminated: false,
             terminatedAt: null,
+            acceptedAt: null,
             paidDate: null,
+            comment: null,
+            userIdReceiver: input.receiverId,
             // default: 1
             milestones: [
               {
                 description: input.description,
                 deadline: input.deadline,
                 terminatedAt: null,
+                renderingFiles: [],
+                renderingText: null,
                 validatedAt: null,
                 priceMilestone: {
                   number: input.price,
@@ -177,7 +290,100 @@ export const appRouter = router({
               }
             ]
           }).run()
-        })
+        ),
+      accept: protectedprocedure
+        .input(
+          z.object({
+            offerId: z.number(),
+            paymentId: z.string(),
+            paymentProvider: z.nativeEnum(PaymentProvider)
+          })
+        )
+        .mutation(({ input, ctx }) =>
+          acceptOffer({
+            offerId: input.offerId,
+            paymentId: input.paymentId,
+            paymentProvider: input.paymentProvider,
+            userId: ctx.session.user.id
+          }).run()
+        ),
+      acceptOfferRenderingsAndCreateMoneyTransfert: protectedprocedure
+        .input(
+          z.object({
+            offerId: z.number()
+          })
+        )
+        .mutation(({ input, ctx }) =>
+          acceptOfferRenderingsAndCreateMoneyTransfert(input.offerId, ctx.session.user.id).run()
+        ),
+      declareADisputeOnOffer: protectedprocedure
+        .input(
+          z.object({
+            offerId: z.number(),
+            comment: z.string().min(1).max(config.userInteraction.serviceDescriptionMaxLen)
+          })
+        )
+        .mutation(({ input, ctx }) =>
+          disputesOperations.createADispute({
+            userId: ctx.session.user.id,
+            offerId: input.offerId,
+            text: input.comment
+          })
+        )
+    }),
+    milestone: router({
+      addRendering: protectedprocedure
+        .input(
+          z.object({
+            milestoneId: z.number(),
+            offerId: z.number(),
+            files: z
+              .array(
+                z.object({
+                  originalFilename: z.string(),
+                  path: z.string()
+                })
+              )
+              .max(config.userInteraction.maxUploadFileSize),
+            text: z.string().max(config.userInteraction.serviceDescriptionMaxLen).nullable()
+          })
+        )
+        .mutation(({ input, ctx }) =>
+          addRendering({
+            userId: ctx.session.user.id,
+            bucket: 'ascend-rendering-offer',
+            ...input
+          }).run()
+        ),
+      deleteAMilestoneFile: protectedprocedure
+        .input(
+          z.object({
+            offerId: z.number(),
+            milestoneId: z.number(),
+            hash: z.string()
+          })
+        )
+        .mutation(({ input, ctx }) =>
+          deleteAMilestoneFile({
+            userId: ctx.session.user.id,
+            bucket: 'ascend-rendering-offer',
+            ...input
+          }).run()
+        ),
+      closeMilestone: protectedprocedure
+        .input(
+          z.object({
+            milestoneId: z.number(),
+            offerId: z.number()
+          })
+        )
+        .mutation(({ input: { milestoneId, offerId }, ctx }) =>
+          closeMilestone({
+            milestoneId,
+            userId: ctx.session.user.id,
+            offerId
+          }).run()
+        )
     })
   })
 })

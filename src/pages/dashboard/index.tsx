@@ -4,11 +4,12 @@ import { Container, Box, Typography } from '@mui/material'
 import { GetStaticProps } from 'next'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import React, { ReactElement, useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import OrdersItem from './Orders.item'
-import ServicesItem from './Services.item'
-import WalletItem from './Wallet.item'
+import { useTranslation } from 'next-i18next'
+import OrdersItem from '../../elements/dashboard/Orders.item'
+import ServicesItem from '../../elements/dashboard/Services.item'
+import WalletItem from '../../elements/dashboard/Wallet.item'
 import { useAuthSession } from '@/hooks/nextAuth.hook'
+import { SupportedLocale } from '@/config'
 
 const Base = ({ children }: { children: ReactElement }) => {
   return (
@@ -27,11 +28,11 @@ const Base = ({ children }: { children: ReactElement }) => {
 type Item = 'services' | 'orders' | 'wallet'
 
 const itemMatcher: PatternMatching<{
-  [K in Item]: () => ReactElement
+  [K in Item]: (locale: SupportedLocale) => ReactElement
 }> = {
-  orders: () => <OrdersItem />,
+  orders: (locale: SupportedLocale) => <OrdersItem locale={locale} />,
   services: () => <ServicesItem />,
-  wallet: () => <WalletItem />
+  wallet: (locale: SupportedLocale) => <WalletItem locale={locale} />
 }
 
 const MenuItem = ({ title, selected }: { title: string; selected: boolean }) => {
@@ -63,7 +64,7 @@ export const getStaticProps: GetStaticProps = async ({ locale }) => {
   }
 }
 
-export default function Dashboard() {
+export default function Dashboard({ locale }: { locale: SupportedLocale }) {
   const [selectedItem, setSelectedItem] = useState<Item>()
   const { t } = useTranslation('common')
 
@@ -109,7 +110,7 @@ export default function Dashboard() {
           sx={t => ({
             borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
             boxShadow: t.shadows[1],
-            backgroundColor: 'white',
+            backgroundColor: t.palette.background.paper,
             minHeight: 620,
             width: '100%',
             display: 'flex',
@@ -130,7 +131,7 @@ export default function Dashboard() {
             ))}
           </Box>
           <Box width={'100%'} id="main">
-            {selectedItem && itemMatcher[selectedItem]()}
+            {selectedItem && itemMatcher[selectedItem](locale)}
           </Box>
         </Box>
       </>

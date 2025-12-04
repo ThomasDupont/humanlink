@@ -1,13 +1,6 @@
+import { messageFromApiToLocal } from '@/utils/retreatDateFromAPI'
 import { trpc } from '@/utils/trpc'
-import { Message } from '@prisma/client'
-
-const parseMessage = (
-  c: Omit<Message, 'createdAt' | 'readAt'> & { createdAt: string; readAt: string | null }
-): Message => ({
-  ...c,
-  readAt: c.readAt ? new Date(c.readAt) : null,
-  createdAt: new Date(c.createdAt)
-})
+import { useEffect } from 'react'
 
 export const useConversation = (receiverId: number) => {
   const { data: conversations, refetch } = trpc.protectedGet.conversation.useQuery(
@@ -17,5 +10,20 @@ export const useConversation = (receiverId: number) => {
     }
   )
 
-  return { queue: conversations ? conversations.map(m => parseMessage(m)) : [], refetch }
+  const { mutate: mutateMessages } = trpc.protectedMutation.setMessageRead.useMutation()
+
+  useEffect(() => {
+    const unreadMessages = conversations?.filter(
+      m => m.readAt === null && m.receiverId !== receiverId
+    )
+
+    console.info('unreadMessages', unreadMessages)
+    if (unreadMessages?.length === 0) return
+
+    mutateMessages({
+      messageIds: unreadMessages?.map(m => m.id) ?? []
+    })
+  }, [conversations])
+
+  return { queue: conversations ? conversations.map(m => messageFromApiToLocal(m)) : [], refetch }
 }

@@ -16,9 +16,9 @@ import dynamic from 'next/dynamic'
 import 'react-quill/dist/quill.snow.css'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import { FormEvent, ReactElement, useEffect, useMemo, useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from 'next-i18next'
 import { format } from 'date-fns'
-import config, { SuportedLocale } from '@/config'
+import config, { SupportedLocale } from '@/config'
 import { localeToDateFnsLocale } from '@/utils/localeToDateFnsLocale'
 import { Spinner } from '@/components/Spinner'
 import { cleanHtmlTag } from '@/utils/cleanHtmlTag'
@@ -46,7 +46,7 @@ export const getStaticProps: GetStaticProps = async ({ locale }) => {
   }
 }
 
-export default function Profile({ locale }: { locale: SuportedLocale }) {
+export default function Profile({ locale }: { locale: SupportedLocale }) {
   const { user, error, refetch } = useAuthSession()
 
   const [jobTitle, setJobTitle] = useState(user?.jobTitle ?? '')
@@ -187,15 +187,6 @@ export default function Profile({ locale }: { locale: SuportedLocale }) {
 
                 <Grid size={6}>
                   <Typography variant="h4" component={'p'}>
-                    {t('oauthProvider')}
-                  </Typography>
-                </Grid>
-                <Grid size={6}>
-                  <Typography variant="body1">{user.oauthProvider}</Typography>
-                </Grid>
-
-                <Grid size={6}>
-                  <Typography variant="h4" component={'p'}>
                     {t('creationDate')}
                   </Typography>
                 </Grid>
@@ -266,10 +257,10 @@ export default function Profile({ locale }: { locale: SuportedLocale }) {
                         dangerouslySetInnerHTML={{
                           __html: description.slice(0, config.userInteraction.descriptionMaxLen)
                         }}
-                        sx={{
-                          backgroundColor: 'white',
+                        sx={t => ({
+                          backgroundColor: t.palette.background.paper,
                           p: 1
-                        }}
+                        })}
                       ></Box>
                     </Box>
                   )}

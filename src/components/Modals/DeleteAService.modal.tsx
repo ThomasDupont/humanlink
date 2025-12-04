@@ -68,7 +68,7 @@ export default function DeleteAService({
         >
           {commonT('yes')}
         </Button>
-        <Button onClick={() => handleClose('no')} variant="contained" color="primary">
+        <Button disabled={openSnackBar} onClick={() => handleClose('no')} variant="contained" color="primary">
           {commonT('no')}
         </Button>
       </Box>

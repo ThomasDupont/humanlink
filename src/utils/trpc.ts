@@ -2,10 +2,17 @@ import { httpBatchLink } from '@trpc/client'
 import { createTRPCNext } from '@trpc/next'
 import type { AppRouter } from '../server/routers/_app'
 import { inferRouterOutputs } from '@trpc/server'
+import { ArrayElement } from '@/types/utility.type'
 
 type RouterOutput = inferRouterOutputs<AppRouter>
 
 export type CreateOfferReturnType = RouterOutput['protectedMutation']['offer']['create']
+export type GetConversationReturnType = ArrayElement<RouterOutput['protectedGet']['conversation']>
+export type ConcernedOffer = ArrayElement<RouterOutput['protectedGet']['listOffers']>
+export type FilesFromAPI = RouterOutput['protectedGet']['getProtectedFiles']
+export type DisplayDispute = ArrayElement<
+  RouterOutput['protectedGet']['getConcernedDisputeForAnOffer']
+>
 
 function getBaseUrl() {
   if (typeof window !== 'undefined')

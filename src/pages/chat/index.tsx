@@ -6,6 +6,10 @@ import {
   Divider,
   IconButton,
   InputAdornment,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
   TextField,
   Typography
 } from '@mui/material'
@@ -16,20 +20,23 @@ import { useRouter } from 'next/router'
 import { z } from 'zod'
 import { useAuthSession } from '@/hooks/nextAuth.hook'
 import { trpc } from '../../utils/trpc'
-import { Send } from '@mui/icons-material'
-import { FormEvent, useState, KeyboardEvent, useEffect } from 'react'
+import { Refresh, Send } from '@mui/icons-material'
+import { FormEvent, useState, KeyboardEvent } from 'react'
 import { useConversation } from '@/hooks/chat/conversation.hook'
 import { Spinner } from '@/components/Spinner'
-import config from '@/config'
+import config, { SupportedLocale } from '@/config'
 import BaseModal from '@/components/BaseModal'
 import CreateOfferModal from '@/components/Modals/CreateOffer.modal'
-import { useTranslation } from 'react-i18next'
-import { OfferWithMileStonesAndMilestonePrice } from '@/types/Offers.type'
+import { useTranslation } from 'next-i18next'
+import ShowOffer from '@/elements/chat/ShowOffer.element'
+import { UserWithServicesWithPrices } from '@/types/User.type'
+import { logger } from '@/server/logger'
 
 export const getStaticProps: GetStaticProps = async ({ locale }) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale ?? 'en', ['common', 'chat', 'service']))
+      ...(await serverSideTranslations(locale ?? 'en', ['common', 'chat', 'service'])),
+      locale
     }
   }
 }
@@ -45,29 +52,29 @@ const qsValidator = z.object({
     .optional()
 })
 
-const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
+const Conversation = ({
+  conversationWithUserId,
+  locale,
+  iAmAFreelance
+}: {
+  conversationWithUserId: number
+  locale: SupportedLocale
+  iAmAFreelance: boolean
+  serviceId?: number
+}) => {
   const { t } = useTranslation('chat')
-  const { data: user, isFetching } = trpc.get.userById.useQuery(userId)
+  const {
+    data: user,
+    isFetching,
+    status,
+    error
+  } = trpc.get.userById.useQuery(conversationWithUserId)
   const [message, setMessage] = useState<string>()
   const [openCreateOfferModal, setOpenCreateOfferModal] = useState(false)
-  const [newOffer, setNewOffer] = useState<OfferWithMileStonesAndMilestonePrice>()
-
-  useEffect(() => {
-    if (newOffer) {
-      mutateAsync({
-        receiverId: userId,
-        message: ''
-        // offerId: newOffer.id
-      }).then(() => {
-        refetch()
-        setMessage('')
-      })
-    }
-  }, [newOffer])
 
   const { mutateAsync } = trpc.protectedMutation.sendMessage.useMutation()
 
-  const { queue, refetch } = useConversation(userId)
+  const { queue, refetch } = useConversation(conversationWithUserId)
 
   const handleSubmitMessage = (e: FormEvent<HTMLFormElement> | KeyboardEvent<HTMLDivElement>) => {
     e.preventDefault()
@@ -77,12 +84,21 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
     }
 
     mutateAsync({
-      receiverId: userId,
+      receiverId: conversationWithUserId,
       message
     }).then(() => {
       refetch()
       setMessage('')
     })
+  }
+
+  if (status === 'error') {
+    logger.error({
+      error: 'trpcError',
+      message: error.message,
+      errorDetail: error
+    })
+    return <Typography variant="body1">{error.message}</Typography>
   }
 
   if (isFetching) {
@@ -95,9 +111,9 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
         sx={t => ({
           borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
           boxShadow: t.shadows[1],
-          backgroundColor: 'white',
+          backgroundColor: t.palette.background.paper,
           height: 620,
-          width: '100%',
+          width: '85%',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between'
@@ -125,42 +141,56 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
         </Box>
         <Box
           id="main"
-          display={'flex'}
-          flexDirection={'column'}
-          justifyContent={'flex-end'}
           sx={{
             height: '100%',
-            m: 2
+            m: 2,
+            overflow: 'scroll'
           }}
         >
-          {[...queue].reverse().map(message => {
-            return (
-              <Box
-                key={message.id}
-                display={'flex'}
-                flexDirection={'row'}
-                justifyContent={message.receiverId === userId ? 'flex-end' : 'flex-start'}
-                sx={{
-                  mt: 1,
-                  mb: 1
-                }}
-              >
-                <Typography
-                  variant="body1"
-                  sx={t => ({
-                    borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
-                    boxShadow: t.shadows[1],
-                    textAlign: 'center',
-                    backgroundColor:
-                      message.receiverId === userId ? t.palette.primary[100] : 'white',
-                    padding: 1
-                  })}
+          <Box>
+            {[...queue].reverse().map(message => {
+              return (
+                <Box
+                  key={message.id}
+                  display={'flex'}
+                  flexDirection={'row'}
+                  justifyContent={
+                    message.receiverId === conversationWithUserId ? 'flex-end' : 'flex-start'
+                  }
+                  sx={{
+                    mt: 1,
+                    mb: 1
+                  }}
                 >
-                  {message.message}{' '}
-                </Typography>
-              </Box>
-            )
-          })}
+                  {message.offer ? (
+                    <ShowOffer
+                      offer={message.offer}
+                      user={user}
+                      locale={locale}
+                      userIdFromAuth={message.receiverId}
+                      onAcceptEvent={() => {
+                        refetch()
+                      }}
+                    />
+                  ) : (
+                    <Typography
+                      variant="body1"
+                      sx={t => ({
+                        whiteSpace: 'pre-line',
+                        borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
+                        boxShadow: t.shadows[1],
+                        textAlign: 'left',
+                        backgroundColor: t.palette.secondary[100],
+                        padding: 1
+                      })}
+                    >
+                      {message.message}
+                    </Typography>
+                  )}
+                </Box>
+              )
+            })}
+          </Box>
         </Box>
         <Box
           id="footer"
@@ -198,6 +228,9 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
                           mr: 1
                         }}
                       >
+                        <IconButton onClick={() => refetch()} edge="end">
+                          <Refresh />
+                        </IconButton>
                         <IconButton type="submit" edge="end">
                           <Send
                             fontSize="medium"
@@ -213,7 +246,7 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
                 }}
               />
             </form>
-            {user.services.length > 0 && (
+            {iAmAFreelance && (
               <Box display={'flex'} flexDirection={'row'} justifyContent={'flex-end'}>
                 <Button onClick={() => setOpenCreateOfferModal(true)} variant="outlined">
                   Proposer une offre
@@ -224,10 +257,11 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
         </Box>
         <BaseModal open={openCreateOfferModal} handleClose={() => setOpenCreateOfferModal(false)}>
           <CreateOfferModal
-            setNewOffer={offer => {
-              setNewOffer(offer)
+            handleClose={() => {
+              refetch()
               setOpenCreateOfferModal(false)
             }}
+            receiverId={conversationWithUserId}
           />
         </BaseModal>
       </Box>
@@ -235,11 +269,114 @@ const Conversation = ({ userId }: { userId: number; serviceId?: number }) => {
   )
 }
 
-const Contacts = () => {
-  return <></>
+const Contacts = ({
+  onContactClick,
+  userId
+}: {
+  onContactClick: (id: number) => void
+  userId?: number
+}) => {
+  const { data: contacts } = trpc.protectedGet.getContacts.useQuery()
+  const [selected, setSelected] = useState(userId)
+
+  return (
+    <Box
+      sx={t => ({
+        width: '15%',
+        height: 620,
+        borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
+        boxShadow: t.shadows[1],
+        backgroundColor: t.palette.background.paper,
+        pt: 1,
+        overflow: 'scroll'
+      })}
+    >
+      {contacts ? (
+        <>
+          <Typography textAlign={'center'} variant="h4" component={'p'}>
+            Contacts
+          </Typography>
+          <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
+            {contacts.map(contact => (
+              <ListItem
+                onClick={() => {
+                  setSelected(contact.id)
+                  onContactClick(contact.id)
+                }}
+                alignItems="flex-start"
+                key={contact.id}
+                sx={t => ({
+                  backgroundColor:
+                    selected === contact.id ? t.palette.secondary[50] : t.palette.background.paper
+                })}
+              >
+                <ListItemAvatar>
+                  <Avatar
+                    alt={`${contact.firstname} ${contact.lastname}`}
+                    src={contact.image ?? undefined}
+                  />
+                </ListItemAvatar>
+                <ListItemText
+                  primary={`${contact.firstname} ${contact.lastname}`}
+                  secondary={
+                    <Typography
+                      component="span"
+                      variant="body2"
+                      sx={{ color: 'text.primary', display: 'inline' }}
+                    >
+                      {contact.hasUnreadMessage ? 'unread message' : ''}
+                    </Typography>
+                  }
+                />
+              </ListItem>
+            ))}
+          </List>
+        </>
+      ) : (
+        <Spinner />
+      )}
+    </Box>
+  )
 }
 
-export default function Chat() {
+const ChatContainer = ({
+  userId,
+  serviceId,
+  locale,
+  user
+}: {
+  userId?: number
+  serviceId?: number
+  locale: SupportedLocale
+  user: UserWithServicesWithPrices
+}) => {
+  const [conversationWithUserId, setConversationWithUserId] = useState(userId)
+  return (
+    <Container maxWidth="xl">
+      <Box
+        display={'flex'}
+        flexDirection={'row'}
+        gap={2}
+        sx={{
+          pt: 20,
+          pb: 10
+        }}
+      >
+        <Contacts userId={conversationWithUserId} onContactClick={setConversationWithUserId} />
+        {conversationWithUserId && (
+          <Conversation
+            locale={locale}
+            conversationWithUserId={conversationWithUserId}
+            iAmAFreelance={user.services.length > 0}
+            serviceId={serviceId}
+          />
+        )}
+      </Box>
+    </Container>
+  )
+}
+
+export default function Chat({ locale }: { locale: SupportedLocale }) {
   const router = useRouter()
   const { user } = useAuthSession()
 
@@ -256,18 +393,11 @@ export default function Chat() {
   const conversationWithUserId = parsedQuery.data.userId
 
   return (
-    <Container maxWidth="lg">
-      <Box
-        sx={{
-          pt: 20,
-          pb: 10
-        }}
-      >
-        <Contacts />
-        {conversationWithUserId && (
-          <Conversation userId={conversationWithUserId} serviceId={parsedQuery.data.serviceId} />
-        )}
-      </Box>
-    </Container>
+    <ChatContainer
+      userId={conversationWithUserId}
+      serviceId={parsedQuery.data.serviceId}
+      locale={locale}
+      user={user}
+    />
   )
 }

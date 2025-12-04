@@ -4,7 +4,7 @@ import { withAccelerate } from '@prisma/extension-accelerate'
 import services from './services'
 import users from './users'
 import prices from './prices'
-import { deleteRecord, sync } from '@/server/routers/databaseOperations/sync/sync'
+import { deleteRecord, sync } from '@/server/databaseOperations/sync/sync'
 
 const prisma = new PrismaClient().$extends(withAccelerate())
 

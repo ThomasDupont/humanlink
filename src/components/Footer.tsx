@@ -24,8 +24,8 @@ export const Footer = () => {
     <Container
       component={'footer'}
       maxWidth={false}
-      sx={() => ({
-        backgroundColor: 'white'
+      sx={t => ({
+        backgroundColor: t.palette.background.paper
       })}
     >
       <Container

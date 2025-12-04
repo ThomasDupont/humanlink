@@ -10,11 +10,6 @@ datasource db {
 
 // USER
 
-enum OauthProvider {
-  google
-  linkedin
-}
-
 enum Country {
   France
   Germany
@@ -32,9 +27,9 @@ enum Role {
 model User {
   id                   Int                    @id @default(autoincrement())
   email                String                 @unique
+  emailVerified        DateTime?
   firstname            String
   lastname             String
-  oauthProvider        OauthProvider
   createdAt            DateTime               @default(now())
   description          String
   jobTitle             String
@@ -46,10 +41,25 @@ model User {
   services             Service[]
   messages1            Message[]              @relation("sender")
   messages2            Message[]              @relation("receiver")
-  offers               Offer[]
+  offers1              Offer[]                @relation("sender")
+  offers2              Offer[]                @relation("receiver")
   userBalance          UserBalance            @relation(fields: [userBalanceId], references: [id])
   userBalanceId        Int                    @unique
   UserBalanceEventsLog UserBalanceEventsLog[]
+  Transaction1         Transaction[]          @relation("seller")
+  Transaction2         Transaction[]          @relation("buyer")
+  ConnectedAccount     ConnectedAccount[]
+  Session              Session[]
+  Account              Account[]
+  Authenticator        Authenticator[]
+}
+
+model ConnectedAccount {
+  id           Int             @id @default(autoincrement())
+  provider     PaymentProvider
+  idInProvider String          @unique
+  user         User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId       Int?
 }
 
 // SERVICE
@@ -152,21 +162,25 @@ model Message {
 // OFFER
 
 model Offer {
-  id           Int         @id @default(autoincrement())
-  createdAt    DateTime    @default(now())
-  user         User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
-  userId       Int?
-  service      Service?    @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  serviceId    Int?
-  description  String
-  deadline     DateTime
-  isAccepted   Boolean
-  isPaid       Boolean
-  paidDate     DateTime?
-  isTerminated Boolean
-  terminatedAt DateTime?
-  message      Message?
-  milestone    Milestone[]
+  id             Int         @id @default(autoincrement())
+  createdAt      DateTime    @default(now())
+  user           User?       @relation("sender", fields: [userId], references: [id], onDelete: SetNull)
+  userId         Int?
+  userReceiver   User?       @relation("receiver", fields: [userIdReceiver], references: [id], onDelete: SetNull)
+  userIdReceiver Int?
+  service        Service?    @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  serviceId      Int?
+  description    String
+  deadline       DateTime
+  isAccepted     Boolean
+  acceptedAt     DateTime?
+  isPaid         Boolean
+  paidDate       DateTime?
+  isTerminated   Boolean
+  terminatedAt   DateTime?
+  comment        String?
+  message        Message?
+  milestone      Milestone[]
 }
 
 model Milestone {
@@ -178,6 +192,8 @@ model Milestone {
   deadline         DateTime
   terminatedAt     DateTime?
   validatedAt      DateTime?
+  renderingText    String?
+  renderingFiles   String[]
   priceMilestone   PriceMilestone @relation(fields: [priceMilestoneId], references: [id])
   priceMilestoneId Int            @unique
 }
@@ -197,11 +213,135 @@ model UserBalance {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   user      User?
+  balance   Int      @default(0)
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+enum PaymentEventType {
+  payout
+  pre_payment
+  payment
+  invoicing
+}
+
+enum PaymentProvider {
+  stripe
+}
+
+enum PaymentFrom {
+  offer
+  milestone
 }
 
 model UserBalanceEventsLog {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    Int
+  id                Int              @id @default(autoincrement())
+  createdAt         DateTime         @default(now())
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            Int
+  amount            Int
+  eventType         PaymentEventType
+  provider          PaymentProvider
+  providerPaymentId String
+  from              PaymentFrom
+  fromId            Int
+}
+
+enum TransactionType {
+  acceptOffer
+  transfertToSellerBalance
+  transfertToBuyerBalance
+  fees
+  cancelOffer
+}
+
+model Transaction {
+  id          Int             @id @default(autoincrement())
+  createdAt   DateTime        @default(now())
+  user1       User?           @relation("seller", fields: [sellerId], references: [id], onDelete: SetNull)
+  sellerId    Int?
+  user2       User?           @relation("buyer", fields: [buyerId], references: [id], onDelete: SetNull)
+  buyerId     Int?
+  amount      Int
+  type        TransactionType
+  offerId     Int?
+  milestoneId Int?
+  comment     String
+}
+
+model File {
+  id               Int       @id @default(autoincrement())
+  createdAt        DateTime  @default(now())
+  hash             String    @unique
+  updatedAt        DateTime?
+  relatedUsers     Int[]
+  mimetype         String
+  originalFilename String
+  size             Int
+}
+
+enum Decision {
+  pending
+  rejected
+  fullRefund
+  partialRefund
+}
+
+model Dispute {
+  createdAt       DateTime  @default(now())
+  offerId         Int
+  userId          Int
+  text            String
+  decision        Decision
+  decisionAt      DateTime?
+  decisionComment String?
+
+  @@id([offerId, userId, decision])
+}
+
+model Account {
+  userId            Int
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       Int
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+model Authenticator {
+  credentialID         String  @unique
+  userId               Int
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, credentialID])
 }

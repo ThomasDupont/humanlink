@@ -1,3 +1,5 @@
 {
-  "yourMessage": "Votre message"
+  "yourMessage": "Votre message",
+  "acceptOffer": "Accepter l'offre",
+  "acceptOfferError": "Erreur"
 }

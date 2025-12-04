@@ -1,40 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# HUMANLINK
 
-## Getting Started
+This project is a MVP of a freelancing PF
 
-First, run the development server:
+## Main technos
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Next.js
+- tRPC : **[link](https://trpc.io/)**
+- TypeScript (v5)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Other technos
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+- @mui/material : **[link](https://mui.com/)** , Component library
+- prisma : **[link](https://www.prisma.io/)** , An ORM
+- effect : **[link](https://effect.website/)** , A functionnal programming library
+- valtio : **[link](https://valtio.dev/)** , state management
+- @tanstack/react-query
+- elasticsearch
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+## Principles
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+### TypeScript
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This project implement TypeScript with a strict configuration.
 
-## Learn More
+### Lint & Prettier
 
-To learn more about Next.js, take a look at the following resources:
+This project use the typescript strandard linter rules and a prettier.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+It's not possible to push a commit with an error build, a lint error and a unit test failed.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### hexagonal architecture
 
-## Deploy on Vercel
+#### backend
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The core of the application is on routers/trpcProcedures, useCase is an Effect programme who respect the SOLID principle.
+The useCases are :
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+- pure
+- used Dependency Injection pattern
+- with a single responsability
+
+The dependencies are manage with ports interface (providers) and adapters.
+Example with emailing :
+
+- The port is the mailer interface, it implements the sendEmail method
+- The useCase who need to send an email inject the mail provider
+- The adapter used is managed by the configuration (here Mailjet)
+- So the sendEmail call with send the email through MailJet.
+
+This process is respecting the SOLID principle.
+
+#### frontend
+
+The unique purpose of the frontend is to display data with a best UX and a nice UI.
+The front could have a hexagonal architecture for example with the payment management. Each payment platform is an adapter (with component and hook), for example use Stripe and Lemonway

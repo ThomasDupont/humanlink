@@ -4,7 +4,7 @@ export const StyledGrid = styled(Grid2)(({ theme }) => ({
   borderRadius: `calc(${theme.shape.borderRadius}px + 8px)`,
   boxShadow: theme.shadows[1],
   textAlign: 'center',
-  backgroundColor: 'white',
+  backgroundColor: theme.palette.background.paper,
   padding: '16px',
   color: 'secondary',
   display: 'flex',

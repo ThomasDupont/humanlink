@@ -1,135 +1,161 @@
-import { Schedule, Effect as T } from 'effect'
+import { Effect as T } from 'effect'
 import {
+  effectBalanceOperations,
+  effectMessageOperations,
   effectOfferOperations,
   effectServiceOperations,
-  OfferOperations,
-  ServiceOperations
-} from '../databaseOperations/prisma.provider'
-import { effectLogger, Logger } from '@/server/logger'
-import { Price, Prisma, Service } from '@prisma/client'
-import { TRPCError } from '@trpc/server'
-import { effectSync, Sync } from '../databaseOperations/sync/sync'
-import { OfferWithMileStonesAndMilestonePriceWithoutIdsAndCreatedAt } from '@/types/Offers.type'
-
-const RETRY = 1
-const RETRY_DELAY = 100
-type UpsertServiceArgs = {
-  userId: number
-  serviceId?: number
-  service: Omit<Service, 'id' | 'userId' | 'createdAt'>
-  prices: Omit<Price, 'serviceId'>[]
-}
-export const upsertServiceEffect = ({ userId, serviceId, service, prices }: UpsertServiceArgs) =>
-  T.gen(function* () {
-    const logger = yield* Logger
-    const serviceOperations = yield* ServiceOperations
-    const sync = yield* Sync
-
-    const retryPolicy = Schedule.addDelay(Schedule.recurs(RETRY), () => `${RETRY_DELAY} millis`)
-
-    return T.tryPromise({
-      try: () =>
-        serviceId
-          ? serviceOperations.updateService(
-              {
-                ...service,
-                id: serviceId,
-                userId
-              },
-              prices.map(price => ({
-                ...price,
-                serviceId
-              }))
-            )
-          : serviceOperations.createService({
-              ...service,
-              userId,
-              prices: prices.map(({ id: _, ...raw }) => raw)
-            }),
-      catch: error => {
-        logger.error({
-          cause: 'database_error',
-          message: `service ${serviceId} db upsert error`,
-          detailedError: error
-        })
-
-        if (error instanceof Prisma.PrismaClientKnownRequestError) {
-          return new TRPCError({
-            code: 'NOT_FOUND'
-          })
-        }
-        return new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR'
-        })
-      }
-    }).pipe(
-      T.filterOrFail(
-        service => service !== null,
-        () => {
-          logger.error({
-            cause: 'upsert_service_failed',
-            message: `service ${serviceId} not found on db`,
-            detailedError: {}
-          })
-          return new TRPCError({
-            code: 'NOT_FOUND'
-          })
-        }
-      ),
-      T.flatMap(service =>
-        T.retry(
-          T.tryPromise({
-            try: () => sync.sync(service),
-            catch: error => {
-              logger.error({
-                cause: 'sync_error',
-                message: `service ${serviceId} sync error`,
-                detailedError: error
-              })
-              return new TRPCError({
-                code: 'INTERNAL_SERVER_ERROR'
-              })
-            }
-          }),
-          retryPolicy
-        )
-      )
-    )
-  }).pipe(T.flatten)
+  effectTransactionOperations
+} from '../../databaseOperations/prisma.provider'
+import { effectLogger } from '@/server/logger'
+import { effectSync } from '../../databaseOperations/sync/sync'
+import { createStripePaymentIntentForOfferEffect } from './mutations/createStripePaymentIntentForOffer'
+import { effectPaymentProviderFactory } from '../../paymentOperations/payment.provider'
+import { acceptOfferEffect, AcceptOfferEffectArgs } from './mutations/acceptOffer'
+import { CreateOffer, createOfferWithMessageEffect } from './mutations/createOfferWithMessage'
+import { UpsertServiceArgs, upsertServiceEffect } from './mutations/upsertService'
+import formidable from 'formidable'
+import { uploadFilesEffect } from './mutations/uploadFile'
+import { effectStorageProviderFactory } from '../../storage/storage.provider'
+import { addRenderingEffect, AddRenderingEffectArgs } from './mutations/addRendering'
+import { acceptOfferRenderingsAndCreateMoneyTransfertEffect } from './mutations/acceptOfferRenderingsAndCreateMoneyTransfert'
+import { CloseMilestoneArgs, closeMilestoneEffect } from './mutations/closeMilestone'
+import { sendMessageEffect, SendMessageInput } from './mutations/sendMessage'
+import { effectCreateAccountIfNotExistsInPaymentProvider } from './utils/createAccountInPaymentProvider'
+import { effectSendMessageProvider } from './effectAsService'
+import {
+  effectSendNotificationAcceptOfferProvider,
+  effectSendNotificationNewMessageProvider,
+  effectSendNotificationNewRenderingProvider
+} from './utils/sendEmail'
+import { markReadMessageEffect } from './mutations/markReadMessage'
 
 export const upsertService = (args: UpsertServiceArgs) => ({
   run: () =>
-    upsertServiceEffect(args).pipe(effectLogger, effectServiceOperations, effectSync, T.runPromise)
+    upsertServiceEffect(args).pipe(
+      effectLogger,
+      effectServiceOperations,
+      effectSync,
+      effectStorageProviderFactory,
+      effectCreateAccountIfNotExistsInPaymentProvider,
+      T.runPromise
+    )
 })
 
-export const createOfferEffect = (
-  offer: OfferWithMileStonesAndMilestonePriceWithoutIdsAndCreatedAt
-) =>
-  T.gen(function* () {
-    const logger = yield* Logger
-    const offerOperations = yield* OfferOperations
+export const createOfferWithMessage = (offer: CreateOffer) => ({
+  run: () =>
+    createOfferWithMessageEffect(offer).pipe(
+      effectLogger,
+      effectOfferOperations,
+      effectSendMessageProvider,
+      T.runPromise
+    )
+})
 
-    return T.tryPromise({
-      try: () => offerOperations.createAnOffer(offer),
-      catch: error => {
-        logger.error({
-          cause: 'database_error',
-          message: `offer for service ${offer.serviceId} db create error`,
-          detailedError: error
-        })
+export const acceptOffer = (args: AcceptOfferEffectArgs) => ({
+  run: () =>
+    acceptOfferEffect(args).pipe(
+      effectLogger,
+      effectPaymentProviderFactory,
+      effectTransactionOperations,
+      effectOfferOperations,
+      effectSendNotificationAcceptOfferProvider,
+      T.runPromise
+    )
+})
 
-        if (error instanceof Prisma.PrismaClientKnownRequestError) {
-          return new TRPCError({
-            code: 'NOT_FOUND'
-          })
-        }
-        return new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR'
-        })
+type CreateStripePaymentIntentInput =
+  | {
+      type: 'offer'
+      offerId: number
+      idempotencyKey: string
+      voucherCode?: string | undefined
+    }
+  | {
+      type: 'milestone'
+      milestoneId: number
+      idempotencyKey: string
+      voucherCode?: string | undefined
+    }
+export const createStripePaymentIntent = (input: CreateStripePaymentIntentInput) => {
+  switch (input.type) {
+    case 'offer':
+      return {
+        run: (userId: number) =>
+          createStripePaymentIntentForOfferEffect(input.offerId, userId, input.idempotencyKey).pipe(
+            effectLogger,
+            effectOfferOperations,
+            effectPaymentProviderFactory,
+            T.runPromise
+          )
       }
-    })
-  }).pipe(T.flatten)
+    case 'milestone':
+      return {
+        run: () => {
+          throw new Error('Not implemented')
+        }
+      }
+  }
+}
 
-export const createOffer = (offer: OfferWithMileStonesAndMilestonePriceWithoutIdsAndCreatedAt) => ({
-  run: () => createOfferEffect(offer).pipe(effectLogger, effectOfferOperations, T.runPromise)
+export const uploadsFile = (files: formidable.File[], bucket: string, userId: number) => ({
+  run: () =>
+    uploadFilesEffect(files, bucket, userId).pipe(
+      effectLogger,
+      effectStorageProviderFactory,
+      T.runPromise
+    )
+})
+
+export const addRendering = (args: AddRenderingEffectArgs) => ({
+  run: () =>
+    addRenderingEffect(args).pipe(
+      effectLogger,
+      effectOfferOperations,
+      effectTransactionOperations,
+      effectStorageProviderFactory,
+      effectSendNotificationNewRenderingProvider,
+      T.runPromise
+    )
+})
+
+export const acceptOfferRenderingsAndCreateMoneyTransfert = (offerId: number, userId: number) => ({
+  run: () =>
+    acceptOfferRenderingsAndCreateMoneyTransfertEffect({
+      offerId,
+      userId
+    }).pipe(
+      effectLogger,
+      effectBalanceOperations,
+      effectOfferOperations,
+      effectTransactionOperations,
+      T.runPromise
+    )
+})
+
+export const closeMilestone = (args: CloseMilestoneArgs) => ({
+  run: () =>
+    closeMilestoneEffect(args).pipe(
+      effectLogger,
+      effectOfferOperations,
+      effectTransactionOperations,
+      T.runPromise
+    )
+})
+
+export const sendMessage = (args: SendMessageInput) => ({
+  run: () =>
+    sendMessageEffect(args).pipe(
+      effectLogger,
+      effectMessageOperations,
+      effectSendNotificationNewMessageProvider,
+      T.runPromise
+    )
+})
+
+export const markMessageIsRead = (messageIds: number[], userId: number) => ({
+  run: () =>
+    markReadMessageEffect({
+      messageIds,
+      userId
+    }).pipe(effectLogger, effectMessageOperations, T.runPromise)
 })

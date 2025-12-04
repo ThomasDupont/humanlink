@@ -10,10 +10,13 @@ import {
   Box,
   Typography,
   Avatar,
-  Button
+  Button,
+  Tooltip
 } from '@mui/material'
 import { AccountCircle, Menu as MenuIcon, Message, NotificationsRounded } from '@mui/icons-material'
 import { CloseRounded as CloseRoundedIcon } from '@mui/icons-material'
+import Brightness4Icon from '@mui/icons-material/Brightness4'
+import Brightness7Icon from '@mui/icons-material/Brightness7'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useTranslation } from 'next-i18next'
@@ -21,6 +24,7 @@ import BaseModal from './BaseModal'
 import AccountModal from './Modals/Account.modal'
 import LoginModal from './Modals/Login.modal'
 import { useAuthSession } from '@/hooks/nextAuth.hook'
+import { useThemeState } from '@/state/theme.state'
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   display: 'flex',
@@ -31,7 +35,7 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   backdropFilter: 'blur(24px)',
   border: '1px solid',
   borderColor: theme.palette.divider,
-  backgroundColor: 'white',
+  backgroundColor: theme.palette.background.paper,
   boxShadow: theme.shadows[1],
   padding: '8px 12px'
 }))
@@ -47,6 +51,7 @@ const Icons = ({ mobile }: { mobile: boolean }) => {
   const { user } = useAuthSession()
   const [openAccountModal, setOpenAccountModal] = useState(false)
   const [openLoginModal, setOpenLoginModal] = useState(false)
+  const { toggleDarkMode, themeSnapshot } = useThemeState()
 
   return (
     <>
@@ -68,34 +73,51 @@ const Icons = ({ mobile }: { mobile: boolean }) => {
           display: mobile ? { xs: 'block', md: 'none' } : { xs: 'none', md: 'block' }
         }}
       >
-        <IconButton>
-          <NotificationsRounded color="secondary" fontSize="medium" />
-        </IconButton>
+        <Tooltip title="Dark / Light mode" arrow>
+          <IconButton onClick={toggleDarkMode}>
+            {themeSnapshot.darkMode ? (
+              <Brightness7Icon color="secondary" fontSize="medium" />
+            ) : (
+              <Brightness4Icon color="secondary" fontSize="medium" />
+            )}
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Notification" arrow>
+          <IconButton>
+            <NotificationsRounded color="secondary" fontSize="medium" />
+          </IconButton>
+        </Tooltip>
         {user && (
           <Link href={`/chat`} target="_blank">
-            <IconButton>
-              <Message color="secondary" fontSize="medium" />
-            </IconButton>
+            <Tooltip title="Chat" arrow>
+              <IconButton>
+                <Message color="secondary" fontSize="medium" />
+              </IconButton>
+            </Tooltip>
           </Link>
         )}
         <IconButton>
           {user ? (
             <>
-              <SmallAvatar
-                onClick={() => setOpenAccountModal(true)}
-                src={user.image ?? undefined}
-              />
+              <Tooltip title="Account" arrow>
+                <SmallAvatar
+                  onClick={() => setOpenAccountModal(true)}
+                  src={user.image ?? undefined}
+                />
+              </Tooltip>
               <BaseModal open={openAccountModal} handleClose={() => setOpenAccountModal(false)}>
                 <AccountModal user={user} handleClose={() => setOpenAccountModal(false)} />
               </BaseModal>
             </>
           ) : (
             <>
-              <AccountCircle
-                onClick={() => setOpenLoginModal(true)}
-                color="secondary"
-                fontSize="medium"
-              />
+              <Tooltip title="Login" arrow>
+                <AccountCircle
+                  onClick={() => setOpenLoginModal(true)}
+                  color="secondary"
+                  fontSize="medium"
+                />
+              </Tooltip>
               <BaseModal open={openLoginModal} handleClose={() => setOpenLoginModal(false)}>
                 <LoginModal />
               </BaseModal>

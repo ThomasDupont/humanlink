@@ -1,6 +1,5 @@
 import BaseModal from '@/components/BaseModal'
 import LoginModal from '@/components/Modals/Login.modal'
-import { useAuthSession } from '@/hooks/nextAuth.hook'
 import { StyledBadge, StyledGrid } from '@/materials/styledElement'
 import { ServiceFromDB } from '@/types/Services.type'
 import { trpc } from '@/utils/trpc'
@@ -29,6 +28,9 @@ import { logger } from '../../server/logger'
 import { Spinner } from '../../components/Spinner'
 import { useManagePrice } from '../../hooks/managePrice.hook'
 import { useRouter } from 'next/router'
+import { useUserState } from '@/state/user.state'
+import { convertHtmlToMarkdown } from '@/utils/convertHtmlToMarkdown'
+import Markdown from 'react-markdown'
 
 const Base = ({ children }: { children: ReactElement }) => {
   return (
@@ -93,7 +95,7 @@ export default function Service({ userId, serviceId }: Props) {
   const { data: user, status, error } = trpc.get.userById.useQuery(userId) // @todo use a slug
   const [openLoginModal, setOpenLoginModal] = useState<boolean>(false)
 
-  const { user: me } = useAuthSession()
+  const { userSnapshot } = useUserState()
 
   if (!user) {
     return (
@@ -135,12 +137,14 @@ export default function Service({ userId, serviceId }: Props) {
   const price = managePrice(priceInService)
 
   const openChatOrLoginModal = () => {
-    if (!me) {
+    if (userSnapshot.userId === null) {
       setOpenLoginModal(true)
     } else {
       router.push(`/${router.locale ?? 'en'}/chat?userId=${user.id}&serviceId=${service.id}`)
     }
   }
+
+  const mdDescription = convertHtmlToMarkdown(service.description)
 
   return (
     <Container maxWidth="lg">
@@ -202,23 +206,27 @@ export default function Service({ userId, serviceId }: Props) {
             </Typography>
             <Typography variant="body2">#{service.category}</Typography>
           </Stack>
-          <CardMedia
-            component="img"
-            image={`https://picsum.photos/1000/625?random=${service.id}`}
-            alt="service"
-            sx={t => ({
-              mt: 4,
-              borderRadius: `calc(${t.shape.borderRadius}px + 8px)`
-            })}
-          />
-          <Typography
-            variant="body1"
+          <Box display={'flex'} flexDirection={'row'} justifyContent={'center'} sx={{ m: 2 }}>
+            <CardMedia
+              component="img"
+              image={service.images[0]}
+              alt="service"
+              sx={t => ({
+                mt: 4,
+                borderRadius: `calc(${t.shape.borderRadius}px + 8px)`,
+                height: 300,
+                width: 448
+              })}
+            />
+          </Box>
+          <Box
             sx={{
-              mt: 4
+              m: 4,
+              p: 2
             }}
           >
-            {service.description}
-          </Typography>
+            <Markdown>{mdDescription}</Markdown>
+          </Box>
           <Divider
             sx={{
               m: 4
@@ -273,7 +281,7 @@ export default function Service({ userId, serviceId }: Props) {
             </ListItem>
           </List>
           <Button
-            disabled={me?.id === user.id}
+            disabled={userSnapshot.userId === user.id}
             onClick={() => openChatOrLoginModal()}
             variant="contained"
           >
