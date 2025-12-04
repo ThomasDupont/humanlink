@@ -1,11 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Effect as T } from 'effect'
 import { addRenderingEffect } from './addRendering'
 import { Logger } from '@/server/logger'
 import { storageProviderFactory, StorageProviderFactory } from '../../../storage/storage.provider'
 import {
-  offerOperations,
-  OfferOperations,
   transactionOperations,
   TransactionOperations
 } from '../../../databaseOperations/prisma.provider'
@@ -13,12 +11,14 @@ import {
   sendNotificationNewRenderingProvider,
   SendNotificationNewRenderingProvider
 } from '../utils/sendEmail'
+import { OfferRepository } from '../repositories/offer.repository'
 
 describe('Test addRendering', () => {
   const loggerErrorMock = vi.fn()
 
-  const offerOperationsMock = {
-    getAnOfferByCreatorId: vi.fn()
+  const offerRepositoryMock = {
+    getValidOfferForRendering: vi.fn(),
+    getAcceptedAndTerminatedOffer: vi.fn()
   }
 
   const transactionOperationsMock = {
@@ -35,28 +35,34 @@ describe('Test addRendering', () => {
   const storageProviderFactoryMock = {
     tigris: () => tigrisMock
   }
-  it('Should proceed rendering add', () => {
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+  it('Should proceed rendering add', async () => {
     getFileInfoMock.mockResolvedValueOnce({
       mimetype: 'test',
       size: 100
     })
 
-    offerOperationsMock.getAnOfferByCreatorId.mockResolvedValueOnce({
-      userId: 1,
-      userIdReceiver: 3,
-      isAccepted: true,
-      milestone: [
-        {
-          id: 10
-        }
-      ]
-    })
+    offerRepositoryMock.getValidOfferForRendering.mockReturnValueOnce(
+      T.succeed({
+        userId: 1,
+        userIdReceiver: 3,
+        isAccepted: true,
+        milestone: [
+          {
+            id: 10
+          }
+        ]
+      })
+    )
 
     transactionOperationsMock.addMilestoneRenderingTransaction.mockResolvedValueOnce({})
 
     sendMessageMock.mockResolvedValueOnce(true)
 
-    addRenderingEffect({
+    await addRenderingEffect({
       userId: 1,
       offerId: 2,
       milestoneId: 10,
@@ -79,7 +85,7 @@ describe('Test addRendering', () => {
           TransactionOperations,
           transactionOperationsMock as unknown as typeof transactionOperations
         ),
-        T.provideService(OfferOperations, offerOperationsMock as unknown as typeof offerOperations),
+        T.provideService(OfferRepository, offerRepositoryMock),
         T.provideService(
           SendNotificationNewRenderingProvider,
           sendMessageMock as unknown as typeof sendNotificationNewRenderingProvider
@@ -108,24 +114,26 @@ describe('Test addRendering', () => {
       })
   })
 
-  it('Should return an Error when offer is not accepted', () => {
+  it('Should return an Error when offer is not accepted', async () => {
     getFileInfoMock.mockResolvedValueOnce({
       mimetype: 'test',
       size: 100
     })
 
-    offerOperationsMock.getAnOfferByCreatorId.mockResolvedValueOnce({
-      userId: 1,
-      userIdReceiver: 3,
-      isAccepted: false,
-      milestone: [
-        {
-          id: 10
-        }
-      ]
-    })
+    offerRepositoryMock.getValidOfferForRendering.mockReturnValueOnce(
+      T.succeed({
+        userId: 1,
+        userIdReceiver: 3,
+        isAccepted: false,
+        milestone: [
+          {
+            id: 10
+          }
+        ]
+      })
+    )
 
-    addRenderingEffect({
+    await addRenderingEffect({
       userId: 1,
       offerId: 2,
       milestoneId: 10,
@@ -148,7 +156,7 @@ describe('Test addRendering', () => {
           TransactionOperations,
           transactionOperationsMock as unknown as typeof transactionOperations
         ),
-        T.provideService(OfferOperations, offerOperationsMock as unknown as typeof offerOperations),
+        T.provideService(OfferRepository, offerRepositoryMock),
         T.provideService(
           SendNotificationNewRenderingProvider,
           sendMessageMock as unknown as typeof sendNotificationNewRenderingProvider
@@ -157,7 +165,7 @@ describe('Test addRendering', () => {
       )
       .then(() => true)
       .catch(error => {
-        expect(error.message).equals('offer_or_milestone_not_found_for_user')
+        expect(error.message).equals('milestone_not_found_for_user')
         return false
       })
       .then(v => {

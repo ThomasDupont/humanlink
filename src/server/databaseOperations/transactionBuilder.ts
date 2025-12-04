@@ -1,4 +1,5 @@
 import { PaymentProvider, PrismaClient } from '@prisma/client'
+import { moneyTransfer } from '../valueObjects/moneyTransfer.value-object'
 
 type AddPaymentTransactionArgs = {
   sellerId: number
@@ -6,15 +7,6 @@ type AddPaymentTransactionArgs = {
   userId: number
   provider: PaymentProvider
   providerPaymentId: string
-  offerId: number
-}
-
-type AcceptOfferRenderingsAndCreateMoneyTransfertTransactionArgs = {
-  sellerId: number
-  balanceId: number
-  fees: number
-  amount: number
-  userId: number
   offerId: number
 }
 
@@ -124,9 +116,7 @@ export const transaction = (prisma: PrismaClient) => {
     })
   }
 
-  const acceptOfferRenderingsAndCreateMoneyTransfertTransaction = (
-    args: AcceptOfferRenderingsAndCreateMoneyTransfertTransactionArgs
-  ) => {
+  const acceptOfferRenderingsAndCreateMoneyTransferTransaction = (args: moneyTransfer) => {
     const updatedAt = new Date()
     return prisma.$transaction([
       prisma.userBalance.update({
@@ -198,7 +188,7 @@ export const transaction = (prisma: PrismaClient) => {
     acceptOfferTransaction,
     addMilestoneRenderingTransaction,
     deleteAMilestoneFileTransaction,
-    acceptOfferRenderingsAndCreateMoneyTransfertTransaction,
+    acceptOfferRenderingsAndCreateMoneyTransferTransaction,
     closeMilestoneAndOfferTransaction
   }
 }

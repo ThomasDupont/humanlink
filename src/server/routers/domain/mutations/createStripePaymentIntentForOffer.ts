@@ -5,6 +5,7 @@ import { OfferOperations } from '../../../databaseOperations/prisma.provider'
 import { PaymentProviderFactory } from '../../../paymentOperations/payment.provider'
 import { Logger } from '@/server/logger'
 import config from '@/config'
+import { buildPayment } from '@/server/paymentOperations/payment.value-object'
 
 export const createStripePaymentIntentForOfferEffect = (
   offerId: number,
@@ -18,7 +19,7 @@ export const createStripePaymentIntentForOfferEffect = (
 
     const stripePayment = paymentProviderFactory['stripe']()
 
-    return T.tryPromise({
+    return yield* T.tryPromise({
       try: () => offerOperations.getAnOfferByIdAndReceiverId(offerId, receiverId),
       catch: error => {
         logger.error({
@@ -57,13 +58,11 @@ export const createStripePaymentIntentForOfferEffect = (
         )
         const currency = offer.milestone[0]?.priceMilestone.currency ?? config.defaultCurrency
 
-        return T.tryPromise({
-          try: () =>
-            stripePayment.createPayment({
-              amount: computedAmount,
-              currency,
-              idempotencyKey
-            }),
+        return buildPayment({ amount: computedAmount, currency, idempotencyKey })
+      }),
+      T.flatMap(payment =>
+        T.tryPromise({
+          try: () => stripePayment.createPayment(payment),
           catch: error => {
             logger.error({
               cause: 'database_error',
@@ -81,6 +80,6 @@ export const createStripePaymentIntentForOfferEffect = (
             })
           }
         })
-      })
+      )
     )
-  }).pipe(T.flatten)
+  })

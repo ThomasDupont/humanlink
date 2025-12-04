@@ -1,4 +1,5 @@
 import { Currency } from '@prisma/client'
+import { Payment } from './payment.value-object'
 
 type PaymentData = {
   id: string
@@ -9,11 +10,7 @@ type PaymentData = {
 }
 
 export type GenericPaymentProvider = {
-  createPayment: (args: {
-    amount: number
-    currency: Currency
-    idempotencyKey: string
-  }) => Promise<PaymentData>
+  createPayment: (args: Payment) => Promise<PaymentData>
   getPaymentById: (id: string) => Promise<PaymentData>
   refundFullTransaction: (id: string) => Promise<boolean>
   createAccount: (email: string) => Promise<string>

@@ -2,14 +2,14 @@ import { Logger } from '@/server/logger'
 import { Effect as T } from 'effect'
 import {
   BalanceOperations,
-  OfferOperations,
   TransactionOperations
 } from '../../../databaseOperations/prisma.provider'
 import { Prisma } from '@prisma/client'
 import { TRPCError } from '@trpc/server'
-import config from '@/config'
+import { OfferRepository } from '../repositories/offer.repository'
+import { transactionOfTerminateOfferPolicy } from '../policies/moneyTransfer.policy'
 
-export const acceptOfferRenderingsAndCreateMoneyTransfertEffect = ({
+export const acceptOfferRenderingsAndCreateMoneyTransferEffect = ({
   offerId,
   userId
 }: {
@@ -18,52 +18,11 @@ export const acceptOfferRenderingsAndCreateMoneyTransfertEffect = ({
 }) =>
   T.gen(function* () {
     const logger = yield* Logger
-    const offerOperations = yield* OfferOperations
+    const offerRepository = yield* OfferRepository
     const balanceOperations = yield* BalanceOperations
     const transactionOperations = yield* TransactionOperations
 
-    return T.tryPromise({
-      try: () => offerOperations.getAnAcceptedAndTerminatedOfferByIdAndReceiverId(offerId, userId),
-      catch: error => {
-        logger.error({
-          cause: 'database_error',
-          message: `get offer ${offerId} db error`,
-          detailedError: error
-        })
-
-        if (error instanceof Prisma.PrismaClientKnownRequestError) {
-          return new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'offer_not_found_for_user_or_not_accepted_or_not_terminated'
-          })
-        }
-        return new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'offer_not_found_for_user_or_not_accepted_or_not_terminated'
-        })
-      }
-    }).pipe(
-      T.flatMap(offer => {
-        if (offer !== null && offer.userId !== null) {
-          const { userId, ...rest } = offer
-          return T.succeed({
-            userId,
-            ...rest
-          })
-        }
-
-        logger.error({
-          cause: 'offer_not_found',
-          message: `offer ${offerId} not found on db`,
-          detailedError: {}
-        })
-        return T.fail(
-          new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'offer_not_found_for_user'
-          })
-        )
-      }),
+    return yield* offerRepository.getAcceptedAndTerminatedOffer({ offerId, userId }).pipe(
       T.flatMap(offer =>
         T.tryPromise({
           try: () => balanceOperations.getUserBalance(offer.userId),
@@ -103,27 +62,17 @@ export const acceptOfferRenderingsAndCreateMoneyTransfertEffect = ({
           T.map(balance => ({ balance, offer }))
         )
       ),
-      T.map(({ offer, balance }) => {
-        const computedAmount = offer.milestone.reduce(
-          (acc, milestone) => acc + milestone.priceMilestone.number,
-          0
-        )
-
-        const fees = computedAmount * config.fees
-
-        return {
-          sellerId: offer.userId,
-          balanceId: balance.id,
-          fees,
-          amount: computedAmount - fees,
-          userId,
-          offerId
-        }
-      }),
+      T.flatMap(({ offer, balance }) =>
+        transactionOfTerminateOfferPolicy({
+          _tag: 'base',
+          offer,
+          balanceId: balance.id
+        }).compute()
+      ),
       T.flatMap(args =>
         T.tryPromise({
           try: () =>
-            transactionOperations.acceptOfferRenderingsAndCreateMoneyTransfertTransaction(args),
+            transactionOperations.acceptOfferRenderingsAndCreateMoneyTransferTransaction(args),
           catch: error => {
             logger.error({
               cause: 'database_error',
@@ -145,4 +94,4 @@ export const acceptOfferRenderingsAndCreateMoneyTransfertEffect = ({
         })
       )
     )
-  }).pipe(T.flatten)
+  })

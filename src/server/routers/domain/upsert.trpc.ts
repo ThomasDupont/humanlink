@@ -17,7 +17,7 @@ import formidable from 'formidable'
 import { uploadFilesEffect } from './mutations/uploadFile'
 import { effectStorageProviderFactory } from '../../storage/storage.provider'
 import { addRenderingEffect, AddRenderingEffectArgs } from './mutations/addRendering'
-import { acceptOfferRenderingsAndCreateMoneyTransfertEffect } from './mutations/acceptOfferRenderingsAndCreateMoneyTransfert'
+import { acceptOfferRenderingsAndCreateMoneyTransferEffect } from './mutations/acceptOfferRenderingsAndCreateMoneyTransfert'
 import { CloseMilestoneArgs, closeMilestoneEffect } from './mutations/closeMilestone'
 import { sendMessageEffect, SendMessageInput } from './mutations/sendMessage'
 import { effectCreateAccountIfNotExistsInPaymentProvider } from './utils/createAccountInPaymentProvider'
@@ -28,6 +28,7 @@ import {
   effectSendNotificationNewRenderingProvider
 } from './utils/sendEmail'
 import { markReadMessageEffect } from './mutations/markReadMessage'
+import { offerRepositoryLive } from './repositories/offer.repository'
 
 export const upsertService = (args: UpsertServiceArgs) => ({
   run: () =>
@@ -110,7 +111,7 @@ export const addRendering = (args: AddRenderingEffectArgs) => ({
   run: () =>
     addRenderingEffect(args).pipe(
       effectLogger,
-      effectOfferOperations,
+      T.provide(offerRepositoryLive),
       effectTransactionOperations,
       effectStorageProviderFactory,
       effectSendNotificationNewRenderingProvider,
@@ -120,13 +121,13 @@ export const addRendering = (args: AddRenderingEffectArgs) => ({
 
 export const acceptOfferRenderingsAndCreateMoneyTransfert = (offerId: number, userId: number) => ({
   run: () =>
-    acceptOfferRenderingsAndCreateMoneyTransfertEffect({
+    acceptOfferRenderingsAndCreateMoneyTransferEffect({
       offerId,
       userId
     }).pipe(
       effectLogger,
       effectBalanceOperations,
-      effectOfferOperations,
+      T.provide(offerRepositoryLive),
       effectTransactionOperations,
       T.runPromise
     )

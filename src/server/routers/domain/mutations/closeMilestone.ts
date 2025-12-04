@@ -37,6 +37,7 @@ export const closeMilestoneEffect = ({ offerId, userId, milestoneId }: CloseMile
         })
       }
     }).pipe(
+      // Domain rule
       T.filterOrFail(
         offer => offer !== null,
         () => {
@@ -51,6 +52,7 @@ export const closeMilestoneEffect = ({ offerId, userId, milestoneId }: CloseMile
           })
         }
       ),
+      // Domain rule
       T.map(offer => {
         const milestone = offer.milestone.find(m => m.id === milestoneId) ?? null
 

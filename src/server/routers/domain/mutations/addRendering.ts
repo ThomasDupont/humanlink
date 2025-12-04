@@ -1,6 +1,6 @@
 import { Logger } from '@/server/logger'
 import { Effect as T } from 'effect'
-import { OfferOperations, TransactionOperations } from '../../../databaseOperations/prisma.provider'
+import { TransactionOperations } from '../../../databaseOperations/prisma.provider'
 import { StorageProviderFactory } from '../../../storage/storage.provider'
 import config from '@/config'
 import { TRPCError } from '@trpc/server'
@@ -8,6 +8,7 @@ import { Prisma } from '@prisma/client'
 import { rebuildPathForSecurity } from '@/utils/rebuildPathForSecurity'
 import { CustomError } from '../error'
 import { SendNotificationNewRenderingProvider } from '../utils/sendEmail'
+import { OfferRepository } from '../repositories/offer.repository'
 
 export type AddRenderingEffectArgs = {
   milestoneId: number
@@ -31,13 +32,13 @@ export const addRenderingEffect = ({
   T.gen(function* () {
     const logger = yield* Logger
     const transactionOperations = yield* TransactionOperations
-    const offerOperations = yield* OfferOperations
+    const offerRepository = yield* OfferRepository
     const storageFactory = yield* StorageProviderFactory
     const sendNotification = yield* SendNotificationNewRenderingProvider
 
     const storage = storageFactory[config.storageProvider]()
 
-    return T.all(
+    return yield* T.all(
       files.map(file =>
         T.tryPromise({
           try: () =>
@@ -59,38 +60,10 @@ export const addRenderingEffect = ({
       )
     ).pipe(
       T.flatMap(filesInfo =>
-        T.tryPromise({
-          try: () => offerOperations.getAnOfferByCreatorId(offerId, userId),
-          catch: error =>
-            new CustomError({
-              code:
-                error instanceof Prisma.PrismaClientKnownRequestError
-                  ? 'NOT_FOUND'
-                  : 'INTERNAL_SERVER_ERROR',
-              cause: 'database_error',
-              message: `get offer ${offerId} db error`,
-              detailedError: error,
-              clientMessage:
-                error instanceof Prisma.PrismaClientKnownRequestError
-                  ? 'offer_not_found_for_user'
-                  : 'offer_not_found_for_user'
-            })
-        }).pipe(
+        offerRepository.getValidOfferForRendering({ offerId, userId }).pipe(
           T.flatMap(offer => {
-            if (
-              offer !== null &&
-              offer.milestone.find(m => m.id === milestoneId) !== undefined &&
-              offer.userId !== null &&
-              offer.userIdReceiver !== null &&
-              offer.isAccepted
-            ) {
-              const { milestone, userId, userIdReceiver, ...rest } = offer
-              return T.succeed({
-                userIdReceiver,
-                userId,
-                milestone,
-                ...rest
-              })
+            if (offer.milestone.find(m => m.id === milestoneId) !== undefined) {
+              return T.succeed(offer)
             }
 
             return T.fail(

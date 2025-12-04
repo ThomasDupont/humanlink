@@ -2,8 +2,8 @@ import { Category, Lang } from '@prisma/client'
 
 export const categoryToArray = (categories: Record<Category, Category>): Category[] => {
   const catArr: Category[] = []
-  for (const categorie in categories) {
-    catArr.push(categorie as Category)
+  for (const category in categories) {
+    catArr.push(category as Category)
   }
 
   return catArr
